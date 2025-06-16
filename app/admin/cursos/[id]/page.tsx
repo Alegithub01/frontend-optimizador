@@ -3,7 +3,7 @@ import Link from "next/link"
 import { CourseDetail } from "@/components/course-detail"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-
+//dsd
 export default function CoursePage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto py-10">
