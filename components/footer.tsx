@@ -88,14 +88,14 @@ export default function Footer() {
                 </Link>
 
                 <Link
-                  href="tel:+5917432029"
+                  href="tel:+59177419374"
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                 >
                   <img src="/Whatsapp.svg" alt="whatsapp" className="h-5 w-5" />
                 </Link>
 
                 <Link
-                  href="tel:7432029"
+                  href="tel:77419374"
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                 >
                   <img src="/llamada.svg" alt="phone" className="h-5 w-5" />
@@ -129,19 +129,19 @@ export default function Footer() {
               </Link>
 
               <Link
-                href="tel:+5917432029"
+                href="tel:+59177419374"
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
               >
                 <img src="/Whatsapp.svg" alt="whatsapp" className="h-5 w-5" />
-                <span className="text-sm md:text-base">+591 7432029</span>
+                <span className="text-sm md:text-base">+591 77419374</span>
               </Link>
 
               <Link
-                href="tel:7432029"
+                href="tel:77419374"
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
               >
                 <img src="/llamada.svg" alt="phone" className="h-5 w-5" />
-                <span className="text-sm md:text-base">7432029</span>
+                <span className="text-sm md:text-base">77419374</span>
               </Link>
             </div>
 
