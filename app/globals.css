@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  font-family: 'Montserrat', sans-serif;
+}
+
+.glow {
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8));
+}
+
+.glow-strong {
+  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.9));
+}
+
+/* Custom corner styles for category cards */
+.border-l-gradient-br {
+  border-bottom: 0;
+  border-right: 0;
+}
+
+.border-r-gradient-bl {
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.border-l-gradient-tr {
+  border-top: 0;
+  border-right: 0;
+}
+
+.border-r-gradient-tl {
+  border-top: 0;
+  border-left: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Estilos para el video player personalizado */
+.vimeo-container iframe {
+  border: none !important;
+  pointer-events: none !important;
+}
+
+/* Ocultar elementos de Vimeo completamente */
+.player .vp-controls,
+.player .vp-title,
+.player .vp-sidedock,
+.player .vp-progress,
+.player .vp-overlay,
+.player .vp-captions,
+.player .vp-menu,
+.player .vp-share,
+.player .vp-logo {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Asegurar que el iframe no tenga interacciones */
+iframe[src*="vimeo"],
+iframe[src*="youtube"] {
+  pointer-events: none !important;
+}
+
+/* Estilos para los controles personalizados */
+.custom-video-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.custom-play-button {
+  transition: all 0.3s ease;
+}
+
+.custom-play-button:hover {
+  transform: scale(1.1);
+}
+
+.custom-mute-button {
+  transition: all 0.3s ease;
+}
+
+.custom-mute-button:hover {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}

@@ -1,0 +1,20 @@
+# Ignorar node_modules (importantísimo)
+node_modules/
+
+# Ignorar la carpeta .next (builds de Next.js)
+.next/
+
+# Ignorar archivos de entorno
+.env*
+!.env.example
+
+# Ignorar locks si solo usás uno (recomendado usar uno solo, como pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+
+# Ignorar outputs del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de VSCode (si no querés compartir la config del editor)
+.vscode/
