@@ -14,5 +14,5 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
-EXPOSE 8080
+EXPOSE 3001
 CMD ["npm", "start"]
