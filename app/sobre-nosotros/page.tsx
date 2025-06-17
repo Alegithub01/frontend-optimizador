@@ -75,7 +75,7 @@ const AboutUs = () => {
           </div>
           <div className="flex justify-center">
             {/* Animación Lottie */}
-            <Player animationData={animacion} loop autoplay style={{ width: 128, height: 128 }} />
+            <Player animationData={animacion} loop autoplay style={{ width: 500, height: 500 }} />
           </div>
         </div>
 
@@ -85,59 +85,74 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Los 4 elementos Section */}
-      <section className="py-16 px-4 max-w-6xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">Los 4 elementos</h2>
+     {/* Los 4 elementos Section */}
+    <section className="py-16 px-4 max-w-6xl mx-auto">
+      <h2 className="text-4xl md:text-5xl font-bold text-center mb-6">Los 4 elementos</h2>
 
-        <div className="relative w-64 h-64 mx-auto">
-          {/* Imagen central */}
-          <img
-            src="/bibliografia/frame.png"
-            alt="Central frame"
-            className="w-full h-full object-contain rounded-xl"
-          />
-
-          {/* Arriba izquierda - Energia */}
-          <div className="absolute top-0 left-0 transform -translate-x-1/2 -translate-y-1/2 w-40 text-center">
-            <p className="font-semibold text-orange-500 text-lg">Energía</p>
-            <p className="text-sm text-gray-300 mt-2">
-              “El motor que impulsa tus sueños y mueve cada acción hacia la grandeza.”
-            </p>
-          </div>
-
-          {/* Arriba derecha - Alimentación */}
-          <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 w-40 text-center">
-            <p className="font-semibold text-green-500 text-lg">Alimentación</p>
-            <p className="text-sm text-gray-300 mt-2">
-              “Nutre tu cuerpo y mente para que florezca tu verdadero potencial.”
-            </p>
-          </div>
-
-          {/* Abajo izquierda - Meditación */}
-          <div className="absolute bottom-0 left-0 transform -translate-x-1/2 translate-y-1/2 w-40 text-center">
-            <p className="font-semibold text-purple-600 text-lg">Meditación</p>
-            <p className="text-sm text-gray-300 mt-2">
-              “Encuentra la calma interior que te conecta con tu esencia y propósito.”
-            </p>
-          </div>
-
-          {/* Abajo derecha - Negocio */}
-          <div className="absolute bottom-0 right-0 transform translate-x-1/2 translate-y-1/2 w-40 text-center">
-            <p className="font-semibold text-blue-500 text-lg">Negocio</p>
-            <p className="text-sm text-gray-300 mt-2">
-              “Construye con visión y pasión un legado que trascienda el tiempo.”
-            </p>
-          </div>
+      <div className="grid grid-cols-3 grid-rows-3 gap-1 items-center justify-center max-w-5xl mx-auto text-sm">
+        
+        {/* Arriba izquierda - Energía */}
+        <div className="text-right pr-4">
+          <p className="font-semibold text-orange-500 text-lg">Energía</p>
+          <p className="text-gray-300 mt-2">
+            “El motor que impulsa tus sueños y mueve cada acción hacia la grandeza.”
+          </p>
         </div>
-      </section>
+
+        {/* Espacio arriba centro */}
+        <div></div>
+
+        {/* Arriba derecha - Alimentación */}
+        <div className="text-left pl-4">
+          <p className="font-semibold text-green-500 text-lg">Alimentación</p>
+          <p className="text-gray-300 mt-2">
+            “Nutre tu cuerpo y mente para que florezca tu verdadero potencial.”
+          </p>
+        </div>
+
+        {/* Espacio medio izquierda */}
+        <div></div>
+
+        {/* Imagen central */}
+        <div className="flex justify-center items-center">
+          <img
+            src="/bibliografia/Frame.png"
+            alt="Central frame"
+            className="w-64 h-64 object-contain rounded-xl"
+          />
+        </div>
+
+        {/* Espacio medio derecha */}
+        <div></div>
+
+        {/* Abajo izquierda - Meditación */}
+        <div className="text-right pr-4">
+          <p className="font-semibold text-purple-600 text-lg">Meditación</p>
+          <p className="text-gray-300 mt-2">
+            “Encuentra la calma interior que te conecta con tu esencia y propósito.”
+          </p>
+        </div>
+
+        {/* Espacio abajo centro */}
+        <div></div>
+
+        {/* Abajo derecha - Negocio */}
+        <div className="text-left pl-4">
+          <p className="font-semibold text-blue-500 text-lg">Negocio</p>
+          <p className="text-gray-300 mt-2">
+            “Construye con visión y pasión un legado que trascienda el tiempo.”
+          </p>
+        </div>
+      </div>
+    </section>
 
       {/* Book Section */}
-      <section className="py-16 px-4 max-w-4xl mx-auto">
+      <section className="py-0 px-4 max-w-4xl mx-auto">
         <div className="flex items-center gap-12 border border-gray-600 rounded-lg p-8 bg-black bg-opacity-80">
           {/* Imagen del libro dentro del recuadro */}
           <div className="flex-shrink-0">
             <img
-              src="/bibliografia/lIBRO DON NICO PORTADA40001somra.jpg"
+              src="/bibliografia/libro.png"
               alt="Portada libro Empleado Rico Jefe Pobre"
               className="w-40 h-auto rounded-lg shadow-lg"
             />
@@ -148,18 +163,19 @@ const AboutUs = () => {
             <p className="text-gray-400 text-sm mb-2">Libro</p>
             <h3 className="text-3xl font-bold mb-4 text-white">Empleado Rico, Jefe Pobre</h3>
             <p className="text-gray-300 leading-relaxed">
-              “El verdadero poder no está en ganar dinero, sino en saber cómo mantenerlo y hacerlo crecer. Aprende a cambiar tu mentalidad para alcanzar la libertad financiera y transformar tu vida.”
+              El verdadero poder no está en ganar dinero, sino en saber cómo mantenerlo y hacerlo crecer. Aprende a cambiar tu mentalidad para alcanzar la libertad financiera y transformar tu vida.
             </p>
           </div>
         </div>
       </section>
 
       {/* Signature Section */}
-      <section className="py-16 px-4 max-w-4xl mx-auto text-center">
-        <div className="mb-8 w-80 h-32 mx-auto">
+      <section className="py-16 px-4 max-w-4xl mx-auto text-center pb-48">
+        <div className="mb-12 w-80 h-32 mx-auto">
           <Lottie animationData={firmaAnim} loop={true} />
         </div>
       </section>
+
     </div>
   );
 };
