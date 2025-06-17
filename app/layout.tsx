@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Optimizador - Cursos y Productos para tu Bienestar",
   description: "Descubre cursos, eventos y productos diseñados para potenciar tu bienestar y felicidad.",
   generator: "v0.dev",
+  icons:{icon:"/icono.svg",}
 }
 
 export default function RootLayout({
