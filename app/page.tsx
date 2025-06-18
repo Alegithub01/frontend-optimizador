@@ -242,7 +242,6 @@ export default function Home() {
         <section id="testimonios" className="container mx-auto py-12 md:py-20 px-4">
           <TestimonialsSection testimonials={testimonials} />
         </section>
-
         {/* Mentoring CTA Section */}
         <CTASection />
 

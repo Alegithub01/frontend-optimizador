@@ -62,6 +62,7 @@ useEffect(() => {
         console.log("ACCESS TOKEN:", accessToken)
 
         try {
+          console.log(process.env.NEXT_PUBLIC_API_URL);
           const res = await api.post("/auth/register-google", { access_token: accessToken })
           console.log("Respuesta del backend:", res.data)
           alert("Cuenta creada exitosamente")
@@ -74,6 +75,7 @@ useEffect(() => {
       }
     })
   } else {
+    console.log(process.env.NEXT_PUBLIC_API_URL);
     console.error("Google script aún no cargado o window.google no disponible")
   }
 }, [])
