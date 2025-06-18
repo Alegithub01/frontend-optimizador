@@ -8,7 +8,7 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RouteGuard requiredRoles={[]}>
+    <RouteGuard requiredRoles={['admin', 'atc']}>
       <AdminLayout>{children}</AdminLayout>
       <Toaster />
     </RouteGuard>
