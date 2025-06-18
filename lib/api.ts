@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.optimizador.com"
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export const api = {
   post: async <T = any>(path: string, data?: any): Promise<T> => {
