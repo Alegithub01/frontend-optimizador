@@ -212,6 +212,31 @@ useEffect(() => {
           {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
         </div>
 
+        {/* Legal Agreement Section */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Al crear tu cuenta, aceptas nuestros{" "}
+            <Link 
+              href="/terms" 
+              className="text-orange-700 hover:text-orange-600 underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Términos y Condiciones de Uso
+            </Link>
+            {" "}y nuestra{" "}
+            <Link 
+              href="/politicas-privacidad" 
+              className="text-orange-700 hover:text-orange-600 underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Política de Privacidad
+            </Link>
+            .
+          </p>
+        </div>
+
         <Button
           type="submit"
           disabled={isSubmitting}
@@ -251,8 +276,30 @@ useEffect(() => {
             Inicia sesión
           </Link>
         </div>
+
+        {/* Footer Legal Links */}
+        <div className="text-center pt-4 border-t border-gray-200">
+          <div className="flex justify-center space-x-4 text-xs text-gray-500">
+            <Link 
+              href="/terms" 
+              className="hover:text-orange-600 transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Términos de Uso
+            </Link>
+            <span>•</span>
+            <Link 
+              href="/politicas-privacidad" 
+              className="hover:text-orange-600 transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Política de Privacidad
+            </Link>
+          </div>
+        </div>
       </form>
     </div>
   )
 }
-
