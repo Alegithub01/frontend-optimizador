@@ -1,21 +1,25 @@
-export interface ProductSection {
-  title: string;
-  content: string;
+export interface ToolkitSection {
+  id?: number
+  title: string
+  videoUrl?: string
+  description?: string
+  fileUrl?: string
+  createdAt?: Date
 }
 
 export interface Product {
-  id?: string;
-  name: string;
-  author: string;
-  price: number;
-  image: string;
-  stock: number;
-  category: string;
-  subCategory: string;
-  description: string;
-  sections: ProductSection[];
-  trailerUrl: string;
+  id?: string
+  name: string
+  author: string
+  price: number
+  stock: number
+  image: string
+  category: "libro" | "revista" | "toolkit"
+  subCategory?: "energia" | "alimentacion" | "meditacion" | "negocio"
+  description: string
+  pdfUrl?: string // Para libros y revistas
+  sections?: ToolkitSection[] // Para toolkits
+  createdAt?: Date
+  updatedAt?: Date
+  trailerUrl?: string
 }
-
-export type CreateProductDto = Omit<Product, 'id'>;
-export type UpdateProductDto = Partial<CreateProductDto>;

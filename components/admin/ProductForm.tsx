@@ -1,144 +1,183 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Product, ProductSection } from '@/types/product';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import type React from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import type { Product, ToolkitSection } from "@/types/product"
+import { api } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProductFormProps {
-  product?: Product;
-  isEditing?: boolean;
+  product?: Product
+  isEditing?: boolean
 }
 
 const CATEGORIES = [
-  { value: 'libro', label: 'Libro' },
-  { value: 'revista', label: 'Revista' },
-  { value: 'toolkit', label: 'Toolkit' }
-];
+  { value: "libro", label: "Libro" },
+  { value: "revista", label: "Revista" },
+  { value: "toolkit", label: "Toolkit" },
+] as const
 
 const TOOLKIT_SUBCATEGORIES = [
-  { value: 'energia', label: 'Energía' },
-  { value: 'alimentacion', label: 'Alimentación' },
-  { value: 'meditacion', label: 'Meditación' },
-  { value: 'negocio', label: 'Negocio' }
-];
+  { value: "energia", label: "Energía" },
+  { value: "alimentacion", label: "Alimentación" },
+  { value: "meditacion", label: "Meditación" },
+  { value: "negocio", label: "Negocio" },
+] as const
 
 export function ProductForm({ product, isEditing = false }: ProductFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState<Partial<Product>>({
-    name: product?.name || '',
-    author: product?.author || '',
+    name: product?.name || "",
+    author: product?.author || "",
     price: product?.price || 0,
-    image: product?.image || '',
+    image: product?.image || "",
     stock: product?.stock || 0,
-    category: product?.category || '',
-    subCategory: product?.subCategory || '',
-    description: product?.description || '',
+    category: product?.category || "libro",
+    subCategory: product?.subCategory,
+    description: product?.description || "",
     sections: product?.sections || [],
-    trailerUrl: product?.trailerUrl || '',
-  });
+    trailerUrl: product?.trailerUrl || "",
+    pdfUrl: product?.pdfUrl || "",
+  })
 
-  const handleInputChange = (field: keyof Product, value: any) => {
-    setFormData(prev => ({
+  const handleInputChange = <K extends keyof Product>(field: K, value: Product[K]) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
-  const handleCategoryChange = (category: string) => {
-    setFormData(prev => ({
+  const handleCategoryChange = (category: Product["category"]) => {
+    setFormData((prev) => ({
       ...prev,
       category,
-      subCategory: '' // Reset subcategory when category changes
-    }));
-  };
+      subCategory: undefined,
+      // Limpiar secciones si no es toolkit
+      sections: category === "toolkit" ? prev.sections : [],
+    }))
+  }
 
-  const handleSectionChange = (index: number, field: keyof ProductSection, value: string) => {
-    const newSections = [...(formData.sections || [])];
+  const handleSectionChange = (index: number, field: keyof ToolkitSection, value: string) => {
+    const newSections = [...(formData.sections || [])]
     newSections[index] = {
       ...newSections[index],
-      [field]: value
-    };
-    setFormData(prev => ({
+      [field]: value,
+    }
+    setFormData((prev) => ({
       ...prev,
-      sections: newSections
-    }));
-  };
+      sections: newSections,
+    }))
+  }
 
   const addSection = () => {
-    setFormData(prev => ({
+    const newSection: ToolkitSection = {
+      title: "",
+      videoUrl: "",
+      description: "",
+      fileUrl: "",
+    }
+    setFormData((prev) => ({
       ...prev,
-      sections: [...(prev.sections || []), { title: '', content: '' }]
-    }));
-  };
+      sections: [...(prev.sections || []), newSection],
+    }))
+  }
 
   const removeSection = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      sections: prev.sections?.filter((_, i) => i !== index) || []
-    }));
-  };
+      sections: prev.sections?.filter((_, i) => i !== index) || [],
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
+      // Función para limpiar URLs vacías
+      const cleanUrl = (url: string | undefined): string | undefined => {
+        if (!url || url.trim() === "") return undefined
+        return url.trim()
+      }
+
+      // Limpiar secciones si es toolkit
+      const cleanedSections =
+        formData.category === "toolkit" && formData.sections
+          ? formData.sections.map((section) => ({
+              ...section,
+              videoUrl: cleanUrl(section.videoUrl),
+              fileUrl: cleanUrl(section.fileUrl),
+              description: section.description?.trim() || undefined,
+            }))
+          : undefined
+
+      // Prepara datos para enviar
+      const dataToSend = {
+        name: formData.name?.trim(),
+        author: formData.author?.trim(),
+        price: formData.price,
+        stock: formData.stock,
+        image: formData.image?.trim(),
+        category: formData.category,
+        subCategory: formData.subCategory || undefined,
+        description: formData.description?.trim(),
+        trailerUrl: cleanUrl(formData.trailerUrl),
+        pdfUrl:
+          formData.category === "libro" || formData.category === "revista" ? cleanUrl(formData.pdfUrl) : undefined,
+        sections: cleanedSections,
+      }
+
       if (isEditing && product?.id) {
-        await api.patch(`/product/${product.id}`, formData);
+        await api.patch(`/product/${product.id}`, dataToSend)
         toast({
           title: "Producto actualizado",
           description: "El producto se ha actualizado correctamente.",
-        });
+        })
       } else {
-        await api.post('/product', formData);
+        await api.post("/product", dataToSend)
         toast({
           title: "Producto creado",
           description: "El producto se ha creado correctamente.",
-        });
+        })
       }
-      router.push('/admin/products');
+      router.push("/admin/products")
     } catch (error) {
+      console.error("Error al guardar producto:", error)
       toast({
         title: "Error",
         description: "Ha ocurrido un error al guardar el producto.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const isToolkit = formData.category === 'toolkit';
+  const isToolkit = formData.category === "toolkit"
+  const isBookOrMagazine = formData.category === "libro" || formData.category === "revista"
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.back()}
-          >
+          <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEditing ? 'Editar Producto' : 'Crear Producto'}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">{isEditing ? "Editar Producto" : "Crear Producto"}</h1>
             <p className="text-gray-600">
-              {isEditing ? 'Modifica los datos del producto' : 'Completa la información del nuevo producto'}
+              {isEditing ? "Modifica los datos del producto" : "Completa la información del nuevo producto"}
             </p>
           </div>
         </div>
@@ -156,7 +195,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Ingresa el nombre del producto"
                   required
                 />
@@ -166,7 +205,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 <Input
                   id="author"
                   value={formData.author}
-                  onChange={(e) => handleInputChange('author', e.target.value)}
+                  onChange={(e) => handleInputChange("author", e.target.value)}
                   placeholder="Nombre del autor"
                   required
                 />
@@ -181,7 +220,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                   type="number"
                   step="0.01"
                   value={formData.price}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                  onChange={(e) => handleInputChange("price", Number.parseFloat(e.target.value) || 0)}
                   placeholder="0.00"
                   required
                 />
@@ -192,7 +231,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                   id="stock"
                   type="number"
                   value={formData.stock}
-                  onChange={(e) => handleInputChange('stock', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange("stock", Number.parseInt(e.target.value) || 0)}
                   placeholder="0"
                   required
                 />
@@ -219,9 +258,9 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="subCategory">Subcategoría</Label>
-                  <Select 
-                    value={formData.subCategory} 
-                    onValueChange={(value) => handleInputChange('subCategory', value)}
+                  <Select
+                    value={formData.subCategory || ""}
+                    onValueChange={(value) => handleInputChange("subCategory", value as Product["subCategory"])}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona una subcategoría" />
@@ -240,7 +279,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                   <Input
                     id="image"
                     value={formData.image}
-                    onChange={(e) => handleInputChange('image', e.target.value)}
+                    onChange={(e) => handleInputChange("image", e.target.value)}
                     placeholder="https://example.com/image.jpg"
                     required
                   />
@@ -248,18 +287,31 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               </div>
             )}
 
-            {/* Para libro y revista, imagen va en la fila normal */}
+            {/* Para libro y revista, imagen y PDF van en filas separadas */}
             {!isToolkit && (
-              <div className="space-y-2">
-                <Label htmlFor="image">URL de Imagen</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => handleInputChange('image', e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  required
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="image">URL de Imagen</Label>
+                  <Input
+                    id="image"
+                    value={formData.image}
+                    onChange={(e) => handleInputChange("image", e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    required
+                  />
+                </div>
+                {isBookOrMagazine && (
+                  <div className="space-y-2">
+                    <Label htmlFor="pdfUrl">URL del PDF</Label>
+                    <Input
+                      id="pdfUrl"
+                      value={formData.pdfUrl || ""}
+                      onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
+                      placeholder="https://example.com/document.pdf"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="space-y-2">
@@ -267,7 +319,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               <Input
                 id="trailerUrl"
                 value={formData.trailerUrl}
-                onChange={(e) => handleInputChange('trailerUrl', e.target.value)}
+                onChange={(e) => handleInputChange("trailerUrl", e.target.value)}
                 placeholder="https://example.com/trailer.mp4"
               />
             </div>
@@ -277,7 +329,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe el producto en detalle..."
                 rows={4}
                 required
@@ -286,86 +338,120 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Secciones del Producto</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addSection}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar Sección
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {formData.sections && formData.sections.length > 0 ? (
-              <div className="space-y-4">
-                {formData.sections.map((section, index) => (
-                  <div key={index} className="p-4 border rounded-lg space-y-4 bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-gray-900">
-                        Sección {index + 1}
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeSection(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="space-y-2">
-                        <Label>Título de la Sección</Label>
-                        <Input
-                          value={section.title}
-                          onChange={(e) => handleSectionChange(index, 'title', e.target.value)}
-                          placeholder="Título de la sección"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Contenido</Label>
-                        <Textarea
-                          value={section.content}
-                          onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
-                          placeholder="Contenido de la sección"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        {/* Secciones solo aparecen si es toolkit */}
+        {isToolkit && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Contenido del Toolkit</CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Agrega secciones con videos, archivos y descripciones para tu toolkit
+                  </p>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addSection}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar Sección
+                </Button>
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <Plus className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p className="font-medium">No hay secciones agregadas</p>
-                <p className="text-sm">Haz clic en "Agregar Sección" para comenzar</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              {formData.sections && formData.sections.length > 0 ? (
+                <div className="space-y-6">
+                  {formData.sections.map((section, index) => (
+                    <div key={index} className="p-6 border rounded-lg space-y-4 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-medium text-gray-900 flex items-center">
+                          <FileText className="h-5 w-5 mr-2" />
+                          Sección {index + 1}
+                        </h4>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeSection(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Título de la Sección
+                          </Label>
+                          <Input
+                            value={section.title}
+                            onChange={(e) => handleSectionChange(index, "title", e.target.value)}
+                            placeholder="Ej: Introducción al tema"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center">
+                            <Video className="h-4 w-4 mr-2" />
+                            URL del Video (opcional)
+                          </Label>
+                          <Input
+                            value={section.videoUrl || ""}
+                            onChange={(e) => handleSectionChange(index, "videoUrl", e.target.value)}
+                            placeholder="https://example.com/video.mp4"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center">
+                            <Link className="h-4 w-4 mr-2" />
+                            URL del Archivo (opcional)
+                          </Label>
+                          <Input
+                            value={section.fileUrl || ""}
+                            onChange={(e) => handleSectionChange(index, "fileUrl", e.target.value)}
+                            placeholder="https://example.com/archivo.pdf"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Descripción</Label>
+                          <Textarea
+                            value={section.description || ""}
+                            onChange={(e) => handleSectionChange(index, "description", e.target.value)}
+                            placeholder="Describe el contenido de esta sección..."
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <Plus className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="font-medium text-lg mb-2">No hay secciones agregadas</p>
+                  <p className="text-sm mb-4">Los toolkits necesitan contenido organizado en secciones</p>
+                  <Button type="button" variant="outline" onClick={addSection}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Primera Sección
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-          >
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancelar
           </Button>
           <Button type="submit" disabled={loading}>
             <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Guardando...' : (isEditing ? 'Actualizar Producto' : 'Crear Producto')}
+            {loading ? "Guardando..." : isEditing ? "Actualizar Producto" : "Crear Producto"}
           </Button>
         </div>
       </form>
     </div>
-  );
+  )
 }
