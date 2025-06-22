@@ -601,7 +601,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             {/* Botón de compra */}
             <Button
               onClick={handleBuy}
-              disabled={purchasing || product.stock <= 0 || (selectedFormat === "fisico" && !selectedDepartment)}
+              disabled={purchasing || (selectedFormat === "fisico" && !selectedDepartment)}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg disabled:opacity-50"
             >
               {purchasing ? (
