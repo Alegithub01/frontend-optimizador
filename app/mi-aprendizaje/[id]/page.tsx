@@ -53,13 +53,20 @@ export default function CoursePlayerPage() {
       try {
         setLoading(true)
         const courseData = await api.get<Course>(`/courses/${courseId}`)
-        setCourse(courseData)
+        
+        // Ordenar secciones por ID ascendente (más antiguo primero)
+        const sortedSections = [...courseData.sections].sort((a, b) => a.id - b.id)
+        
+        setCourse({
+          ...courseData,
+          sections: sortedSections
+        })
 
-        if (courseData.sections.length > 0) {
-          setActiveSection(courseData.sections[0])
-          setExpandedSections(new Set([courseData.sections[0].id]))
+        if (sortedSections.length > 0) {
+          setActiveSection(sortedSections[0])
+          setExpandedSections(new Set([sortedSections[0].id]))
 
-          const firstVideo = courseData.sections[0].contents.find((content) => content.type === "video")
+          const firstVideo = sortedSections[0].contents.find((content) => content.type === "video")
           if (firstVideo) {
             setActiveVideoId(firstVideo.id)
           }
@@ -283,83 +290,82 @@ export default function CoursePlayerPage() {
                 </div>
 
                 <div className="max-h-[600px] overflow-y-auto">
-                  {course.sections
-                    .sort((a, b) => a.id - b.id)
-                    .map((section) => {
-                      const firstVideo = section.contents.find((content) => content.type === "video")
-                      const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
-                      const temarioItems = parseTemario(section.temario)
-                      const isExpanded = expandedSections.has(section.id)
+                  {/* Secciones ya están ordenadas por ID ascendente */}
+                  {course.sections.map((section) => {
+                    const firstVideo = section.contents.find((content) => content.type === "video")
+                    const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
+                    const temarioItems = parseTemario(section.temario)
+                    const isExpanded = expandedSections.has(section.id)
 
-                      return (
-                        <div key={section.id} className="border-b last:border-b-0">
-                          <div
-                            className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
-                              activeSection?.id === section.id ? "bg-orange-50 border-r-4 border-orange-500" : ""
-                            }`}
-                            onClick={() => selectSection(section)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden relative">
-                                  <Image
-                                    src={thumbnail || "/placeholder.svg"}
-                                    alt={section.title}
-                                    fill
-                                    className="object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.src = "/placeholder.svg?height=48&width=64"
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Calendar className="h-3 w-3 text-gray-500" />
-                                  <span className="text-xs font-medium text-gray-600">{section.title}</span>
-                                </div>
-                                <h4 className="font-medium text-gray-800 text-sm leading-tight mb-2">
-                                  {firstVideo?.title || "Sin contenido"}
-                                </h4>
-                                {activeSection?.id === section.id && (
-                                  <div className="flex items-center">
-                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                  </div>
-                                )}
+                    return (
+                      <div key={section.id} className="border-b last:border-b-0">
+                        <div
+                          className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
+                            activeSection?.id === section.id ? "bg-orange-50 border-r-4 border-orange-500" : ""
+                          }`}
+                          onClick={() => selectSection(section)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden relative">
+                                <Image
+                                  src={thumbnail || "/placeholder.svg"}
+                                  alt={section.title}
+                                  fill
+                                  className="object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.svg?height=48&width=64"
+                                  }}
+                                />
                               </div>
                             </div>
-                          </div>
-
-                          {/* Temario expandible */}
-                          {temarioItems.length > 0 && (
-                            <div className="px-4 pb-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  toggleSection(section.id)
-                                }}
-                                className="flex items-center justify-between w-full text-left text-xs text-gray-600 hover:text-gray-800 transition-colors"
-                              >
-                                <span>Texto de referencia {section.title}</span>
-                                <ChevronDown
-                                  className={`h-3 w-3 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
-                                />
-                              </button>
-
-                              {isExpanded && (
-                                <div className="mt-2 pl-4 space-y-1">
-                                  {temarioItems.map((item, index) => (
-                                    <div key={index} className="text-xs text-gray-600">
-                                      • {item}
-                                    </div>
-                                  ))}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Calendar className="h-3 w-3 text-gray-500" />
+                                <span className="text-xs font-medium text-gray-600">{section.title}</span>
+                              </div>
+                              <h4 className="font-medium text-gray-800 text-sm leading-tight mb-2">
+                                {firstVideo?.title || "Sin contenido"}
+                              </h4>
+                              {activeSection?.id === section.id && (
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
                         </div>
-                      )
-                    })}
+
+                        {/* Temario expandible */}
+                        {temarioItems.length > 0 && (
+                          <div className="px-4 pb-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleSection(section.id)
+                              }}
+                              className="flex items-center justify-between w-full text-left text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                            >
+                              <span>Texto de referencia {section.title}</span>
+                              <ChevronDown
+                                className={`h-3 w-3 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
+                              />
+                            </button>
+
+                            {isExpanded && (
+                              <div className="mt-2 pl-4 space-y-1">
+                                {temarioItems.map((item, index) => (
+                                  <div key={index} className="text-xs text-gray-600">
+                                    • {item}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -481,161 +487,159 @@ export default function CoursePlayerPage() {
         {/* Módulos Tab Content */}
         {activeTab === "modulos" && (
           <div className="p-4 space-y-4">
-            {course.sections
-              .sort((a, b) => a.id - b.id)
-              .map((section) => {
-                const firstVideo = section.contents.find((content) => content.type === "video")
-                const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
-                const temarioItems = parseTemario(section.temario)
-                const isExpanded = expandedSections.has(section.id)
-                const isActive = activeSection?.id === section.id
+            {/* Secciones ya están ordenadas por ID ascendente */}
+            {course.sections.map((section) => {
+              const firstVideo = section.contents.find((content) => content.type === "video")
+              const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
+              const temarioItems = parseTemario(section.temario)
+              const isExpanded = expandedSections.has(section.id)
+              const isActive = activeSection?.id === section.id
 
-                return (
-                  <div key={section.id} className="space-y-2">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 relative">
-                        <div className="w-20 h-16 bg-gray-200 rounded-lg overflow-hidden">
-                          <Image
-                            src={thumbnail || "/placeholder.svg"}
-                            alt={section.title}
-                            fill
-                            className="object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "/placeholder.svg?height=64&width=80"
-                            }}
-                          />
-                          {isActive && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                              <Play className="h-6 w-6 text-white" fill="currentColor" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1 mb-1">
-                          <Calendar className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs font-medium text-gray-600">Día {section.id}</span>
-                        </div>
-                        <button
-                          className="text-sm font-medium text-gray-800 text-left"
-                          onClick={() => selectSection(section)}
-                        >
-                          {firstVideo?.title || "¿Qué es una empresa?"}
-                        </button>
-                        {isActive && <div className="w-2 h-2 bg-orange-500 rounded-full mt-1"></div>}
-                      </div>
-                    </div>
-
-                    {/* Temario expandible */}
-                    {temarioItems.length > 0 && (
-                      <div className="bg-gray-100 rounded-lg">
-                        <button
-                          onClick={() => toggleSection(section.id)}
-                          className="flex items-center justify-between w-full p-3 text-left text-sm text-gray-600"
-                        >
-                          <span>Texto de referencia{section.title}</span>
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
-                          />
-                        </button>
-
-                        {isExpanded && (
-                          <div className="p-3 pt-0 space-y-1">
-                            {temarioItems.map((item, index) => (
-                              <div key={index} className="text-xs text-gray-600">
-                                • {item}
-                              </div>
-                            ))}
+              return (
+                <div key={section.id} className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 relative">
+                      <div className="w-20 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                        <Image
+                          src={thumbnail || "/placeholder.svg"}
+                          alt={section.title}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder.svg?height=64&width=80"
+                          }}
+                        />
+                        {isActive && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-6 w-6 text-white" fill="currentColor" />
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
-          </div>
-        )}
-
-        {/* Recursos Tab Content */}
-        {activeTab === "recursos" && (
-          <div className="p-4 space-y-4">
-            {course.sections
-              .sort((a, b) => a.id - b.id)
-              .map((section) => {
-                const firstVideo = section.contents.find((content) => content.type === "video")
-                if (!firstVideo || !firstVideo.secondaryUrl) return null
-
-                const isExpanded = expandedResources.has(section.id)
-                const contentType = getSecondaryContentType(firstVideo.secondaryUrl)
-
-                return (
-                  <div key={`resource-${section.id}`} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <Calendar className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs font-medium text-gray-600">Día {section.id}</span>
-                        </div>
-                        <h3 className="text-sm font-medium text-gray-800">{firstVideo.title}</h3>
-                      </div>
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                     </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Calendar className="h-3 w-3 text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600">Día {section.id}</span>
+                      </div>
+                      <button
+                        className="text-sm font-medium text-gray-800 text-left"
+                        onClick={() => selectSection(section)}
+                      >
+                        {firstVideo?.title || "¿Qué es una empresa?"}
+                      </button>
+                      {isActive && <div className="w-2 h-2 bg-orange-500 rounded-full mt-1"></div>}
+                    </div>
+                  </div>
 
-                    {/* Recursos expandible */}
+                  {/* Temario expandible */}
+                  {temarioItems.length > 0 && (
                     <div className="bg-gray-100 rounded-lg">
                       <button
-                        onClick={() => toggleResource(section.id)}
+                        onClick={() => toggleSection(section.id)}
                         className="flex items-center justify-between w-full p-3 text-left text-sm text-gray-600"
                       >
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-500" />
-                          <span>Recursos</span>
-                        </div>
+                        <span>Texto de referencia{section.title}</span>
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
                         />
                       </button>
 
                       {isExpanded && (
-                        <div className="p-4 pt-0">
-                          {contentType === "pdf" && (
-                            <div className="w-full h-[400px] border rounded-lg overflow-hidden bg-white">
-                              <iframe
-                                src={convertDriveUrl(firstVideo.secondaryUrl)}
-                                className="w-full h-full"
-                                frameBorder="0"
-                                title="PDF Resource"
-                              />
+                        <div className="p-3 pt-0 space-y-1">
+                          {temarioItems.map((item, index) => (
+                            <div key={index} className="text-xs text-gray-600">
+                              • {item}
                             </div>
-                          )}
-
-                          {contentType === "video" && (
-                            <div className="w-full">
-                              <VideoPlayer
-                                videoUrl={firstVideo.secondaryUrl}
-                                title={`${firstVideo.title} - Recurso adicional`}
-                              />
-                            </div>
-                          )}
-
-                          {contentType === "image" && (
-                            <div className="w-full flex justify-center">
-                              <img
-                                src={firstVideo.secondaryUrl || "/placeholder.svg"}
-                                alt={`${firstVideo.title} - Recurso adicional`}
-                                className="max-w-full h-auto rounded-lg"
-                                onError={(e) => {
-                                  e.currentTarget.src = "/placeholder.svg?height=200&width=300"
-                                }}
-                              />
-                            </div>
-                          )}
+                          ))}
                         </div>
                       )}
                     </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Recursos Tab Content */}
+        {activeTab === "recursos" && (
+          <div className="p-4 space-y-4">
+            {/* Secciones ya están ordenadas por ID ascendente */}
+            {course.sections.map((section) => {
+              const firstVideo = section.contents.find((content) => content.type === "video")
+              if (!firstVideo || !firstVideo.secondaryUrl) return null
+
+              const isExpanded = expandedResources.has(section.id)
+              const contentType = getSecondaryContentType(firstVideo.secondaryUrl)
+
+              return (
+                <div key={`resource-${section.id}`} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Calendar className="h-3 w-3 text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600">Día {section.id}</span>
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-800">{firstVideo.title}</h3>
+                    </div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                   </div>
-                )
-              })}
+
+                  {/* Recursos expandible */}
+                  <div className="bg-gray-100 rounded-lg">
+                    <button
+                      onClick={() => toggleResource(section.id)}
+                      className="flex items-center justify-between w-full p-3 text-left text-sm text-gray-600"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-gray-500" />
+                        <span>Recursos</span>
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="p-4 pt-0">
+                        {contentType === "pdf" && (
+                          <div className="w-full h-[400px] border rounded-lg overflow-hidden bg-white">
+                            <iframe
+                              src={convertDriveUrl(firstVideo.secondaryUrl)}
+                              className="w-full h-full"
+                              frameBorder="0"
+                              title="PDF Resource"
+                            />
+                          </div>
+                        )}
+
+                        {contentType === "video" && (
+                          <div className="w-full">
+                            <VideoPlayer
+                              videoUrl={firstVideo.secondaryUrl}
+                              title={`${firstVideo.title} - Recurso adicional`}
+                            />
+                          </div>
+                        )}
+
+                        {contentType === "image" && (
+                          <div className="w-full flex justify-center">
+                            <img
+                              src={firstVideo.secondaryUrl || "/placeholder.svg"}
+                              alt={`${firstVideo.title} - Recurso adicional`}
+                              className="max-w-full h-auto rounded-lg"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder.svg?height=200&width=300"
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
