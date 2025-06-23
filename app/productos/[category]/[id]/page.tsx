@@ -53,7 +53,7 @@ const BOLIVIA_DEPARTMENTS = [
     code: "CBBA",
     name: "Cochabamba",
     isCapital: true,
-    fedexAvailable: true,
+    fedexAvailable: false,
   },
   {
     code: "SC",
