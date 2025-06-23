@@ -44,6 +44,12 @@ const BOLIVIA_DEPARTMENTS = [
     fedexAvailable: true,
   },
   {
+    code: "EA",
+    name: "El Alto",
+    isCapital: true,
+    fedexAvailable: true,
+  },
+  {
     code: "CBBA",
     name: "Cochabamba",
     isCapital: true,
@@ -109,6 +115,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const [selectedDepartment, setSelectedDepartment] = useState("")
   const [needsHomeDelivery, setNeedsHomeDelivery] = useState(false)
   const [shippingAddress, setShippingAddress] = useState("")
+  const [cochabambaDeliveryMethod, setCochabambaDeliveryMethod] = useState<"office" | "shipping">("office")
 
   // Obtener información del departamento seleccionado
   const selectedDeptInfo = BOLIVIA_DEPARTMENTS.find((dept) => dept.code === selectedDepartment)
@@ -186,6 +193,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
       setSelectedDepartment("")
       setNeedsHomeDelivery(false)
       setShippingAddress("")
+      setCochabambaDeliveryMethod("office")
     }
   }, [selectedFormat])
 
@@ -193,6 +201,11 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   useEffect(() => {
     setNeedsHomeDelivery(false)
     setShippingAddress("")
+    if (selectedDepartment !== "CBBA") {
+      setCochabambaDeliveryMethod("shipping")
+    } else {
+      setCochabambaDeliveryMethod("office")
+    }
   }, [selectedDepartment])
 
   const validateShippingInfo = () => {
@@ -206,10 +219,21 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         return false
       }
 
-      if (needsHomeDelivery && !shippingAddress.trim()) {
+      // Validación especial para Cochabamba
+      if (selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "shipping" && needsHomeDelivery && !shippingAddress.trim()) {
         toast({
           title: "Dirección requerida",
           description: "Por favor ingresa tu dirección completa para envío a domicilio.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Validación para otros departamentos
+      if (selectedDepartment !== "CBBA" && needsHomeDelivery && !shippingAddress.trim()) {
+        toast({
+          title: "Dirección requerida",
+          description: "Por favor ingresa tu dirección completa para envío.",
           variant: "destructive",
         })
         return false
@@ -264,11 +288,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           deliveryType: deliveryType, // Formato en inglés para el backend
           department: selectedDepartment,
           departmentName: selectedDeptInfo?.name,
-          needsHomeDelivery,
+          needsHomeDelivery: selectedDepartment === "CBBA" ? cochabambaDeliveryMethod === "shipping" : needsHomeDelivery,
           shippingAddress,
           fedexAvailable: selectedDeptInfo?.fedexAvailable || false,
           isCapital: selectedDeptInfo?.isCapital || false,
           type: "product",
+          deliveryMethod: selectedDepartment === "CBBA" ? cochabambaDeliveryMethod : null,
           // Añadir estos campos para asegurar que estén disponibles para el backend
           fullName: "", // Se llenará en el checkout
           phone: "", // Se llenará en el checkout
@@ -449,7 +474,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     <option value="">Selecciona tu departamento</option>
                     {BOLIVIA_DEPARTMENTS.map((dept) => (
                       <option key={dept.code} value={dept.code}>
-                        {dept.name} {dept.isCapital ? "(Capital)" : "(Provincia)"}
+                        {dept.name} {dept.isCapital ? "(Capital)" : ""}
                       </option>
                     ))}
                   </select>
@@ -459,7 +484,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 {selectedDeptInfo && (
                   <>
                     {selectedDeptInfo.fedexAvailable ? (
-                      // Para capitales (La Paz, Cochabamba, Santa Cruz)
+                      // Para capitales (La Paz, Cochabamba, Santa Cruz) y El Alto
                       needsHomeDelivery ? (
                         // Si marca envío a domicilio en capital
                         <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -489,17 +514,17 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                             <span className="font-medium text-green-800">Envío con FedEx</span>
                           </div>
                           <p className="text-green-700 text-sm">
-                            ✅ <strong>Envío GRATIS</strong> a {selectedDeptInfo.name} (ciudad capital)
+                            ✅ <strong>Envío GRATIS</strong> a {selectedDeptInfo.name}
                           </p>
                           <p className="text-green-700 text-sm">🚚 Entrega en 1-2 días hábiles</p>
                         </div>
                       )
                     ) : (
-                      // Para provincias (otros departamentos)
+                      // Para otros departamentos
                       <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                         <div className="flex items-center gap-2 mb-2">
                           <Package className="h-5 w-5 text-orange-600" />
-                          <span className="font-medium text-orange-800">Envío Interprovincial</span>
+                          <span className="font-medium text-orange-800">Envío Interdepartamental</span>
                         </div>
                         <p className="text-orange-700 text-sm">
                           📦 Envío a {selectedDeptInfo.name} con <strong>costo adicional</strong>
@@ -519,8 +544,48 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   </>
                 )}
 
-                {/* Opción de envío a domicilio */}
-                {selectedDepartment && (
+                {/* Opciones especiales para Cochabamba */}
+                {selectedDepartment === "CBBA" && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium mb-2">Método de entrega en Cochabamba</h4>
+                    <div className="flex flex-col space-y-2">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cochabambaDelivery"
+                          value="office"
+                          checked={cochabambaDeliveryMethod === "office"}
+                          onChange={() => setCochabambaDeliveryMethod("office")}
+                          className="mr-2 text-orange-500 focus:ring-orange-500"
+                        />
+                        <span>Recojo en oficina (Gratis)</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="cochabambaDelivery"
+                          value="shipping"
+                          checked={cochabambaDeliveryMethod === "shipping"}
+                          onChange={() => setCochabambaDeliveryMethod("shipping")}
+                          className="mr-2 text-orange-500 focus:ring-orange-500"
+                        />
+                        <span>Necesito envío a domicilio o provincia</span>
+                      </label>
+                    </div>
+                    {cochabambaDeliveryMethod === "office" && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                        <p>📍 Dirección: <a href="https://maps.app.goo.gl/zynnG3QMVnxeoZpC9" target="_blank" rel="noopener noreferrer">https://maps.app.goo.gl/zynnG3QMVnxeoZpC9</a></p>
+                        <p>🕒 Horario de atención: Lunes a Viernes de 8:00 a 12:20 y de 13:30 a 17:30
+                          Sábado de 8:00 a 13:00.
+                        </p>
+                        <p>Una ves que realice su compra comunique con el nombre que realizo su compra, el nombre del producto y el comprobante de pago</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Opción de envío a domicilio - Solo para otros departamentos o si en Cochabamba seleccionó envío */}
+                {(selectedDepartment !== "CBBA" || cochabambaDeliveryMethod === "shipping") && (
                   <div className="mb-4">
                     <label className="flex items-start cursor-pointer">
                       <input
@@ -528,12 +593,18 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                         checked={needsHomeDelivery}
                         onChange={(e) => setNeedsHomeDelivery(e.target.checked)}
                         className="mr-3 mt-1 text-orange-500 focus:ring-orange-500"
+                        disabled={selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "office"}
                       />
                       <div>
-                        <span className="text-sm font-medium">Necesito envío a domicilio/provincia específica</span>
+                        <span className="text-sm font-medium">
+                          {selectedDepartment === "CBBA" 
+                            ? "Envío a domicilio o provincia" 
+                            : "Envío a provincia"}
+                        </span>
                         <p className="text-xs text-gray-600 mt-1">
-                          Marca esta opción si necesitas envío a una dirección específica, fuera de la ciudad capital o
-                          a provincia
+                          {selectedDepartment === "CBBA"
+                            ? "Marca esta opción si necesitas envío a una dirección específica en Cochabamba o provincia"
+                            : `Marca esta opción si necesitas envío a una dirección específica en ${selectedDeptInfo?.name}`}
                         </p>
                       </div>
                     </label>
@@ -549,14 +620,13 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     <textarea
                       value={shippingAddress}
                       onChange={(e) => setShippingAddress(e.target.value)}
-                      placeholder="Ingresa tu dirección completa: provincia, municipio, zona/barrio, calle, número, referencias..."
+                      placeholder="Ingresa tu dirección completa: zona/barrio, calle, número, referencias..."
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
                       rows={4}
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Incluye todos los detalles: provincia, municipio, zona/barrio, calle, número de casa y referencias
-                      para facilitar la entrega
+                      Incluye todos los detalles: zona/barrio, calle, número de casa y referencias para facilitar la entrega
                     </p>
                     {!selectedDeptInfo?.fedexAvailable && (
                       <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
@@ -622,7 +692,10 @@ export default function ProductDetailPage({ params }: { params: { category: stri
               {selectedFormat === "fisico" && !selectedDepartment && (
                 <p className="text-orange-600">⚠️ Selecciona tu departamento para continuar</p>
               )}
-              {selectedFormat === "fisico" && selectedDepartment && needsHomeDelivery && !shippingAddress.trim() && (
+              {selectedFormat === "fisico" && selectedDepartment && selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "shipping" && needsHomeDelivery && !shippingAddress.trim() && (
+                <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
+              )}
+              {selectedFormat === "fisico" && selectedDepartment && selectedDepartment !== "CBBA" && needsHomeDelivery && !shippingAddress.trim() && (
                 <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
               )}
             </div>
