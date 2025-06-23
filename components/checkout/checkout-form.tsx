@@ -20,7 +20,6 @@ interface CheckoutFormProps {
   productId?: string
 }
 
-// Actualizar el estado para usar undefined en lugar de null
 interface FormData {
   firstName: string
   lastName: string
@@ -40,7 +39,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
   const [showPaymentOptions, setShowPaymentOptions] = useState(false)
   const [itemData, setItemData] = useState<any>(null)
 
-  // Actualizar el estado inicial
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -52,14 +50,12 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     country: undefined,
   })
 
-  // Auto-detectar país al cargar
   useEffect(() => {
     if (detectedCountry && !formData.country) {
       const foundCountry = countries.find((c) => c.name.toLowerCase() === detectedCountry.toLowerCase())
       if (foundCountry) {
         setFormData((prev) => ({ ...prev, country: foundCountry }))
       } else {
-        // Si es Bolivia o no se encuentra, usar Bolivia por defecto
         const bolivia = countries.find((c) => c.code === "BO")
         if (bolivia) {
           setFormData((prev) => ({ ...prev, country: bolivia }))
@@ -68,33 +64,26 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     }
   }, [detectedCountry, formData.country])
 
-  // Cargar datos del item (producto, curso o evento)
   useEffect(() => {
     const loadItemData = () => {
       try {
-        // Primero buscar datos de producto
         const productData = localStorage.getItem("checkoutProduct")
         if (productData) {
           const parsedData = JSON.parse(productData)
-          console.log("Datos de producto cargados:", parsedData)
           setItemData(parsedData)
           return
         }
 
-        // Si no hay producto, buscar datos de evento
         const eventData = localStorage.getItem("checkoutEvent")
         if (eventData) {
           const parsedData = JSON.parse(eventData)
-          console.log("Datos de evento cargados:", parsedData)
           setItemData(parsedData)
           return
         }
 
-        // Si no hay evento, buscar datos de curso
         const courseData = localStorage.getItem("checkoutCourse")
         if (courseData) {
           const parsedData = JSON.parse(courseData)
-          console.log("Datos de curso cargados:", parsedData)
           setItemData(parsedData)
           return
         }
@@ -106,15 +95,12 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     loadItemData()
   }, [])
 
-  // Corregir el useEffect para pre-llenar datos del usuario
   useEffect(() => {
     if (user) {
-      console.log("Datos de usuario disponibles:", user)
       setFormData((prev) => ({
         ...prev,
-        // Usar propiedades que existen en tu tipo User
-        firstName: user.name?.split(" ")[0] || "", // Extraer primer nombre si existe
-        lastName: user.name?.split(" ").slice(1).join(" ") || "", // Extraer apellidos si existe
+        firstName: user.name?.split(" ")[0] || "",
+        lastName: user.name?.split(" ").slice(1).join(" ") || "",
         email: user.email || "",
       }))
     }
@@ -124,7 +110,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Actualizar la función handleCountryChange
   const handleCountryChange = (country: Country) => {
     setFormData((prev) => ({ ...prev, country }))
   }
@@ -144,7 +129,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     setIsLoading(true)
 
     try {
-      // Obtener datos del producto o curso desde localStorage
       const productData = localStorage.getItem("checkoutProduct")
       const courseData = localStorage.getItem("checkoutCourse")
       const eventData = localStorage.getItem("checkoutEvent")
@@ -165,9 +149,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
         throw new Error("No se encontraron datos del producto, curso o evento")
       }
 
-      console.log("Procesando pago para:", itemType, currentItemData)
-
-      // Preparar datos para el backend
       const billingInfo = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -180,23 +161,15 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
         countryCode: formData.country.code,
       }
 
-      console.log("Información de facturación:", billingInfo)
-
-      // Actualizar el item con la información de facturación
       const updatedItemData = {
         ...currentItemData,
         billingInfo,
-        // Asegurarse de que la información de envío esté disponible para productos físicos
         fullName: `${formData.firstName} ${formData.lastName}`,
         phone: formData.country.phoneCode ? `${formData.country.phoneCode}${formData.phone}` : formData.phone,
         country: formData.country.name,
-        // Si no hay dirección de envío específica, usar la dirección de facturación
         shippingAddress: currentItemData.shippingAddress || formData.address,
       }
 
-      console.log("Datos actualizados del item:", updatedItemData)
-
-      // Guardar información actualizada en localStorage
       if (itemType === "product") {
         localStorage.setItem("checkoutProduct", JSON.stringify(updatedItemData))
       } else if (itemType === "course") {
@@ -206,8 +179,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
       }
 
       setItemData(updatedItemData)
-
-      // Mostrar opciones de pago
       setShowPaymentOptions(true)
     } catch (error) {
       console.error("Error al procesar el pago:", error)
@@ -230,7 +201,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información personal */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Nombre *</Label>
@@ -270,7 +240,6 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
 
             <Separator />
 
-            {/* Información de contacto */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Información de contacto</h3>
 

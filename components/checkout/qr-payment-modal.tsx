@@ -1,7 +1,6 @@
 "use client"
 
 import { DialogFooter } from "@/components/ui/dialog"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -29,7 +28,7 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
   const [qrStatus, setQrStatus] = useState<string>("pending")
   const [timeLeft, setTimeLeft] = useState<number>(0)
   const [copied, setCopied] = useState(false)
-  const [isPolling, setIsPolling] = useState(false)
+  const [checkingStatus, setCheckingStatus] = useState(false)
 
   // Generar QR al abrir el modal
   useEffect(() => {
@@ -38,32 +37,12 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
     }
   }, [isOpen, user?.id])
 
-  // Iniciar polling para verificar estado del QR
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-
-    if (qrData && isOpen && !isPolling) {
-      setIsPolling(true)
-      interval = setInterval(() => {
-        checkStatus(qrData.qr.numeroReferencia)
-      }, 5000) // Verificar cada 5 segundos
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
-      setIsPolling(false)
-    }
-  }, [qrData, isOpen])
-
   // Contador de tiempo restante
   useEffect(() => {
     if (!qrData || qrStatus !== "pending") return
 
-    // Calcular tiempo restante basado en la fecha de generación y tiempoQr (15 minutos)
     const qrGeneratedTime = new Date(qrData.qr.fechaHora).getTime()
-    const expirationTime = qrGeneratedTime + 15 * 60 * 1000 // 15 minutos en milisegundos
+    const expirationTime = qrGeneratedTime + 15 * 60 * 1000
 
     const interval = setInterval(() => {
       const now = new Date().getTime()
@@ -72,7 +51,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
 
       if (timeRemaining <= 0) {
         clearInterval(interval)
-        // QR expirado, mostrar mensaje
         toast({
           title: "QR expirado",
           description: "El código QR ha expirado. Por favor genera uno nuevo.",
@@ -96,19 +74,11 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
 
     setIsLoading(true)
     try {
-      // Preparar datos para el QR - Asegurarse de que user.id sea string
       const userId = String(user.id)
       const qrRequestData = prepareQrData(itemData, userId)
-      console.log("Datos para generar QR:", qrRequestData)
-
       const response = await generateQrPayment(qrRequestData)
-      console.log("QR generado:", response)
-
       setQrData(response)
       setQrStatus("pending")
-
-      // Iniciar verificación de estado
-      checkStatus(response.qr.numeroReferencia)
     } catch (error: any) {
       console.error("Error al generar QR:", error)
       toast({
@@ -122,9 +92,9 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
   }
 
   const checkStatus = async (numeroReferencia: string) => {
+    setCheckingStatus(true)
     try {
       const status = await checkQrStatus(numeroReferencia)
-      console.log("Estado del QR:", status)
 
       if (status.estado === "PAGADO") {
         setQrStatus("paid")
@@ -132,7 +102,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
           title: "¡Pago exitoso!",
           description: "Tu pago ha sido procesado correctamente",
         })
-        // Esperar un momento y redirigir a la página de éxito
         setTimeout(() => {
           onSuccess()
           router.push("/checkout/success")
@@ -142,6 +111,13 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
       }
     } catch (error) {
       console.error("Error al verificar estado del QR:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo verificar el estado del pago",
+        variant: "destructive",
+      })
+    } finally {
+      setCheckingStatus(false)
     }
   }
 
@@ -161,7 +137,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
   const downloadQrImage = () => {
     if (!qrData?.qr.qrImage) return
 
-    // Crear un enlace temporal para descargar la imagen
     const link = document.createElement("a")
     link.href = qrData.qr.qrImage
     link.download = `qr-pago-${qrData.qr.numeroReferencia}.png`
@@ -179,6 +154,11 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+  }
+
+  const handleManualCheck = async () => {
+    if (!qrData) return
+    await checkStatus(qrData.qr.numeroReferencia)
   }
 
   return (
@@ -216,7 +196,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
           ) : qrData ? (
             <Card className="w-full border-0 shadow-none">
               <CardContent className="flex flex-col items-center p-0">
-                {/* QR Image */}
                 <div className="bg-white p-4 rounded-lg mb-4 border">
                   {qrData.qr.qrImage ? (
                     <Image
@@ -237,7 +216,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
                   )}
                 </div>
 
-                {/* Tiempo restante */}
                 <div className="w-full text-center mb-4">
                   <p className="text-sm text-gray-500">
                     Tiempo restante: <span className="font-medium">{formatTimeLeft(timeLeft)}</span>
@@ -250,12 +228,10 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
                   </div>
                 </div>
 
-                {/* Referencia */}
                 <div className="w-full text-center mb-4">
                   <p className="text-xs text-gray-500">Referencia: {qrData.qr.numeroReferencia}</p>
                 </div>
 
-                {/* Acciones */}
                 <div className="flex gap-2 w-full">
                   <Button
                     variant="outline"
@@ -271,7 +247,6 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
                   </Button>
                 </div>
 
-                {/* Instrucciones */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-md text-blue-700 text-sm w-full">
                   <p className="font-medium mb-1">Instrucciones:</p>
                   <ol className="list-decimal pl-5 space-y-1">
@@ -300,8 +275,16 @@ export default function QrPaymentModal({ isOpen, onClose, itemData, onSuccess }:
             Cancelar
           </Button>
           {qrData && qrStatus === "pending" && (
-            <Button onClick={() => checkStatus(qrData.qr.numeroReferencia)} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
+            <Button 
+              onClick={handleManualCheck} 
+              variant="outline"
+              disabled={checkingStatus}
+            >
+              {checkingStatus ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
               Verificar pago
             </Button>
           )}

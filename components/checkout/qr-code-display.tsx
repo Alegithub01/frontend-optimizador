@@ -45,7 +45,6 @@ export default function QrCodeDisplay({
   const downloadQrImage = () => {
     if (!qrImage) return
 
-    // Crear un enlace temporal para descargar la imagen
     const link = document.createElement("a")
     link.href = qrImage
     link.download = `qr-pago-${paymentId}.png`
@@ -67,7 +66,6 @@ export default function QrCodeDisplay({
 
   return (
     <div className="flex flex-col items-center">
-      {/* QR Image */}
       <div className="bg-white p-4 rounded-lg mb-4 border">
         {qrImage ? (
           <Image
@@ -84,7 +82,6 @@ export default function QrCodeDisplay({
         )}
       </div>
 
-      {/* Monto */}
       <div className="text-center mb-4">
         <p className="text-lg font-bold">
           {amount.toFixed(2)} {currency}
@@ -92,7 +89,6 @@ export default function QrCodeDisplay({
         <p className="text-xs text-gray-500">Referencia: {paymentId}</p>
       </div>
 
-      {/* Tiempo restante */}
       {expiresAt && (
         <div className="w-full text-center mb-4">
           <p className="text-sm text-gray-500">
@@ -107,7 +103,6 @@ export default function QrCodeDisplay({
         </div>
       )}
 
-      {/* Acciones */}
       <div className="flex gap-2 w-full">
         <Button
           variant="outline"
@@ -124,7 +119,6 @@ export default function QrCodeDisplay({
         </Button>
       </div>
 
-      {/* Instrucciones */}
       <div className="mt-4 p-3 bg-blue-50 rounded-md text-blue-700 text-sm w-full">
         <p className="font-medium mb-1">Instrucciones:</p>
         <ol className="list-decimal pl-5 space-y-1">

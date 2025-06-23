@@ -12,19 +12,15 @@ export default function QrStatusPage({ params }: { params: { reference: string }
   const router = useRouter()
   const { toast } = useToast()
   const [status, setStatus] = useState<"pending" | "paid" | "expired" | "error">("pending")
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [lastChecked, setLastChecked] = useState<Date>(new Date())
+  const [lastChecked, setLastChecked] = useState<Date | null>(null)
 
   const reference = params.reference
 
+  // Verificar estado al cargar la página
   useEffect(() => {
     checkPaymentStatus()
-
-    // Verificar estado cada 10 segundos
-    const interval = setInterval(checkPaymentStatus, 10000)
-
-    return () => clearInterval(interval)
   }, [reference])
 
   const checkPaymentStatus = async () => {
@@ -35,7 +31,6 @@ export default function QrStatusPage({ params }: { params: { reference: string }
 
       if (statusResponse.estado === "PAGADO") {
         setStatus("paid")
-        // Redirigir a la página de éxito después de un breve retraso
         setTimeout(() => {
           router.push("/checkout/success")
         }, 3000)
@@ -58,8 +53,8 @@ export default function QrStatusPage({ params }: { params: { reference: string }
     }
   }
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString()
+  const formatTime = (date: Date | null) => {
+    return date ? date.toLocaleTimeString() : "Nunca"
   }
 
   return (
@@ -113,9 +108,11 @@ export default function QrStatusPage({ params }: { params: { reference: string }
               <Loader2 className="h-16 w-16 text-orange-500 animate-spin mb-4" />
               <p className="text-lg font-medium">Esperando confirmación del pago...</p>
               <p className="text-sm text-gray-500 mt-2">
-                Por favor, completa el pago en tu aplicación bancaria. Esta página se actualizará automáticamente.
+                Por favor, completa el pago en tu aplicación bancaria.
               </p>
-              <p className="text-xs text-gray-400 mt-4">Última verificación: {formatTime(lastChecked)}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Última verificación: {formatTime(lastChecked)}
+              </p>
             </div>
           )}
         </CardContent>
@@ -134,9 +131,17 @@ export default function QrStatusPage({ params }: { params: { reference: string }
               Verificar nuevamente
             </Button>
           ) : (
-            <Button onClick={checkPaymentStatus} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Actualizar estado
+            <Button 
+              onClick={checkPaymentStatus} 
+              className="bg-orange-500 hover:bg-orange-600"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Verificar estado
             </Button>
           )}
         </CardFooter>
