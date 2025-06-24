@@ -39,13 +39,13 @@ export default function Home() {
     {
       id: 1,
       title: "Libros",
-      image: "/libro.jpg",
+      image: "/libro.png",
       href: "/productos/libro",
     },
     {
       id: 2,
       title: "Revistas",
-      image: "/revista.jpg",
+      image: "/revista.png",
       href: "/productos/revista",
     },
     {
