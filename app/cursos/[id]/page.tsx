@@ -11,7 +11,7 @@ import { useAuthContext } from "@/context/AuthContext"
 import { CountryService } from "@/services/country-service"
 import { VideoService } from "@/services/video-service"
 
-// Interfaces that coincide with the structure of your backend
+// Interfaces que coinciden con la estructura de tu backend
 interface Content {
   id: number
   title: string
@@ -22,6 +22,7 @@ interface Content {
 interface Section {
   id: number
   title: string
+  temario: string | null
   contents: Content[]
 }
 
@@ -50,7 +51,7 @@ interface CoursePageProps {
   }>
 }
 
-// Helper functions for price calculations
+// Funciones auxiliares para cálculos de precios
 const calculateDiscountedPrice = (price: string, discount: string) => {
   const originalPrice = Number.parseFloat(price)
   const discountAmount = Number.parseFloat(discount)
@@ -84,6 +85,21 @@ const convertToLocalCurrency = (priceUSD: number, countryInfo: CountryInfo | nul
   }
 }
 
+// Función para convertir el temario en array de elementos
+const parseTemario = (temario: string | null) => {
+  if (!temario) return []
+  try {
+    // Eliminar corchetes y dividir por comas
+    const cleaned = temario.replace(/[[\]]/g, "").trim()
+    return cleaned
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+  } catch {
+    return []
+  }
+}
+
 export default function CoursePage({ params }: CoursePageProps) {
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
@@ -97,12 +113,12 @@ export default function CoursePage({ params }: CoursePageProps) {
   const [courseId, setCourseId] = useState<string>("")
   const [purchasing, setPurchasing] = useState(false)
 
-  // Video player states
+  // Estados del reproductor de video
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
-  // Unwrap params using React.use()
+  // Desenvolver los parámetros usando React.use()
   useEffect(() => {
     const unwrapParams = async () => {
       const resolvedParams = await params
@@ -126,36 +142,32 @@ export default function CoursePage({ params }: CoursePageProps) {
     const fetchCourseData = async () => {
       try {
         setLoading(true)
-        // Get specific course by ID
+        // Obtener curso específico por ID
         const courseData = await api.get<Course>(`/courses/${courseId}`)
         setCourse(courseData)
 
-        // Determine if the trailer is a video or an image
+        // Determinar si el trailer es un video o una imagen
         if (courseData.trailer) {
           setIsTrailerVideo(VideoService.isVideoUrl(courseData.trailer))
         }
 
-        // Get all courses for related courses section
+        // Obtener todos los cursos para la sección de cursos relacionados
         const allCourses = await api.get<Course[]>("/courses")
-        // Filter out the current course and limit to 3 courses
+        // Filtrar el curso actual y limitar a 3 cursos
         const filtered = allCourses.filter((c) => c.id !== Number.parseInt(courseId)).slice(0, 3)
         setRelatedCourses(filtered)
 
-        // Verify if the user has purchased the course
+        // Verificar si el usuario ha comprado el curso
         if (isAuthenticated && user) {
           try {
-            // Here you should make a call to your API to verify if the user has purchased the course
-            // For example: const userPurchases = await api.get('/user/purchases')
-            // setHasPurchased(userPurchases.some(p => p.courseId === Number.parseInt(courseId)))
-
-            // For now, we simulate that the user has not purchased it
+            // Simulamos que el usuario no ha comprado el curso
             setHasPurchased(false)
           } catch (error) {
-            console.error("Error verifying user purchases:", error)
+            console.error("Error verificando compras del usuario:", error)
           }
         }
       } catch (error) {
-        console.error("Error fetching course data:", error)
+        console.error("Error obteniendo datos del curso:", error)
       } finally {
         setLoading(false)
       }
@@ -172,7 +184,7 @@ export default function CoursePage({ params }: CoursePageProps) {
     }
   }
 
-  // Video control functions
+  // Funciones de control de video
   const togglePlay = () => {
     const newIsPlaying = VideoService.togglePlay(isPlaying, iframeRef, course?.trailer)
     setIsPlaying(newIsPlaying)
@@ -183,21 +195,21 @@ export default function CoursePage({ params }: CoursePageProps) {
     setIsMuted(newIsMuted)
   }
 
-  // Handle buy button click
+  // Manejar clic en el botón de compra
   const handleBuy = async () => {
     if (!course) return
 
     setPurchasing(true)
 
     try {
-      // Calculate final price
+      // Calcular precio final
       const priceInfo = calculateDiscountedPrice(course.price, course.discount)
 
       // Limpiar localStorage de datos anteriores
       localStorage.removeItem("checkoutProduct")
       localStorage.removeItem("checkoutCourse")
 
-      // Save course data to localStorage for checkout
+      // Guardar datos del curso en localStorage para checkout
       localStorage.setItem(
         "checkoutCourse",
         JSON.stringify({
@@ -212,23 +224,17 @@ export default function CoursePage({ params }: CoursePageProps) {
         }),
       )
 
-      console.log("Datos del curso guardados:", {
-        id: course.id,
-        title: course.title,
-        price: priceInfo.finalPrice,
-      })
-
       if (!isAuthenticated) {
-        // If not authenticated, save course ID and redirect to login
+        // Si no está autenticado, guardar ID del curso y redirigir a login
         localStorage.setItem("pendingPurchaseCourseId", courseId)
         router.push(`/login?redirect=/checkout?courseId=${courseId}`)
         return
       }
 
-      // If authenticated, go directly to checkout
+      // Si está autenticado, ir directamente al checkout
       router.push(`/checkout?courseId=${courseId}`)
     } catch (error) {
-      console.error("Error preparing checkout:", error)
+      console.error("Error preparando el checkout:", error)
     } finally {
       setPurchasing(false)
     }
@@ -253,16 +259,16 @@ export default function CoursePage({ params }: CoursePageProps) {
     )
   }
 
-  // Calculate price with discount
+  // Calcular precio con descuento
   const priceInfo = calculateDiscountedPrice(course.price, course.discount)
 
-  // Convert to local currency
+  // Convertir a moneda local
   const localPrice = convertToLocalCurrency(priceInfo.finalPrice, countryInfo)
 
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto py-8 px-4">
-        {/* Breadcrumb */}
+        {/* Migas de pan */}
         <div className="mb-8">
           <Link href="/cursos" className="text-orange-500 hover:text-orange-600 flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -270,12 +276,12 @@ export default function CoursePage({ params }: CoursePageProps) {
           </Link>
         </div>
 
-        {/* Video/Image Trailer */}
+        {/* Video/Imagen del trailer */}
         <div className="relative w-full aspect-video mb-12 rounded-lg overflow-hidden">
           {course.trailer ? (
             isTrailerVideo ? (
               <div className="relative w-full h-full">
-                {/* Hidden iframe with all controls disabled */}
+                {/* Iframe oculto con todos los controles deshabilitados */}
                 <iframe
                   ref={iframeRef}
                   src={VideoService.getEmbedUrl(course.trailer)}
@@ -286,9 +292,9 @@ export default function CoursePage({ params }: CoursePageProps) {
                   title="Video trailer"
                 ></iframe>
 
-                {/* Custom overlay with minimal controls */}
+                {/* Overlay personalizado con controles mínimos */}
                 <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-                  {/* Custom play button */}
+                  {/* Botón de reproducción personalizado */}
                   <div
                     className="absolute inset-0 flex items-center justify-center cursor-pointer"
                     onClick={togglePlay}
@@ -302,7 +308,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                     )}
                   </div>
 
-                  {/* Custom mute button - bottom right */}
+                  {/* Botón de silencio personalizado - abajo a la derecha */}
                   <div className="absolute bottom-4 right-4 cursor-pointer" onClick={toggleMute}>
                     <div className="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors">
                       {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
@@ -347,7 +353,7 @@ export default function CoursePage({ params }: CoursePageProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Course Info - 2/3 width */}
+          {/* Información del curso - 2/3 de ancho */}
           <div className="lg:col-span-2">
             <div className="mb-8">
               <div className="text-orange-500 font-medium mb-2">CURSO</div>
@@ -355,7 +361,7 @@ export default function CoursePage({ params }: CoursePageProps) {
 
               <p className="text-lg mb-8">{course.description}</p>
 
-              {/* Curriculum/Sections */}
+              {/* Plan de estudios/Secciones */}
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-4">Temario del curso</h2>
                 <div className="space-y-3">
@@ -375,8 +381,9 @@ export default function CoursePage({ params }: CoursePageProps) {
                             }`}
                           />
                         </div>
-                        {activeSection === section.id && section.contents.length > 0 && (
+                        {activeSection === section.id && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
+                            {/* Lista de contenidos */}
                             <ul className="space-y-2">
                               {section.contents.map((content) => (
                                 <li key={content.id} className="flex items-center">
@@ -393,6 +400,21 @@ export default function CoursePage({ params }: CoursePageProps) {
                                 </li>
                               ))}
                             </ul>
+
+                            {/* Lista de temario */}
+                            {section.temario && (
+                              <div className="mt-4">
+                                <h4 className="font-medium mb-2">Temario:</h4>
+                                <ul className="space-y-2">
+                                  {parseTemario(section.temario).map((item, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1.5 mr-2"></div>
+                                      <span className="text-sm">{item}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -402,7 +424,7 @@ export default function CoursePage({ params }: CoursePageProps) {
             </div>
           </div>
 
-          {/* Pricing Card - 1/3 width */}
+          {/* Tarjeta de precios - 1/3 de ancho */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6 sticky top-24">
               {hasPurchased ? (
@@ -421,9 +443,9 @@ export default function CoursePage({ params }: CoursePageProps) {
                 </div>
               ) : (
                 <>
-                  {/* Price with better discount visualization */}
+                  {/* Precio con mejor visualización de descuento */}
                   <div className="mb-6">
-                    {/* Price in local currency - NOW FIRST */}
+                    {/* Precio en moneda local - PRIMERO */}
                     {localPrice && (
                       <div className="flex items-center mb-2">
                         <span className="text-3xl font-bold">
@@ -439,7 +461,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                       </div>
                     )}
 
-                    {/* Price in USD - NOW SECOND */}
+                    {/* Precio en USD - SEGUNDO */}
                     {priceInfo.discountPercentage > 0 ? (
                       <>
                         <div className="text-gray-500 text-sm">
@@ -482,15 +504,15 @@ export default function CoursePage({ params }: CoursePageProps) {
           </div>
         </div>
 
-        {/* Related Courses */}
+        {/* Cursos relacionados */}
         {relatedCourses.length > 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-8">Sigue descubriendo más valor</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedCourses.map((relatedCourse) => {
-                // Calculate price with discount for each related course
+                // Calcular precio con descuento para cada curso relacionado
                 const relatedPriceInfo = calculateDiscountedPrice(relatedCourse.price, relatedCourse.discount)
-                // Convert to local currency
+                // Convertir a moneda local
                 const relatedLocalPrice = convertToLocalCurrency(relatedPriceInfo.finalPrice, countryInfo)
 
                 return (
@@ -517,9 +539,9 @@ export default function CoursePage({ params }: CoursePageProps) {
                       <h3 className="font-bold mb-2">{relatedCourse.title}</h3>
                       <p className="text-gray-600 text-sm mb-4">{relatedCourse.description}</p>
 
-                      {/* Price with discount for related courses */}
+                      {/* Precio con descuento para cursos relacionados */}
                       <div className="mb-4">
-                        {/* Price in local currency - NOW FIRST */}
+                        {/* Precio en moneda local - PRIMERO */}
                         {relatedLocalPrice && (
                           <div className="flex items-center">
                             <span className="text-2xl font-bold">
@@ -535,11 +557,11 @@ export default function CoursePage({ params }: CoursePageProps) {
                           </div>
                         )}
 
-                        {/* Price in USD - NOW SECOND */}
+                        {/* Precio en USD - SEGUNDO */}
                         {relatedPriceInfo.discountPercentage > 0 ? (
                           <div className="text-gray-500 text-xs mt-1">
-                            ${relatedPriceInfo.originalPrice?.toFixed(2)} USD{" "}
-                            <span className="line-through">${relatedPriceInfo.finalPrice.toFixed(2)}</span>
+                            <span className="line-through">${relatedPriceInfo.originalPrice?.toFixed(2)} USD</span>
+                            <span> ${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
                           </div>
                         ) : (
                           <div className="text-gray-500 text-xs mt-1">

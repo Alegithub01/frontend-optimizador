@@ -46,35 +46,39 @@ interface Product {
 }
 
 interface ProductViewerPageProps {
-  params: Promise<{
+  params: {
     category: string
     id: string
-  }>
+  }
 }
 
 export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentSection, setCurrentSection] = useState(1)
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0) // Cambiado a índice en lugar de ID
   const [showPDF, setShowPDF] = useState(false)
 
   // Estados para el video player personalizado
-  const [showVideoControls, setShowVideoControls] = useState(true) // Cambiar de false a true
+  const [showVideoControls, setShowVideoControls] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const iframeRef = React.useRef<HTMLIFrameElement>(null)
 
-  // Unwrap params
-  const resolvedParams = React.use(params)
-  const { category, id } = resolvedParams
+  const { category, id } = params
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
         const productData = await api.get<Product>(`/product/${id}`)
+        
+        // Ordenar secciones por ID para asegurar el orden correcto
+        if (productData.sections) {
+          productData.sections.sort((a, b) => a.id - b.id)
+        }
+        
         setProduct(productData)
       } catch (error) {
         console.error("Error fetching product:", error)
@@ -87,23 +91,23 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   }, [id])
 
   const getCurrentSectionData = () => {
-    if (!product?.sections) return null
-    return product.sections.find((section) => section.id === currentSection) || product.sections[0]
+    if (!product?.sections || product.sections.length === 0) return null
+    return product.sections[currentSectionIndex]
   }
 
   const goToNextSection = () => {
-    if (product?.sections && currentSection < product.sections.length) {
-      setCurrentSection(currentSection + 1)
+    if (product?.sections && currentSectionIndex < product.sections.length - 1) {
+      setCurrentSectionIndex(currentSectionIndex + 1)
       setShowPDF(false)
-      setShowVideoControls(true) // Cambiar de false a true
+      setShowVideoControls(true)
     }
   }
 
   const goToPrevSection = () => {
-    if (currentSection > 1) {
-      setCurrentSection(currentSection - 1)
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex(currentSectionIndex - 1)
       setShowPDF(false)
-      setShowVideoControls(true) // Cambiar de false a true
+      setShowVideoControls(true)
     }
   }
 
@@ -261,7 +265,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   const renderToolkitContent = () => {
     const totalSections = product?.sections?.length || 0
     const currentSectionData = getCurrentSectionData()
-    const isLastSection = currentSection === totalSections
+    const isLastSection = currentSectionIndex === totalSections - 1
 
     return (
       <div className="flex-1 bg-white">
@@ -270,18 +274,18 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
           <div className="container mx-auto px-4 py-6">
             {/* Barra de progreso */}
             <div className="flex items-center justify-center mb-4">
-              {Array.from({ length: totalSections }, (_, index) => (
-                <div key={index} className="flex items-center">
+              {product?.sections?.map((section, index) => (
+                <div key={section.id} className="flex items-center">
                   <button
                     onClick={() => {
-                      setCurrentSection(index + 1)
+                      setCurrentSectionIndex(index)
                       setShowPDF(false)
-                      setShowVideoControls(true) // Cambiar de false a true
+                      setShowVideoControls(true)
                     }}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
-                      index + 1 === currentSection
+                      index === currentSectionIndex
                         ? "bg-orange-500 text-white"
-                        : index + 1 < currentSection
+                        : index < currentSectionIndex
                           ? "bg-orange-300 text-white hover:bg-orange-400"
                           : "bg-gray-200 text-gray-600 hover:bg-gray-300"
                     }`}
@@ -289,7 +293,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                     {index + 1}
                   </button>
                   {index < totalSections - 1 && (
-                    <div className={`w-12 h-1 mx-2 ${index + 1 < currentSection ? "bg-orange-500" : "bg-gray-200"}`} />
+                    <div className={`w-12 h-1 mx-2 ${index < currentSectionIndex ? "bg-orange-500" : "bg-gray-200"}`} />
                   )}
                 </div>
               ))}
@@ -466,9 +470,9 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
           {/* Botones de navegación */}
           <button
             onClick={goToPrevSection}
-            disabled={currentSection === 1}
+            disabled={currentSectionIndex === 0}
             className={`absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
-              currentSection === 1
+              currentSectionIndex === 0
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
             }`}
@@ -478,9 +482,9 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
           <button
             onClick={goToNextSection}
-            disabled={currentSection === totalSections}
+            disabled={currentSectionIndex === (product?.sections?.length || 1) - 1}
             className={`absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
-              currentSection === totalSections
+              currentSectionIndex === (product?.sections?.length || 1) - 1
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
             }`}
@@ -519,7 +523,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
               {/* Indicador de sección */}
               <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-full text-sm text-gray-600">
-                <span className="font-medium">{currentSection}</span>
+                <span className="font-medium">{currentSectionIndex + 1}</span>
                 <span>/</span>
                 <span>{totalSections}</span>
               </div>
@@ -537,7 +541,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                   <p className="text-gray-600 text-sm">{currentSectionData.description}</p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  Sección {currentSection} de {totalSections}
+                  Sección {currentSectionIndex + 1} de {totalSections}
                 </div>
               </div>
             </div>
