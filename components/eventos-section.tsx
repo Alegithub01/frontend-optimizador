@@ -165,7 +165,12 @@ export default function EventsSection() {
         {formattedEvents.map((event) => (
           <div key={event.id} className="bg-gray-900 rounded-2xl overflow-hidden">
             <div className="relative h-48">
-              <Image src={event.image || "/placeholder.svg"} alt={event.title} fill className="object-cover" />
+              <Image 
+                src={event.image || "/placeholder.svg"} 
+                alt={event.title} 
+                fill 
+                className="object-cover rounded-t-2xl" 
+              />
             </div>
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
@@ -203,7 +208,7 @@ export default function EventsSection() {
                   alt={event.title}
                   width={120}
                   height={160}
-                  className="object-cover w-[120px] h-full min-h-[160px] rounded-lg"
+                  className="object-cover w-[120px] h-full min-h-[160px] rounded-xl"
                 />
               </div>
               <div className="flex flex-1">
@@ -245,7 +250,7 @@ export default function EventsSection() {
                       alt={mainEvent.title}
                       width={600}
                       height={200}
-                      className="object-cover w-full h-[200px]"
+                      className="object-cover w-full h-[200px] rounded-xl"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <button className="bg-white/80 rounded-full p-4 hover:bg-white transition-colors">
