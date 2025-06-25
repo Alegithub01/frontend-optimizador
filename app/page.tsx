@@ -121,10 +121,10 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-[100vh] bg-black text-white">
       {/* Hero Section */}
-      <section className="container mx-auto py-12 md:py-20 px-4 text-center relative">
-        <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold mb-8 md:mb-16 leading-tight">
+      <section className="container mx-auto px-4 text-center relative h-screen flex flex-col justify-center items-center">
+        <h1 className="text-3xl md:text-4xl lg:text-6xl font-sans mb-8 md:mb-12 leading-tight">
           ¿QUÉ TE FALTA PARA SER FELIZ?
         </h1>
 

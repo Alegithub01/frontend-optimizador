@@ -18,3 +18,5 @@ Thumbs.db
 
 # Archivos de VSCode (si no querés compartir la config del editor)
 .vscode/
+
+public/
