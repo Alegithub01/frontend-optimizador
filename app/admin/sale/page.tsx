@@ -38,9 +38,6 @@ import {
   Filter,
   Home,
   Store
-  Filter,
-  Home,
-  Store
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -74,13 +71,10 @@ export default function SalesPage() {
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [lastUpdated, setLastUpdated] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSales();
-    // Actualizar cada 15 segundos para tiempo real
-    const interval = setInterval(fetchSales, 15000);
     // Actualizar cada 15 segundos para tiempo real
     const interval = setInterval(fetchSales, 15000);
     return () => clearInterval(interval);
@@ -100,11 +94,6 @@ export default function SalesPage() {
         minute: '2-digit',
         second: '2-digit'
       }));
-      setLastUpdated(new Date().toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      }));
     } catch (error) {
       toast({
         title: "Error",
@@ -116,7 +105,6 @@ export default function SalesPage() {
     }
   };
 
-  // Función para determinar si es pago QR
   // Función para determinar si es pago QR
   const isQRPayment = (sale: Sale): boolean => {
     return !!(sale.qrReference && sale.qrReference.trim() !== '');
@@ -211,9 +199,6 @@ export default function SalesPage() {
         (sale.course?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (sale.product?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (sale.event?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (sale.course?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (sale.product?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (sale.event?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         sale.departamento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.country?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -230,7 +215,6 @@ export default function SalesPage() {
       filtered = filtered.filter(sale => sale.type === typeFilter);
     }
 
-    // Filtro por tipo de entrega
     // Filtro por tipo de entrega
     if (deliveryFilter !== 'all') {
       filtered = filtered.filter(sale => sale.deliveryType === deliveryFilter);
@@ -279,11 +263,6 @@ export default function SalesPage() {
         const isQR = isQRPayment(sale);
         const saleDate = new Date(sale.createdAt);
         
-        // CORRECCIÓN: Mostrar nombre del curso/evento/producto según tipo
-        const itemName = sale.type === 'course' ? sale.course?.name :
-                         sale.type === 'product' ? sale.product?.name :
-                         sale.type === 'event' ? sale.event?.name : '';
-        
         return {
           // INFORMACIÓN BÁSICA
           'N°': index + 1,
@@ -300,7 +279,7 @@ export default function SalesPage() {
           
           // INFORMACIÓN DEL PRODUCTO/SERVICIO
           'Tipo de Venta': sale.type === 'course' ? 'Curso' : sale.type === 'product' ? 'Producto' : 'Evento',
-          'Producto/Servicio': itemName || '',
+          'Producto/Servicio': sale.course?.name || sale.product?.name || sale.event?.name || '',
           'Categoría': sale.product?.category || 'N/A',
           'Subcategoría': sale.product?.subCategory || 'N/A',
           
@@ -313,7 +292,6 @@ export default function SalesPage() {
           'Referencia QR': sale.qrReference || 'N/A',
           'ID Stripe': sale.stripePaymentIntentId || 'N/A',
           
-          // INFORMACIÓN DE ENVÍO
           // INFORMACIÓN DE ENVÍO
           'Tipo de Entrega': sale.deliveryType === 'physical' ? 'ENVÍO FÍSICO' : 'ENTREGA DIGITAL',
           'Requiere Envío FedEx': sale.deliveryType === 'physical' ? 'SÍ' : 'NO',
@@ -473,67 +451,6 @@ export default function SalesPage() {
     }
 
     // Si es Cochabamba y es físico, mostrar recojo en oficina
-    const isCbba = sale.departamento?.toLowerCase().includes('cochabamba');
-    
-    return (
-      <div className="text-sm max-w-xs">
-        <div className="font-medium text-purple-700 mb-1 flex items-center">
-          <Truck className="h-4 w-4 mr-1" />
-          {isCbba ? "Recojo en oficina" : "Envío físico"}
-        </div>
-        
-        {isCbba ? (
-          <div className="bg-blue-50 p-2 rounded-md">
-            <div className="flex items-center text-blue-700">
-              <Store className="h-4 w-4 mr-2" />
-              <div>
-                <div className="font-medium">Oficina Central</div>
-                <div className="text-xs">Av. Simón López #1234, Zona Central</div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="border-l-2 border-purple-200 pl-2">
-            {sale.country && (
-              <div className="flex items-center text-gray-700 mb-1">
-                <MapPin className="h-4 w-4 mr-1 text-purple-600" />
-                <span className="font-medium">{sale.country}</span>
-              </div>
-            )}
-            {sale.departamento && (
-              <div className="text-gray-600 flex items-center ml-4">
-                <span>📍 {sale.departamento}</span>
-              </div>
-            )}
-            {sale.address && (
-              <div className="text-gray-600 ml-4 flex items-start">
-                <Home className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-                <span className="break-words">{sale.address}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Función para mostrar dirección mejorada
-  const renderAddress = (sale: Sale) => {
-    if (sale.deliveryType !== DeliveryType.PHYSICAL) {
-      return (
-        <div className="text-sm text-gray-500">
-          <div className="flex items-center">
-            <Monitor className="h-4 w-4 mr-1 text-blue-600" />
-            <span className="font-medium">Entrega Digital</span>
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Acceso automático
-          </div>
-        </div>
-      );
-    }
-
-    // Si es Cochabamba y es físico, mostrar recojo en oficina
     const isCbba = sale.departamento && 
                   (sale.departamento.toLowerCase().includes('cochabamba') || 
                    sale.departamento.toLowerCase().includes('cbba'));
@@ -584,9 +501,7 @@ export default function SalesPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-      <div className="flex flex-col items-center justify-center py-12">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600">Cargando datos de ventas...</p>
         <p className="mt-4 text-gray-600">Cargando datos de ventas...</p>
       </div>
     );
@@ -600,16 +515,12 @@ export default function SalesPage() {
           <p className="text-gray-600">
             Monitoreo en tiempo real • Última actualización: {lastUpdated || 'Cargando...'}
           </p>
-          <p className="text-gray-600">
-            Monitoreo en tiempo real • Última actualización: {lastUpdated || 'Cargando...'}
-          </p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={fetchSales}
             disabled={loading}
-            className="flex items-center"
             className="flex items-center"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -618,7 +529,6 @@ export default function SalesPage() {
           <Button
             onClick={exportToExcel}
             disabled={exporting}
-            className="bg-green-600 hover:bg-green-700 flex items-center"
             className="bg-green-600 hover:bg-green-700 flex items-center"
           >
             <FileSpreadsheet className="h-4 w-4 mr-2" />
@@ -879,30 +789,12 @@ export default function SalesPage() {
                   Actualizado: {lastUpdated}
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <CardTitle>
-                  Lista de Ventas - {activeTab === 'all' ? 'Todas' : activeTab === 'qr' ? 'QR (BOB)' : 'Tarjeta (USD)'}
-                </CardTitle>
-                <div className="text-sm text-gray-500">
-                  Actualizado: {lastUpdated}
-                </div>
-              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[80px]">ID</TableHead>
-                      <TableHead className="w-[120px]">Fecha</TableHead>
-                      <TableHead className="min-w-[180px]">Cliente</TableHead>
-                      <TableHead className="min-w-[200px]">Producto/Servicio</TableHead>
-                      <TableHead className="w-[100px]">Tipo</TableHead>
-                      <TableHead className="w-[120px]">Método Pago</TableHead>
-                      <TableHead className="w-[100px]">Monto</TableHead>
-                      <TableHead className="w-[120px]">Estado</TableHead>
-                      <TableHead className="min-w-[200px]">Entrega</TableHead>
-                      <TableHead className="w-[120px]">Acciones</TableHead>
                       <TableHead className="w-[80px]">ID</TableHead>
                       <TableHead className="w-[120px]">Fecha</TableHead>
                       <TableHead className="min-w-[180px]">Cliente</TableHead>
@@ -942,16 +834,10 @@ export default function SalesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {/* CORRECCIÓN: Mostrar nombre según tipo de venta */}
                           <div className="font-medium">
-                            {sale.type === 'course' && sale.course?.name}
-                            {sale.type === 'product' && sale.product?.name}
-                            {sale.type === 'event' && sale.event?.name}
+                            {sale.course?.name || sale.product?.name || sale.event?.name}
                           </div>
                           {sale.qrReference && (
-                            <div className="text-sm text-gray-600 truncate max-w-[180px]">
-                              QR: {sale.qrReference}
-                            </div>
                             <div className="text-sm text-gray-600 truncate max-w-[180px]">
                               QR: {sale.qrReference}
                             </div>
@@ -972,7 +858,6 @@ export default function SalesPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(sale.status)}</TableCell>
                         <TableCell>
-                          {renderAddress(sale)}
                           {renderAddress(sale)}
                         </TableCell>
                         <TableCell>
