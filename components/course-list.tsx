@@ -43,7 +43,9 @@ export function CourseList() {
     const fetchCourses = async () => {
       try {
         const data = await api.get<Course[]>("/courses")
-        setCourses(data)
+        // Ordenar cursos por ID de forma ascendente
+        const sortedCourses = [...data].sort((a, b) => a.id - b.id)
+        setCourses(sortedCourses)
       } catch (error) {
         toast({
           title: "Error",
@@ -57,7 +59,6 @@ export function CourseList() {
 
     fetchCourses()
   }, [toast])
-
   const handleDelete = async () => {
     if (deleteId === null) return
 
