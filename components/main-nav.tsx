@@ -84,9 +84,8 @@ export default function MainNav() {
             )}
           </div>
 
-          {/* Mobile */}
+          {/* Mobile Menu - Versión modificada */}
           <div className="flex items-center gap-3 md:hidden">
-            
             <Sheet>
               <SheetTrigger asChild>
                 <Button
@@ -98,37 +97,45 @@ export default function MainNav() {
                   <span className="sr-only">Menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-white text-black border-gray-200">
-                <div className="flex flex-col gap-6 mt-8">
+              <SheetContent side="right" className="w-full max-w-xs bg-white text-black border-gray-200">
+                <div className="h-full flex flex-col items-center justify-center gap-8 px-4">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`text-lg font-medium ${
-                        link.isActive ? "text-orange-500" : "text-black"
-                      } hover:text-orange-400 transition-colors`}
+                      onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+                      className="w-full text-center"
                     >
-                      {link.label}
+                      <span className="text-2xl font-bold text-black hover:text-orange-500 transition-colors block py-3">
+                        {link.label}
+                      </span>
                     </Link>
                   ))}
 
-                  {/* Mobile Auth Buttons */}
-                  <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-200">
+                  <div className="w-full border-t border-gray-200 pt-6 mt-4">
                     {isAuthenticated ? (
                       <UserDropdown user={user!} onLogout={logout} />
                     ) : (
-                      <>
-                        <Link href="/login">
-                          <button className="w-full border border-black text-black hover:bg-black hover:text-white px-4 py-2 rounded-md transition">
+                      <div className="flex flex-col gap-4 w-full">
+                        <Link 
+                          href="/login"
+                          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+                          className="w-full"
+                        >
+                          <button className="w-full border-2 border-black text-black hover:bg-black hover:text-white px-4 py-3 rounded-md transition text-xl font-bold">
                             Iniciar sesión
                           </button>
                         </Link>
-                        <Link href="/registro">
-                          <button className="w-full bg-orange-700 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition">
+                        <Link 
+                          href="/registro"
+                          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+                          className="w-full"
+                        >
+                          <button className="w-full bg-orange-700 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition text-xl font-bold">
                             Registrarse
                           </button>
                         </Link>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
