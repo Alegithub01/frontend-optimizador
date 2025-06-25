@@ -59,7 +59,7 @@ export default function Home() {
   const testimonials = [
     {
       id: "1",
-      name: "Pasteleria El amor",
+      name: "Kelly Queen",
       title: "Emprendedora",
       country: "boliviana",
       image: "/pastel.jpeg",

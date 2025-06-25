@@ -1,17 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Play, Calendar, Clock } from "lucide-react"
+import { ArrowRight, Play, Calendar, Clock, Pause } from "lucide-react"
 import { useEvents } from "@/hooks/useEvent"
 
-interface Event {
+interface BackendEvent {
   id: string
   title: string
   description: string
   image: string
   dateTime: string
+  trailerUrl?: string
 }
 
 interface FormattedEvent {
@@ -24,6 +25,8 @@ interface FormattedEvent {
     year: number
   }
   image: string
+  trailerUrl?: string
+  originalDateTime: string
 }
 
 interface FeaturedEvent extends FormattedEvent {
@@ -42,10 +45,22 @@ export default function EventsSection() {
     minutes: 0,
     seconds: 0,
   })
+  const [showVideo, setShowVideo] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  // Extract Vimeo ID from URL
+  const getVimeoId = (url: string) => {
+    const regExp = /vimeo.com\/(\d+)/
+    const match = url.match(regExp)
+    return match ? match[1] : null
+  }
 
   useEffect(() => {
     if (events && events.length > 0) {
-      const formatted = events.map((event) => {
+      const now = new Date().getTime()
+      
+      const formatted = events.map((event: BackendEvent) => {
         const date = new Date(event.dateTime)
         const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
 
@@ -59,14 +74,27 @@ export default function EventsSection() {
             year: date.getFullYear(),
           },
           image: event.image || "/placeholder.svg",
+          trailerUrl: event.trailerUrl,
+          originalDateTime: event.dateTime
         }
       })
 
-      setFormattedEvents(formatted)
+      // Sort events by date (closest first)
+      const sortedEvents = [...formatted].sort((a, b) => {
+        return new Date(a.originalDateTime).getTime() - new Date(b.originalDateTime).getTime()
+      })
 
-      if (formatted.length > 0) {
-        const firstEvent = formatted[0]
-        const eventDate = new Date(events[0].dateTime)
+      setFormattedEvents(sortedEvents)
+
+      // Find the closest upcoming event
+      const upcomingEvents = sortedEvents.filter(event => {
+        return new Date(event.originalDateTime).getTime() > now
+      })
+
+      const closestEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : sortedEvents[0]
+
+      if (closestEvent) {
+        const eventDate = new Date(closestEvent.originalDateTime)
 
         const options: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long", year: "numeric" }
         const formattedDate = eventDate.toLocaleDateString("es-ES", options)
@@ -75,7 +103,7 @@ export default function EventsSection() {
         const formattedTime = eventDate.toLocaleTimeString("es-ES", timeOptions)
 
         setMainEvent({
-          ...firstEvent,
+          ...closestEvent,
           eventDate: formattedDate,
           eventTime: formattedTime,
           eventTimestamp: eventDate.getTime(),
@@ -110,6 +138,25 @@ export default function EventsSection() {
 
     return () => clearInterval(timer)
   }, [mainEvent])
+
+  const handlePlayVideo = () => {
+    if (mainEvent?.trailerUrl) {
+      setShowVideo(true)
+      setIsPlaying(true)
+    }
+  }
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play()
+        setIsPlaying(true)
+      } else {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      }
+    }
+  }
 
   if (loading) {
     return (
@@ -164,12 +211,13 @@ export default function EventsSection() {
       <div className="block lg:hidden space-y-6">
         {formattedEvents.map((event) => (
           <div key={event.id} className="bg-gray-900 rounded-2xl overflow-hidden">
-            <div className="relative h-48">
+            <div className="relative aspect-video">
               <Image 
                 src={event.image || "/placeholder.svg"} 
                 alt={event.title} 
-                fill 
+                fill
                 className="object-cover rounded-t-2xl" 
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             </div>
             <div className="p-6">
@@ -202,13 +250,13 @@ export default function EventsSection() {
         <div className="col-span-6 space-y-6">
           {formattedEvents.map((event) => (
             <div key={event.id} className="flex gap-6">
-              <div className="relative">
+              <div className="relative w-[120px] h-[160px] flex-shrink-0">
                 <Image
                   src={event.image || "/placeholder.svg"}
                   alt={event.title}
                   width={120}
                   height={160}
-                  className="object-cover w-[120px] h-full min-h-[160px] rounded-xl"
+                  className="object-cover rounded-xl"
                 />
               </div>
               <div className="flex flex-1">
@@ -221,7 +269,7 @@ export default function EventsSection() {
                 <div className="flex flex-col justify-between flex-1">
                   <div>
                     <h4 className="font-bold text-xl">{event.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1 mb-4">{event.description}</p>
+                    <p className="text-sm text-gray-600 mt-1 mb-4 line-clamp-2">{event.description}</p>
                   </div>
                   <div>
                     <Link
@@ -238,66 +286,126 @@ export default function EventsSection() {
           ))}
         </div>
 
-        {/* Right Column - Main Event Card with Fixed Size */}
+        {/* Right Column - Main Event Card */}
         <div className="col-span-6">
           <div className="bg-black text-white rounded-3xl overflow-hidden w-full h-[700px] flex flex-col">
             {mainEvent ? (
-              <div className="relative p-6 flex flex-col h-full justify-between">
-                <div className="flex-1">
-                  <div className="relative rounded-2xl overflow-hidden mb-6">
-                    <Image
-                      src={mainEvent.image || "/placeholder.svg"}
-                      alt={mainEvent.title}
-                      width={600}
-                      height={200}
-                      className="object-cover w-full h-[200px] rounded-xl"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <button className="bg-white/80 rounded-full p-4 hover:bg-white transition-colors">
-                        <Play className="h-8 w-8 text-orange-500 fill-orange-500" />
+              <div className="relative p-6 flex flex-col h-full">
+                {/* Video/Image Section */}
+                <div className="relative aspect-video rounded-2xl overflow-hidden flex-shrink-0">
+                  {showVideo && mainEvent.trailerUrl ? (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setShowVideo(false)
+                          setIsPlaying(false)
+                        }}
+                        className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full z-10"
+                      >
+                        ✕
                       </button>
+                      {mainEvent.trailerUrl.includes('vimeo') ? (
+                        <iframe
+                          src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&muted=0&controls=1`}
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                          className="rounded-xl"
+                        ></iframe>
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <video
+                            ref={videoRef}
+                            controls
+                            autoPlay
+                            className="w-full h-full rounded-xl object-cover"
+                            onClick={togglePlayPause}
+                          >
+                            <source src={mainEvent.trailerUrl} type="video/mp4" />
+                            Your browser does not support the video tag.
+                          </video>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex justify-center">
+                            <button 
+                              onClick={togglePlayPause}
+                              className="bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+                            >
+                              {isPlaying ? (
+                                <Pause className="h-6 w-6 text-white" />
+                              ) : (
+                                <Play className="h-6 w-6 text-white" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Image
+                        src={mainEvent.image || "/placeholder.svg"}
+                        alt={mainEvent.title}
+                        fill
+                        className="object-cover rounded-xl"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                      {mainEvent.trailerUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <button 
+                            onClick={handlePlayVideo}
+                            className="bg-white/80 rounded-full p-4 hover:bg-white transition-colors"
+                          >
+                            <Play className="h-8 w-8 text-orange-500 fill-orange-500" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Countdown Section */}
+                <div className="grid grid-cols-4 gap-3 my-6">
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                      <div className="text-xs text-gray-400 mb-2">Días</div>
+                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                        {countdown.days}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-4 gap-3 mb-6">
-                    <div className="text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                        <div className="text-xs text-gray-400 mb-2">Días</div>
-                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                          {countdown.days}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                        <div className="text-xs text-gray-400 mb-2">Horas</div>
-                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                          {countdown.hours}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                        <div className="text-xs text-gray-400 mb-2">Minutos</div>
-                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                          {countdown.minutes}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                        <div className="text-xs text-gray-400 mb-2">Segundos</div>
-                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                          {countdown.seconds}
-                        </div>
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                      <div className="text-xs text-gray-400 mb-2">Horas</div>
+                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                        {countdown.hours}
                       </div>
                     </div>
                   </div>
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                      <div className="text-xs text-gray-400 mb-2">Minutos</div>
+                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                        {countdown.minutes}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                      <div className="text-xs text-gray-400 mb-2">Segundos</div>
+                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                        {countdown.seconds}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Event Info Section */}
+                <div className="flex-1 flex flex-col">
                   <div className="text-sm text-orange-500 font-medium mb-3">Evento más próximo</div>
 
                   <div className="flex items-center gap-2 mb-2">
@@ -316,16 +424,17 @@ export default function EventsSection() {
 
                   <h4 className="font-bold text-xl mb-3">{mainEvent.title}</h4>
                   <p className="text-sm text-gray-300 mb-4 line-clamp-3">{mainEvent.description}</p>
-                </div>
 
-                <div className="flex justify-center w-full mt-4">
-                  <Link
-                    href={`/eventos/${mainEvent.id}`}
-                    className="inline-flex items-center bg-orange-500 text-black px-6 py-3 rounded-full text-sm hover:bg-orange-600 transition-colors"
-                  >
-                    Ver más
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Link>
+                  {/* Fixed position button at bottom */}
+                  <div className="mt-auto pt-4">
+                    <Link
+                      href={`/eventos/${mainEvent.id}`}
+                      className="inline-flex items-center bg-orange-500 text-black px-6 py-3 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center"
+                    >
+                      Ver más
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : (
