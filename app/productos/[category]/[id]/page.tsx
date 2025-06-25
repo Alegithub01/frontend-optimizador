@@ -285,7 +285,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           image: product.image,
           category: product.category,
           format: selectedFormat,
-          deliveryType: deliveryType, // Formato en inglés para el backend
+          deliveryType: selectedFormat === "digital" ? "digital" : "physical",
           department: selectedDepartment,
           departmentName: selectedDeptInfo?.name,
           needsHomeDelivery: selectedDepartment === "CBBA" ? cochabambaDeliveryMethod === "shipping" : needsHomeDelivery,

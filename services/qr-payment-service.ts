@@ -20,6 +20,7 @@ export interface GenerarQrDto {
   country?: string
   department?: string
   province?: string
+  deliveryType: "digital" | "physical"
 }
 
 export interface QrResponse {
@@ -169,7 +170,7 @@ export function prepareQrData(itemData: any, userId: string | number): GenerarQr
   // Asegurarse de que el precio esté en el formato correcto y convertir de USD a BOB
   const priceUSD = typeof itemData.price === "number" ? itemData.price : Number.parseFloat(itemData.price || "0")
   const exchangeRate = 6.96 // Tipo de cambio fijo para Bolivia: 1 USD = 6.96 BOB
-
+  const deliveryType = itemData.deliveryType || "digital";
   // Corregir el cálculo del precio - asegurar que sea exacto
   // Multiplicar primero por 100 para trabajar con centavos, luego por el tipo de cambio
   // y finalmente dividir por 100 para volver a la unidad monetaria
@@ -227,6 +228,7 @@ export function prepareQrData(itemData: any, userId: string | number): GenerarQr
     phone,
     country,
     numeroReferencia,
+    deliveryType,
     timestamp,
   })
 
@@ -247,5 +249,6 @@ export function prepareQrData(itemData: any, userId: string | number): GenerarQr
     department,
     province,
     campoExtra,
+     deliveryType: itemData.deliveryType || "digital" as "digital" | "physical",
   }
 }
