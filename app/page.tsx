@@ -187,7 +187,7 @@ export default function Home() {
 
               <Link
                 href="/cursos"
-                className="flex items-center justify-center lg:justify-start text-gray-400 font-semibold"
+                className="flex items-center justify-center lg:justify-start text-gray-400 font-semibold hover:text-orange-700"
               >
                 Todos los cursos
                 <ChevronRight className="h-5 w-5 ml-1" />
