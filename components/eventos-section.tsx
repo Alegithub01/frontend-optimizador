@@ -612,7 +612,7 @@ export default function EventsSection() {
         </div>
 
         <div className="flex justify-center">
-          <Link href="/eventos" className="flex items-center text-gray-500 hover:text-orange-500 transition-colors">
+          <Link href="/eventos" className="flex items-center text-gray-500 hover:text-orange-500 transition-colors text-lg px-4 py-2">
             Todos los eventos
             <ArrowRight className="h-5 w-5 ml-1" />
           </Link>

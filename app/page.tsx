@@ -186,12 +186,12 @@ export default function Home() {
               </p>
 
               <Link
-                href="/cursos"
-                className="flex items-center justify-center lg:justify-start text-gray-400 font-semibold hover:text-orange-700"
-              >
-                Todos los cursos
-                <ChevronRight className="h-5 w-5 ml-1" />
-              </Link>
+              href="/cursos"
+              className="flex items-center justify-center lg:justify-start text-gray-400 font-semibold hover:text-orange-700 text-lg px-4 py-2"
+            >
+              Todos los cursos
+              <ChevronRight className="h-6 w-6 ml-2" />
+            </Link>
             </div>
 
             {/* DERECHA - scroll horizontal */}
@@ -231,7 +231,7 @@ export default function Home() {
           </div>
 
           <div className="flex justify-center">
-            <Link href="/productos" className="flex items-center text-gray-400 hover:text-orange-700">
+            <Link href="/productos" className="flex items-center text-gray-400 hover:text-orange-700 text-lg px-4 py-2">
               Todos los productos
               <ArrowRight className="h-5 w-5 ml-1" />
             </Link>
