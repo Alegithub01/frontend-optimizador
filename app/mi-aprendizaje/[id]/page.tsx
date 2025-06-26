@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { Play, FileText, ArrowLeft, ChevronDown, Calendar, Search, Menu } from "lucide-react"
+import { Play, FileText, ArrowLeft, ChevronDown, Calendar } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { api } from "@/lib/api"
@@ -198,7 +198,18 @@ export default function CoursePlayerPage() {
 
           {contentType === "video" && (
             <div className="w-full">
-              <VideoPlayer videoUrl={content.secondaryUrl} title={`${content.title} - Recurso adicional`} />
+              <VideoPlayer
+                videoUrl={content.secondaryUrl}
+                title={`${content.title} - Recurso adicional`}
+                vimeoConfig={{
+                  controls: true,
+                  responsive: true,
+                  autoplay: false,
+                  byline: false,
+                  portrait: false,
+                  title: false
+                }}
+              />
             </div>
           )}
 
@@ -215,7 +226,19 @@ export default function CoursePlayerPage() {
             </div>
           )}
 
-          
+          {/* Botón Ingresar a OptiKids (solo para Escuela financiera) */}
+          {course?.title.trim() === "Escuela financiera" && (
+            <div className="mt-6 text-center">
+              <a
+                href="https://sanatoriumbusiness.com/optikids/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Ingresar a OptiKids
+              </a>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -376,12 +399,23 @@ export default function CoursePlayerPage() {
                 <div className="space-y-6">
                   {/* Course Title */}
                   <div className="text-right">
-                    <h1 className="text-2xl font-bold text-gray-800">DESAFÍO DE LOS 7 DÍAS</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{course.title}</h1>
                   </div>
 
                   {/* Video Player Component */}
                   <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <VideoPlayer videoUrl={activeVideo.urlOrText} title={activeVideo.title} />
+                    <VideoPlayer
+                      videoUrl={activeVideo.urlOrText}
+                      title={activeVideo.title}
+                      vimeoConfig={{
+                        controls: true,
+                        responsive: true,
+                        autoplay: false,
+                        byline: false,
+                        portrait: false,
+                        title: false
+                      }}
+                    />
                   </div>
 
                   {/* Video Info */}
@@ -414,27 +448,6 @@ export default function CoursePlayerPage() {
 
       {/* Mobile Layout - New Design */}
       <div className="lg:hidden">
-        {/* Mobile Header */}
-        <div className="bg-white shadow-sm">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-2">
-              <div className="text-orange-500">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-              <span className="font-bold">Optimizador</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Search className="h-5 w-5 text-gray-500" />
-              <Menu className="h-5 w-5 text-gray-500" />
-            </div>
-          </div>
-        </div>
-
         {/* Back Button */}
         <div className="p-4">
           <Link href="/cursos" className="flex items-center gap-2 text-gray-600">
@@ -444,7 +457,20 @@ export default function CoursePlayerPage() {
 
         {/* Video Player Mobile */}
         <div className="relative w-full aspect-video bg-black">
-          {activeVideo && <VideoPlayer videoUrl={activeVideo.urlOrText} title={activeVideo.title} />}
+          {activeVideo && (
+            <VideoPlayer
+              videoUrl={activeVideo.urlOrText}
+              title={activeVideo.title}
+              vimeoConfig={{
+                controls: true,
+                responsive: true,
+                autoplay: false,
+                byline: false,
+                portrait: false,
+                title: false
+              }}
+            />
+          )}
           {!activeVideo && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Play className="h-16 w-16 text-white opacity-70" />
@@ -457,7 +483,7 @@ export default function CoursePlayerPage() {
           <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs rounded-full mb-2">
             {course.sections.length} Cursos
           </span>
-          <h1 className="text-xl font-bold text-gray-800">DESAFÍO DE LOS 7 DÍAS</h1>
+          <h1 className="text-xl font-bold text-gray-800">{course.title}</h1>
         </div>
 
         {/* Tab Navigation */}
@@ -601,7 +627,7 @@ export default function CoursePlayerPage() {
                     </button>
 
                     {isExpanded && (
-                      <div className="p-4 pt-0">
+                      <div className="p-4 pt-0 space-y-4">
                         {contentType === "pdf" && (
                           <div className="w-full h-[400px] border rounded-lg overflow-hidden bg-white">
                             <iframe
@@ -618,6 +644,14 @@ export default function CoursePlayerPage() {
                             <VideoPlayer
                               videoUrl={firstVideo.secondaryUrl}
                               title={`${firstVideo.title} - Recurso adicional`}
+                              vimeoConfig={{
+                                controls: true,
+                                responsive: true,
+                                autoplay: false,
+                                byline: false,
+                                portrait: false,
+                                title: false
+                              }}
                             />
                           </div>
                         )}
@@ -632,6 +666,20 @@ export default function CoursePlayerPage() {
                                 e.currentTarget.src = "/placeholder.svg?height=200&width=300"
                               }}
                             />
+                          </div>
+                        )}
+
+                        {/* Botón Ingresar a OptiKids (solo para Escuela financiera) */}
+                        {course.title.trim() === "Escuela financiera" && (
+                          <div className="text-center">
+                            <a
+                              href="https://sanatoriumbusiness.com/optikids/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                            >
+                              Ingresar a OptiKids
+                            </a>
                           </div>
                         )}
                       </div>

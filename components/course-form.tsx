@@ -15,6 +15,36 @@ import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2, Plus, Minus, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
 
+// Función para transformar URLs de Google Drive
+const transformDriveUrl = (url: string | undefined): string | undefined => {
+  if (!url) return undefined
+  
+  // Si ya es un enlace de descarga directa, no hacer nada
+  if (url.includes('uc?export=download')) return url
+  
+  // Extraer el ID del archivo de diferentes formatos de URL de Drive
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([^\/]+)/,
+    /drive\.google\.com\/open\?id=([^&]+)/,
+    /drive\.google\.com\/uc\?id=([^&]+)/
+  ]
+  
+  let fileId = null
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      fileId = match[1]
+      break
+    }
+  }
+  
+  if (fileId) {
+    return `https://drive.google.com/uc?export=download&id=${fileId}`
+  }
+  
+  return url
+}
+
 // Esquema de validación basado en los DTOs del backend
 const contentSchema = z.object({
   id: z.number().optional(),
@@ -229,8 +259,23 @@ function SectionItem({
                   <FormItem>
                     <FormLabel>URL o Texto</FormLabel>
                     <FormControl>
-                      <Input placeholder="URL o texto del contenido" {...field} />
+                      <Input 
+                        placeholder={
+                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" 
+                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view" 
+                            : "URL o texto del contenido"
+                        } 
+                        {...field} 
+                      />
                     </FormControl>
+                    {control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" && (
+                      <FormDescription>
+                        {field.value && field.value.includes('drive.google.com') && 
+                         !field.value.includes('uc?export=download') && (
+                          <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
+                        )}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -243,8 +288,23 @@ function SectionItem({
                   <FormItem>
                     <FormLabel>URL Secundaria (opcional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="URL secundaria (opcional)" {...field} />
+                      <Input 
+                        placeholder={
+                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" 
+                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view" 
+                            : "URL secundaria (opcional)"
+                        } 
+                        {...field} 
+                      />
                     </FormControl>
+                    {control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" && (
+                      <FormDescription>
+                        {field.value && field.value.includes('drive.google.com') && 
+                         !field.value.includes('uc?export=download') && (
+                          <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
+                        )}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -304,64 +364,68 @@ export function CourseForm({ courseId }: CourseFormProps) {
 
   // Cargar datos del curso si estamos en modo edición
   useEffect(() => {
-  if (!courseId) return
+    if (!courseId) return
 
-  const formatDate = (date?: string | Date, fallbackDays = 0) => {
-    const d = date ? new Date(date) : new Date(Date.now() + fallbackDays * 86400000)
-    return d.toISOString().split("T")[0]
-  }
-
-  const fetchCourse = async () => {
-    try {
-      setLoading(true)
-      console.log("Cargando curso con ID:", courseId)
-
-      const course = await api.get<CourseType>(`/courses/${courseId}`)
-      if (!course || typeof course !== "object") throw new Error("Curso no válido")
-
-      const formattedCourse = {
-        title: course.title || "",
-        description: course.description || "",
-        price: isNaN(Number(course.price)) ? 0 : Number(course.price),
-        image: course.image || "",
-        startDate: formatDate(course.startDate),
-        endDate: formatDate(course.endDate, 30),
-        capacity: course.capacity || 20,
-        trailer: course.trailer || "",
-        sections: Array.isArray(course.sections)
-          ? course.sections.map((section: SectionType) => ({
-              id: section.id,
-              title: section.title || "",
-              temario: section.temario || "",
-              contents: Array.isArray(section.contents)
-                ? section.contents.map((content) => ({
-                    id: content?.id ?? undefined,
-                    title: content?.title || "",
-                    type: content?.type || "video",
-                    urlOrText: content?.urlOrText || "",
-                    secondaryUrl: content?.secondaryUrl || "",
-                  }))
-                : [{ title: "", type: "video" as const, urlOrText: "" }],
-            }))
-          : [],
-      }
-
-      form.reset(formattedCourse)
-      console.log("Formulario actualizado con éxito")
-    } catch (error) {
-      console.error("Error al cargar el curso:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo cargar el curso",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+    const formatDate = (date?: string | Date, fallbackDays = 0) => {
+      const d = date ? new Date(date) : new Date(Date.now() + fallbackDays * 86400000)
+      return d.toISOString().split("T")[0]
     }
-  }
 
-  fetchCourse()
-}, [courseId, form, toast])
+    const fetchCourse = async () => {
+      try {
+        setLoading(true)
+        console.log("Cargando curso con ID:", courseId)
+
+        const course = await api.get<CourseType>(`/courses/${courseId}`)
+        if (!course || typeof course !== "object") throw new Error("Curso no válido")
+
+        const formattedCourse = {
+          title: course.title || "",
+          description: course.description || "",
+          price: isNaN(Number(course.price)) ? 0 : Number(course.price),
+          image: course.image || "",
+          startDate: formatDate(course.startDate),
+          endDate: formatDate(course.endDate, 30),
+          capacity: course.capacity || 20,
+          trailer: course.trailer || "",
+          sections: Array.isArray(course.sections)
+            ? course.sections.map((section: SectionType) => ({
+                id: section.id,
+                title: section.title || "",
+                temario: section.temario || "",
+                contents: Array.isArray(section.contents)
+                  ? section.contents.map((content) => ({
+                      id: content?.id ?? undefined,
+                      title: content?.title || "",
+                      type: content?.type || "video",
+                      urlOrText: content?.type === "pdf" 
+                        ? transformDriveUrl(content.urlOrText) || "" 
+                        : content?.urlOrText || "",
+                      secondaryUrl: content?.type === "pdf" 
+                        ? transformDriveUrl(content.secondaryUrl) || "" 
+                        : content?.secondaryUrl || "",
+                    }))
+                  : [{ title: "", type: "video" as const, urlOrText: "" }],
+              }))
+            : [],
+        }
+
+        form.reset(formattedCourse)
+        console.log("Formulario actualizado con éxito")
+      } catch (error) {
+        console.error("Error al cargar el curso:", error)
+        toast({
+          title: "Error",
+          description: "No se pudo cargar el curso",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourse()
+  }, [courseId, form, toast])
 
   // Función para guardar directamente sin usar el formulario
   const saveDirectly = async () => {
@@ -376,7 +440,25 @@ export function CourseForm({ courseId }: CourseFormProps) {
 
       // Obtener los datos del formulario
       const formData = form.getValues()
-      console.log("Datos a enviar:", JSON.stringify(formData, null, 2))
+
+      // Transformar URLs de Drive para todos los PDFs
+      const transformedData = {
+        ...formData,
+        sections: formData.sections.map(section => ({
+          ...section,
+          contents: section.contents.map(content => ({
+            ...content,
+            urlOrText: content.type === "pdf" 
+              ? transformDriveUrl(content.urlOrText) || content.urlOrText 
+              : content.urlOrText,
+            secondaryUrl: content.type === "pdf" && content.secondaryUrl
+              ? transformDriveUrl(content.secondaryUrl) 
+              : content.secondaryUrl
+          }))
+        }))
+      }
+
+      console.log("Datos a enviar:", JSON.stringify(transformedData, null, 2))
 
       // URL base de la API
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
@@ -393,7 +475,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(transformedData),
       })
 
       // Verificar si la respuesta es exitosa

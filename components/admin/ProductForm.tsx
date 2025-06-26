@@ -51,7 +51,42 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     pdfUrl: product?.pdfUrl || "",
   })
 
+  // Función para transformar URLs de Google Drive
+  const transformDriveUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined
+    
+    // Si ya es un enlace de descarga directa, no hacer nada
+    if (url.includes('uc?export=download')) return url
+    
+    // Extraer el ID del archivo de diferentes formatos de URL de Drive
+    const patterns = [
+      /drive\.google\.com\/file\/d\/([^\/]+)/,
+      /drive\.google\.com\/open\?id=([^&]+)/,
+      /drive\.google\.com\/uc\?id=([^&]+)/
+    ]
+    
+    let fileId = null
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match && match[1]) {
+        fileId = match[1]
+        break
+      }
+    }
+    
+    if (fileId) {
+      return `https://drive.google.com/uc?export=download&id=${fileId}`
+    }
+    
+    return url
+  }
+
   const handleInputChange = <K extends keyof Product>(field: K, value: Product[K]) => {
+    // Transformar automáticamente URLs de Drive para el campo pdfUrl
+    if (field === 'pdfUrl' && typeof value === 'string') {
+      value = transformDriveUrl(value) as Product[K]
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -63,7 +98,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
       ...prev,
       category,
       subCategory: undefined,
-      // Limpiar secciones si no es toolkit
       sections: category === "toolkit" ? prev.sections : [],
     }))
   }
@@ -72,7 +106,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     const newSections = [...(formData.sections || [])]
     newSections[index] = {
       ...newSections[index],
-      [field]: value,
+      [field]: field === 'fileUrl' ? transformDriveUrl(value) : value,
     }
     setFormData((prev) => ({
       ...prev,
@@ -105,24 +139,21 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     setLoading(true)
 
     try {
-      // Función para limpiar URLs vacías
       const cleanUrl = (url: string | undefined): string | undefined => {
         if (!url || url.trim() === "") return undefined
         return url.trim()
       }
 
-      // Limpiar secciones si es toolkit
       const cleanedSections =
         formData.category === "toolkit" && formData.sections
           ? formData.sections.map((section) => ({
               ...section,
               videoUrl: cleanUrl(section.videoUrl),
-              fileUrl: cleanUrl(section.fileUrl),
+              fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)), // Asegurar transformación aquí también
               description: section.description?.trim() || undefined,
             }))
           : undefined
 
-      // Prepara datos para enviar
       const dataToSend = {
         name: formData.name?.trim(),
         author: formData.author?.trim(),
@@ -133,8 +164,9 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         subCategory: formData.subCategory || undefined,
         description: formData.description?.trim(),
         trailerUrl: cleanUrl(formData.trailerUrl),
-        pdfUrl:
-          formData.category === "libro" || formData.category === "revista" ? cleanUrl(formData.pdfUrl) : undefined,
+        pdfUrl: (formData.category === "libro" || formData.category === "revista") 
+          ? cleanUrl(transformDriveUrl(formData.pdfUrl)) 
+          : undefined,
         sections: cleanedSections,
       }
 
@@ -253,7 +285,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               </div>
             </div>
 
-            {/* Subcategoría solo aparece si es toolkit */}
             {isToolkit && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -287,7 +318,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               </div>
             )}
 
-            {/* Para libro y revista, imagen y PDF van en filas separadas */}
             {!isToolkit && (
               <>
                 <div className="space-y-2">
@@ -303,12 +333,20 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 {isBookOrMagazine && (
                   <div className="space-y-2">
                     <Label htmlFor="pdfUrl">URL del PDF</Label>
-                    <Input
-                      id="pdfUrl"
-                      value={formData.pdfUrl || ""}
-                      onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
-                      placeholder="https://example.com/document.pdf"
-                    />
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="pdfUrl"
+                        value={formData.pdfUrl || ""}
+                        onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
+                        placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.pdfUrl && formData.pdfUrl.includes('drive.google.com') && 
+                       !formData.pdfUrl.includes('uc?export=download') && (
+                        <span>✔ El enlace de Drive será convertido automáticamente</span>
+                      )}
+                    </p>
                   </div>
                 )}
               </>
@@ -338,7 +376,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           </CardContent>
         </Card>
 
-        {/* Secciones solo aparecen si es toolkit */}
         {isToolkit && (
           <Card>
             <CardHeader>
@@ -410,8 +447,14 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                           <Input
                             value={section.fileUrl || ""}
                             onChange={(e) => handleSectionChange(index, "fileUrl", e.target.value)}
-                            placeholder="https://example.com/archivo.pdf"
+                            placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
                           />
+                          <p className="text-xs text-gray-500">
+                            {section.fileUrl && section.fileUrl.includes('drive.google.com') && 
+                             !section.fileUrl.includes('uc?export=download') && (
+                              <span>✔ El enlace de Drive será convertido automáticamente</span>
+                            )}
+                          </p>
                         </div>
 
                         <div className="space-y-2">

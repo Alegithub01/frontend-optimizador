@@ -4,11 +4,20 @@ import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { Play, Pause, SkipBack, SkipForward, RotateCcw } from "lucide-react"
 
-interface VideoPlayerProps {
-  videoUrl: string
-  title: string
+interface VimeoConfig {
+  controls?: boolean;
+  responsive?: boolean;
+  autoplay?: boolean;
+  byline?: boolean;
+  portrait?: boolean;
+  title?: boolean;
 }
 
+interface VideoPlayerProps {
+  videoUrl: string;
+  title: string;
+  vimeoConfig?: VimeoConfig;
+}
 export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -203,16 +212,15 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
   }, [])
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden backdrop-blur-sm">
-      <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-        <h3 className="text-xl font-bold text-gray-800 mb-1">Video Player</h3>
-        <p className="text-sm text-gray-500">Controles avanzados de reproducción</p>
+    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden backdrop-blur-sm w-full max-w-full">
+      {/* Header - Responsive */}
+      <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-1">Video Player</h3>
+        <p className="text-xs sm:text-sm text-gray-500">Controles avanzados de reproducción</p>
       </div>
 
-      <div
-        className="relative w-full mx-4 my-4 rounded-xl overflow-hidden shadow-lg"
-        style={{ paddingBottom: "56.25%" }}
-      >
+      {/* Video Container - Fully Responsive */}
+      <div className="relative w-full aspect-video mx-2 sm:mx-4 my-2 sm:my-4 rounded-xl overflow-hidden shadow-lg">
         {!isVideoPlaying ? (
           // Thumbnail View
           <div className="absolute inset-0 cursor-pointer group" onClick={() => setIsVideoPlaying(true)}>
@@ -226,14 +234,14 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
               }}
             />
 
-            {/* Play Button Overlay */}
+            {/* Play Button Overlay - Responsive */}
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-all duration-300">
-              <div className="w-24 h-24 bg-white/95 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-2xl border-4 border-white/50">
-                <Play className="h-10 w-10 text-orange-500 ml-1" fill="currentColor" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white/95 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-2xl border-2 sm:border-4 border-white/50">
+                <Play className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-orange-500 ml-1" fill="currentColor" />
               </div>
             </div>
 
-            <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2 py-1 rounded text-sm">Video</div>
+            <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-black/80 text-white px-2 py-1 rounded text-xs sm:text-sm">Video</div>
           </div>
         ) : (
           // Video Player
@@ -253,75 +261,76 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
         )}
       </div>
 
-      {/* Controles Personalizados */}
+      {/* Controles Personalizados - Responsive */}
       {isVideoPlaying && (
-        <div className="p-6 bg-gradient-to-t from-gray-50 to-white border-t border-gray-100">
-          {/* Información del tiempo con mejor diseño */}
-          <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-lg">
-            <div className="text-sm font-medium text-gray-700">
+        <div className="p-3 sm:p-4 md:p-6 bg-gradient-to-t from-gray-50 to-white border-t border-gray-100">
+          {/* Información del tiempo - Responsive */}
+          <div className="flex items-center justify-between mb-4 sm:mb-6 p-2 sm:p-3 bg-gray-50 rounded-lg">
+            <div className="text-xs sm:text-sm font-medium text-gray-700">
               <span className="text-orange-500">{formatTime(currentTime)}</span> / {formatTime(duration)}
             </div>
-            <div className="text-sm text-gray-600 flex items-center gap-2">
+            <div className="text-xs sm:text-sm text-gray-600 flex items-center gap-1 sm:gap-2">
               <div className={`w-2 h-2 rounded-full ${isPlaying ? "bg-green-500" : "bg-gray-400"}`}></div>
-              {isPlaying ? "Reproduciendo" : "Pausado"}
+              <span className="hidden sm:inline">{isPlaying ? "Reproduciendo" : "Pausado"}</span>
             </div>
           </div>
 
-          {/* Botones de control con mejor estilo */}
-          <div className="flex items-center justify-center gap-3">
-            {/* Reiniciar con nuevo estilo */}
+          {/* Botones de control - Responsive Layout */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {/* Reiniciar */}
             <button
               onClick={restartVideo}
-              className="p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
+              className="p-2 sm:p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
               title="Reiniciar video"
             >
-              <RotateCcw className="h-5 w-5 text-gray-700" />
+              <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
             </button>
 
-            {/* Retroceder con nuevo estilo */}
+            {/* Retroceder */}
             <button
               onClick={skipBackward}
-              className="p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
+              className="p-2 sm:p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
               title="Retroceder 10 segundos"
             >
-              <SkipBack className="h-5 w-5 text-gray-700" />
+              <SkipBack className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
             </button>
 
-            {/* Play/Pause con estilo destacado */}
+            {/* Play/Pause - Destacado */}
             <button
               onClick={togglePlayPause}
-              className="p-4 bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl border border-orange-300"
+              className="p-3 sm:p-4 bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl border border-orange-300"
               title={isPlaying ? "Pausar" : "Reproducir"}
             >
               {isPlaying ? (
-                <Pause className="h-6 w-6 text-white" fill="currentColor" />
+                <Pause className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="currentColor" />
               ) : (
-                <Play className="h-6 w-6 text-white ml-1" fill="currentColor" />
+                <Play className="h-5 w-5 sm:h-6 sm:w-6 text-white ml-1" fill="currentColor" />
               )}
             </button>
 
-            {/* Adelantar con nuevo estilo */}
+            {/* Adelantar */}
             <button
               onClick={skipForward}
-              className="p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
+              className="p-2 sm:p-3 bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
               title="Adelantar 10 segundos"
             >
-              <SkipForward className="h-5 w-5 text-gray-700" />
+              <SkipForward className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
             </button>
 
-            {/* Volver a miniatura con nuevo estilo */}
+            {/* Volver a miniatura - Responsive text */}
             <button
               onClick={() => {
                 setIsVideoPlaying(false)
                 setIsPlaying(false)
                 setCurrentTime(0)
               }}
-              className="px-4 py-2 text-sm bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
+              className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-b from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md border border-gray-300"
             >
-              Miniatura
+              <span className="hidden sm:inline">Miniatura</span>
+              <span className="sm:hidden">Mini</span>
             </button>
 
-            {/* Botón de pantalla completa con nuevo estilo */}
+            {/* Pantalla completa - Responsive text */}
             <button
               onClick={() => {
                 if (iframeRef.current) {
@@ -330,26 +339,27 @@ export default function VideoPlayer({ videoUrl, title }: VideoPlayerProps) {
                   }
                 }
               }}
-              className="px-4 py-2 text-sm bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl border border-blue-400"
+              className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl border border-blue-400"
               title="Pantalla completa"
             >
-              Expandir
+              <span className="hidden sm:inline">Expandir</span>
+              <span className="sm:hidden">Full</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Controls cuando no está reproduciendo - Footer mejorado */}
+      {/* Footer cuando no está reproduciendo - Responsive */}
       {!isVideoPlaying && (
-        <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="p-3 sm:p-4 md:p-6 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-              <div className="text-sm font-medium text-gray-700">Estado: Pausado</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-700">Estado: Pausado</div>
             </div>
-            <div className="text-sm text-gray-500 flex items-center gap-2">
-              <Play className="h-4 w-4" />
-              Haz clic en la miniatura para reproducir
+            <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1 sm:gap-2">
+              <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-center sm:text-left">Haz clic en la miniatura para reproducir</span>
             </div>
           </div>
         </div>
