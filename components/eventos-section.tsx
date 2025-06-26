@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Play, Calendar, Clock, Pause } from "lucide-react"
+import { ArrowRight, Play, Calendar, Clock, Pause, X } from "lucide-react"
 import { useEvents } from "@/hooks/useEvent"
 
 interface BackendEvent {
@@ -48,12 +48,18 @@ export default function EventsSection() {
   const [showVideo, setShowVideo] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
 
   // Extract Vimeo ID from URL
   const getVimeoId = (url: string) => {
     const regExp = /vimeo.com\/(\d+)/
     const match = url.match(regExp)
     return match ? match[1] : null
+  }
+
+  // Check if URL is a Vimeo video
+  const isVimeoVideo = (url: string) => {
+    return url && url.includes('vimeo.com')
   }
 
   useEffect(() => {
@@ -143,6 +149,16 @@ export default function EventsSection() {
     if (mainEvent?.trailerUrl) {
       setShowVideo(true)
       setIsPlaying(true)
+      setVideoLoaded(true)
+    }
+  }
+
+  const handleCloseVideo = () => {
+    setShowVideo(false)
+    setIsPlaying(false)
+    if (videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
     }
   }
 
@@ -156,6 +172,16 @@ export default function EventsSection() {
         setIsPlaying(false)
       }
     }
+  }
+
+  const formatMobileDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'short', 
+      day: 'numeric', 
+      month: 'long' 
+    }
+    return date.toLocaleDateString('es-ES', options)
   }
 
   if (loading) {
@@ -201,263 +227,397 @@ export default function EventsSection() {
   }
 
   return (
-    <section className="container mx-auto py-12 md:py-20 px-4">
-      <div className="mb-8 md:mb-12 text-center">
-        <h2 className="text-lg font-medium text-orange-500 mb-1">Todos los</h2>
-        <h3 className="text-black text-3xl md:text-5xl font-black">EVENTOS</h3>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="block lg:hidden space-y-6">
-        {formattedEvents.map((event) => (
-          <div key={event.id} className="bg-gray-900 rounded-2xl overflow-hidden">
-            <div className="relative aspect-video">
-              <Image 
-                src={event.image || "/placeholder.svg"} 
-                alt={event.title} 
-                fill
-                className="object-cover rounded-t-2xl" 
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">{event.date.day}</div>
-                  <div className="text-sm font-bold text-orange-500">{event.date.month}</div>
-                  <div className="text-xs text-gray-400">{event.date.year}</div>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-lg text-white mb-2">{event.title}</h4>
-                  <p className="text-sm text-gray-300">{event.description}</p>
-                </div>
-              </div>
-              <Link
-                href={`/eventos/${event.id}`}
-                className="inline-flex items-center bg-orange-500 text-black px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center"
-              >
-                Ver más
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden lg:grid grid-cols-12 gap-8 mb-8">
-        {/* Left Column - Events List */}
-        <div className="col-span-6 space-y-6">
-          {formattedEvents.map((event) => (
-            <div key={event.id} className="flex gap-6">
-              <div className="relative w-[120px] h-[160px] flex-shrink-0">
-                <Image
-                  src={event.image || "/placeholder.svg"}
-                  alt={event.title}
-                  width={120}
-                  height={160}
-                  className="object-cover rounded-xl"
-                />
-              </div>
-              <div className="flex flex-1">
-                <div className="flex flex-col justify-center items-center mr-4">
-                  <div className="text-5xl font-bold leading-none text-black">{event.date.day}</div>
-                  <div className="uppercase font-bold text-sm text-black">{event.date.month}</div>
-                  <div className="w-12 h-0.5 bg-orange-500 my-1"></div>
-                  <div className="text-sm text-black">{event.date.year}</div>
-                </div>
-                <div className="flex flex-col justify-between flex-1">
-                  <div>
-                    <h4 className="font-bold text-xl">{event.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1 mb-4 line-clamp-2">{event.description}</p>
-                  </div>
-                  <div>
-                    <Link
-                      href={`/eventos/${event.id}`}
-                      className="inline-flex items-center bg-orange-500 text-black px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors"
-                    >
-                      Ver más
-                      <ArrowRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+    <>
+      {/* Vimeo Player API Script - Solo en cliente */}
+      {typeof window !== 'undefined' && (
+        <script src="https://player.vimeo.com/api/player.js" async />
+      )}
+      
+      <section className="container mx-auto py-12 md:py-20 px-4">
+        <div className="mb-8 md:mb-12 text-center">
+          <h2 className="text-lg font-medium text-orange-500 mb-1">Todos los</h2>
+          <h3 className="text-black text-3xl md:text-5xl font-black">EVENTOS</h3>
         </div>
 
-        {/* Right Column - Main Event Card */}
-        <div className="col-span-6">
-          <div className="bg-black text-white rounded-3xl overflow-hidden w-full h-[700px] flex flex-col">
-            {mainEvent ? (
-              <div className="relative p-6 flex flex-col h-full">
-                {/* Video/Image Section */}
-                <div className="relative aspect-video rounded-2xl overflow-hidden flex-shrink-0">
-                  {showVideo && mainEvent.trailerUrl ? (
-                    <>
-                      <button 
-                        onClick={() => {
-                          setShowVideo(false)
-                          setIsPlaying(false)
-                        }}
-                        className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full z-10"
-                      >
-                        ✕
-                      </button>
-                      {mainEvent.trailerUrl.includes('vimeo') ? (
+        {/* Mobile Layout */}
+        <div className="block lg:hidden space-y-6">
+          {/* Evento Principal en Mobile */}
+          {mainEvent && (
+            <div className="bg-gray-900 rounded-2xl overflow-hidden">
+              <div className="relative aspect-video bg-black">
+                {showVideo && mainEvent.trailerUrl ? (
+                  <>
+                    <button 
+                      onClick={handleCloseVideo}
+                      className="absolute top-4 right-4 z-50 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                    
+                    {isVimeoVideo(mainEvent.trailerUrl) ? (
+                      <div className="w-full h-full" style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
                         <iframe
-                          src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&muted=0&controls=1`}
-                          width="100%"
-                          height="100%"
+                          src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&title=0&byline=0&portrait=0`}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%'
+                          }}
                           frameBorder="0"
                           allow="autoplay; fullscreen; picture-in-picture"
                           allowFullScreen
                           className="rounded-xl"
-                        ></iframe>
-                      ) : (
-                        <div className="relative w-full h-full">
-                          <video
-                            ref={videoRef}
-                            controls
-                            autoPlay
-                            className="w-full h-full rounded-xl object-cover"
-                            onClick={togglePlayPause}
-                          >
-                            <source src={mainEvent.trailerUrl} type="video/mp4" />
-                            Your browser does not support the video tag.
-                          </video>
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex justify-center">
-                            <button 
+                        />
+                      </div>
+                    ) : (
+                      <video
+                        ref={videoRef}
+                        controls
+                        autoPlay
+                        className="w-full h-full object-cover"
+                        onLoadedData={() => setVideoLoaded(true)}
+                      >
+                        <source src={mainEvent.trailerUrl} type="video/mp4" />
+                      </video>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Image 
+                      src={mainEvent.image || "/placeholder.svg"} 
+                      alt={mainEvent.title} 
+                      fill
+                      className="object-cover" 
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority
+                    />
+                    {mainEvent.trailerUrl && (
+                      <button 
+                        onClick={handlePlayVideo}
+                        className="absolute inset-0 m-auto bg-white/90 rounded-full p-4 hover:bg-white transition-colors shadow-lg hover:scale-105 transform duration-200 w-16 h-16 flex items-center justify-center"
+                      >
+                        <Play className="h-8 w-8 text-orange-500 fill-orange-500 ml-1" />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="p-6">
+                <div className="mb-4">
+                  <h4 className="font-bold text-xl text-white mb-2">{mainEvent.title}</h4>
+                  <p className="text-sm text-gray-300 mb-3">{mainEvent.description}</p>
+                  
+                  <div className="flex items-center gap-2 text-sm mb-1">
+                    <Calendar className="h-4 w-4 text-orange-500" />
+                    <span>{formatMobileDate(mainEvent.originalDateTime)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-orange-500" />
+                    <span>{mainEvent.eventTime}</span>
+                  </div>
+                </div>
+                
+                {/* Countdown Mobile */}
+                <div className="grid grid-cols-4 gap-3 mb-6">
+                  <div className="text-center bg-gray-800 rounded-lg p-2">
+                    <div className="text-xs text-gray-400 mb-1">Días</div>
+                    <div className="text-xl font-bold">
+                      {countdown.days}
+                    </div>
+                  </div>
+                  <div className="text-center bg-gray-800 rounded-lg p-2">
+                    <div className="text-xs text-gray-400 mb-1">Horas</div>
+                    <div className="text-xl font-bold">
+                      {countdown.hours}
+                    </div>
+                  </div>
+                  <div className="text-center bg-gray-800 rounded-lg p-2">
+                    <div className="text-xs text-gray-400 mb-1">Min</div>
+                    <div className="text-xl font-bold">
+                      {countdown.minutes}
+                    </div>
+                  </div>
+                  <div className="text-center bg-gray-800 rounded-lg p-2">
+                    <div className="text-xs text-gray-400 mb-1">Seg</div>
+                    <div className="text-xl font-bold">
+                      {countdown.seconds}
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/eventos/${mainEvent.id}`}
+                  className="inline-flex items-center bg-orange-500 text-black px-6 py-3 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center font-medium"
+                >
+                  Ver más detalles
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de otros eventos en Mobile */}
+          {formattedEvents
+            .filter(event => mainEvent ? event.id !== mainEvent.id : true)
+            .map((event) => (
+              <div key={event.id} className="bg-gray-900 rounded-2xl overflow-hidden">
+                <div className="relative aspect-video">
+                  <Image 
+                    src={event.image || "/placeholder.svg"} 
+                    alt={event.title} 
+                    fill
+                    className="object-cover" 
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="text-center flex-shrink-0">
+                      <div className="text-3xl font-bold text-white">{event.date.day}</div>
+                      <div className="text-sm font-bold text-orange-500">{event.date.month}</div>
+                      <div className="text-xs text-gray-400">{event.date.year}</div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg text-white mb-2">{event.title}</h4>
+                      <p className="text-sm text-gray-300 mb-3">{event.description}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/eventos/${event.id}`}
+                    className="inline-flex items-center bg-orange-500 text-black px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center"
+                  >
+                    Ver más
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:grid grid-cols-12 gap-8 mb-8">
+          {/* Left Column - Events List */}
+          <div className="col-span-6 space-y-6">
+            {formattedEvents.map((event) => (
+              <div key={event.id} className="flex gap-6">
+                <div className="relative w-[120px] h-[160px] flex-shrink-0">
+                  <Image
+                    src={event.image || "/placeholder.svg"}
+                    alt={event.title}
+                    width={120}
+                    height={160}
+                    className="object-cover rounded-xl"
+                  />
+                </div>
+                <div className="flex flex-1">
+                  <div className="flex flex-col justify-center items-center mr-4">
+                    <div className="text-5xl font-bold leading-none text-black">{event.date.day}</div>
+                    <div className="uppercase font-bold text-sm text-black">{event.date.month}</div>
+                    <div className="w-12 h-0.5 bg-orange-500 my-1"></div>
+                    <div className="text-sm text-black">{event.date.year}</div>
+                  </div>
+                  <div className="flex flex-col justify-between flex-1">
+                    <div>
+                      <h4 className="font-bold text-xl text-black">{event.title}</h4>
+                      <p className="text-sm text-gray-600 mt-1 mb-4 line-clamp-2">{event.description}</p>
+                    </div>
+                    <div>
+                      <Link
+                        href={`/eventos/${event.id}`}
+                        className="inline-flex items-center bg-orange-500 text-black px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors"
+                      >
+                        Ver más
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right Column - Main Event Card */}
+          <div className="col-span-6">
+            <div className="bg-black text-white rounded-3xl overflow-hidden w-full h-[700px] flex flex-col">
+              {mainEvent ? (
+                <div className="relative p-6 flex flex-col h-full">
+                  {/* Video/Image Section */}
+                  <div className="relative aspect-video rounded-2xl overflow-hidden flex-shrink-0 bg-black">
+                    {showVideo && mainEvent.trailerUrl ? (
+                      <>
+                        <button 
+                          onClick={handleCloseVideo}
+                          className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full z-10 hover:bg-black/70 transition-colors"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                        
+                        {isVimeoVideo(mainEvent.trailerUrl) ? (
+                          <div className="w-full h-full" style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
+                            <iframe
+                              src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&title=0&byline=0&portrait=0`}
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%'
+                              }}
+                              frameBorder="0"
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
+                              className="rounded-xl"
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative w-full h-full">
+                            <video
+                              ref={videoRef}
+                              controls
+                              autoPlay
+                              className="w-full h-full rounded-xl object-cover"
                               onClick={togglePlayPause}
-                              className="bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+                              onLoadedData={() => setVideoLoaded(true)}
                             >
-                              {isPlaying ? (
-                                <Pause className="h-6 w-6 text-white" />
-                              ) : (
-                                <Play className="h-6 w-6 text-white" />
-                              )}
+                              <source src={mainEvent.trailerUrl} type="video/mp4" />
+                            </video>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex justify-center">
+                              <button 
+                                onClick={togglePlayPause}
+                                className="bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
+                              >
+                                {isPlaying ? (
+                                  <Pause className="h-6 w-6 text-white" />
+                                ) : (
+                                  <Play className="h-6 w-6 text-white" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Image
+                          src={mainEvent.image || "/placeholder.svg"}
+                          alt={mainEvent.title}
+                          fill
+                          className="object-cover rounded-xl"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          priority
+                        />
+                        {mainEvent.trailerUrl && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-xl">
+                            <button 
+                              onClick={handlePlayVideo}
+                              className="bg-white/90 rounded-full p-4 hover:bg-white transition-colors shadow-lg hover:scale-105 transform duration-200"
+                            >
+                              <Play className="h-8 w-8 text-orange-500 fill-orange-500 ml-1" />
                             </button>
                           </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Countdown Section */}
+                  <div className="grid grid-cols-4 gap-3 my-6">
+                    <div className="text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                        <div className="text-xs text-gray-400 mb-2">Días</div>
+                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                          {countdown.days}
                         </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Image
-                        src={mainEvent.image || "/placeholder.svg"}
-                        alt={mainEvent.title}
-                        fill
-                        className="object-cover rounded-xl"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                      {mainEvent.trailerUrl && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <button 
-                            onClick={handlePlayVideo}
-                            className="bg-white/80 rounded-full p-4 hover:bg-white transition-colors"
-                          >
-                            <Play className="h-8 w-8 text-orange-500 fill-orange-500" />
-                          </button>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                        <div className="text-xs text-gray-400 mb-2">Horas</div>
+                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                          {countdown.hours}
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Countdown Section */}
-                <div className="grid grid-cols-4 gap-3 my-6">
-                  <div className="text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                      <div className="text-xs text-gray-400 mb-2">Días</div>
-                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                        {countdown.days}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                        <div className="text-xs text-gray-400 mb-2">Minutos</div>
+                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                          {countdown.minutes}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
+                        <div className="text-xs text-gray-400 mb-2">Segundos</div>
+                        <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
+                          {countdown.seconds}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                      <div className="text-xs text-gray-400 mb-2">Horas</div>
-                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                        {countdown.hours}
+
+                  {/* Event Info Section */}
+                  <div className="flex-1 flex flex-col">
+                    <div className="text-sm text-orange-500 font-medium mb-3">Evento más próximo</div>
+
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="bg-gray-800 p-1.5 rounded">
+                        <Calendar className="h-4 w-4" />
                       </div>
+                      <span className="text-sm">{mainEvent.eventDate}</span>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                      <div className="text-xs text-gray-400 mb-2">Minutos</div>
-                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                        {countdown.minutes}
+
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="bg-gray-800 p-1.5 rounded">
+                        <Clock className="h-4 w-4" />
                       </div>
+                      <span className="text-sm">{mainEvent.eventTime}</span>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 bg-white rounded-full mb-2"></div>
-                      <div className="text-xs text-gray-400 mb-2">Segundos</div>
-                      <div className="text-2xl font-bold bg-gray-800 rounded-lg w-14 h-14 flex items-center justify-center">
-                        {countdown.seconds}
-                      </div>
+
+                    <h4 className="font-bold text-xl mb-3">{mainEvent.title}</h4>
+                    <p className="text-sm text-gray-300 mb-4 line-clamp-3">{mainEvent.description}</p>
+
+                    <div className="mt-auto pt-4">
+                      <Link
+                        href={`/eventos/${mainEvent.id}`}
+                        className="inline-flex items-center bg-orange-500 text-black px-6 py-3 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center font-medium"
+                      >
+                        Ver más
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Link>
                     </div>
                   </div>
                 </div>
-
-                {/* Event Info Section */}
-                <div className="flex-1 flex flex-col">
-                  <div className="text-sm text-orange-500 font-medium mb-3">Evento más próximo</div>
-
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-gray-800 p-1.5 rounded">
-                      <Calendar className="h-4 w-4" />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="text-gray-400 mb-4">
+                      <Calendar className="h-16 w-16 mx-auto mb-4" />
                     </div>
-                    <span className="text-sm">{mainEvent.eventDate}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-gray-800 p-1.5 rounded">
-                      <Clock className="h-4 w-4" />
-                    </div>
-                    <span className="text-sm">{mainEvent.eventTime}</span>
-                  </div>
-
-                  <h4 className="font-bold text-xl mb-3">{mainEvent.title}</h4>
-                  <p className="text-sm text-gray-300 mb-4 line-clamp-3">{mainEvent.description}</p>
-
-                  {/* Fixed position button at bottom */}
-                  <div className="mt-auto pt-4">
-                    <Link
-                      href={`/eventos/${mainEvent.id}`}
-                      className="inline-flex items-center bg-orange-500 text-black px-6 py-3 rounded-full text-sm hover:bg-orange-600 transition-colors w-full justify-center"
-                    >
-                      Ver más
-                      <ArrowRight className="h-4 w-4 ml-1" />
-                    </Link>
+                    <h3 className="text-xl font-bold mb-2">No hay eventos próximos</h3>
+                    <p className="text-gray-400">Mantente atento para futuros eventos</p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="text-gray-400 mb-4">
-                    <Calendar className="h-16 w-16 mx-auto mb-4" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">No hay eventos próximos</h3>
-                  <p className="text-gray-400">Mantente atento para futuros eventos</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex justify-center">
-        <Link href="/eventos" className="flex items-center text-gray-500 hover:text-orange-500 transition-colors">
-          Todos los eventos
-          <ArrowRight className="h-5 w-5 ml-1" />
-        </Link>
-      </div>
-    </section>
+        <div className="flex justify-center">
+          <Link href="/eventos" className="flex items-center text-gray-500 hover:text-orange-500 transition-colors">
+            Todos los eventos
+            <ArrowRight className="h-5 w-5 ml-1" />
+          </Link>
+        </div>
+      </section>
+    </>
   )
 }

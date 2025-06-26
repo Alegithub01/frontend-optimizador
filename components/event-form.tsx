@@ -15,15 +15,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, X, Plus } from "lucide-react"
 
-// Esquema de validación basado en los DTOs del backend
+// Esquema de validación actualizado para manejar dateTime y endTime por separado
 const eventSchema = z.object({
   title: z.string().min(1, "El título es requerido"),
   description: z.string().min(1, "La descripción es requerida"),
-  dateTime: z.string().min(1, "La fecha y hora son requeridas"),
+  dateTime: z.string().min(1, "La fecha y hora de inicio son requeridas"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "El formato debe ser HH:MM"),
   location: z.string().min(1, "La ubicación es requerida"),
   image: z.string().url("Debe ser una URL válida"),
   logo: z.string().url("Debe ser una URL válida"),
-  capacity: z.coerce.number().min(1, "La capacidad debe ser al menos 1"),
+  capacity: z.coerce.number().min(0, "La capacidad debe ser mayor o igual a 0"),
   price: z.coerce.number().min(0, "El precio debe ser mayor o igual a 0"),
   topics: z.array(z.string()).min(1, "Debe haber al menos un tema"),
   logo1: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
@@ -39,11 +40,12 @@ type Event = {
   title: string
   description: string
   dateTime: string
+  endTime: string
   location: string
   image: string
   logo: string
   capacity: number
-  price: number
+  price: string | number
   topics: string[]
   logo1?: string
   logo2?: string
@@ -67,7 +69,8 @@ export function EventForm({ eventId }: EventFormProps) {
     defaultValues: {
       title: "",
       description: "",
-      dateTime: new Date().toISOString().slice(0, 16),
+      dateTime: new Date().toISOString().slice(0, 16), // formato datetime-local
+      endTime: "13:00", // hora de fin por defecto en formato HH:MM
       location: "",
       image: "https://via.placeholder.com/800x400?text=Imagen+del+Evento",
       logo: "https://via.placeholder.com/200x200?text=Logo",
@@ -101,19 +104,33 @@ export function EventForm({ eventId }: EventFormProps) {
 
           if (!event) throw new Error("Evento no encontrado")
 
-          // Formatear la fecha y hora para el input datetime-local
-          const dateTime = new Date(event.dateTime).toISOString().slice(0, 16)
+          // Crear fecha sin conversión de timezone - usar los valores tal como vienen
+          const eventDate = new Date(event.dateTime)
+          // Ajustar por timezone local para evitar el cambio de 4 horas
+          const offsetMinutes = eventDate.getTimezoneOffset()
+          eventDate.setMinutes(eventDate.getMinutes() + offsetMinutes)
+          
+          const year = eventDate.getFullYear()
+          const month = String(eventDate.getMonth() + 1).padStart(2, '0')
+          const day = String(eventDate.getDate()).padStart(2, '0')
+          const hours = String(eventDate.getHours()).padStart(2, '0')
+          const minutes = String(eventDate.getMinutes()).padStart(2, '0')
+          const dateTimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`
+
+          // Convertir endTime - si viene como HH:MM:SS, tomar solo HH:MM
+          const endTimeFormatted = event.endTime ? event.endTime.substring(0, 5) : "13:00"
 
           // Crear un objeto formateado para el formulario
           const formattedEvent = {
             title: event.title || "",
             description: event.description || "",
-            dateTime: dateTime,
+            dateTime: dateTimeLocal,
+            endTime: endTimeFormatted,
             location: event.location || "",
             image: event.image || "https://via.placeholder.com/800x400?text=Imagen+del+Evento",
             logo: event.logo || "https://via.placeholder.com/200x200?text=Logo",
-            capacity: event.capacity || 100,
-            price: event.price || 0,
+            capacity: typeof event.capacity === 'string' ? parseInt(event.capacity) : (event.capacity || 100),
+            price: typeof event.price === 'string' ? parseFloat(event.price) : (event.price || 0),
             topics: Array.isArray(event.topics) ? event.topics : ["Tema 1"],
             logo1: event.logo1 || "",
             logo2: event.logo2 || "",
@@ -172,6 +189,8 @@ export function EventForm({ eventId }: EventFormProps) {
 
   const handleSaveClick = async () => {
     try {
+      setLoading(true)
+
       // Validar el formulario manualmente
       const isValid = await form.trigger()
       if (!isValid) {
@@ -181,42 +200,74 @@ export function EventForm({ eventId }: EventFormProps) {
           description: "Por favor, completa todos los campos requeridos correctamente",
           variant: "destructive",
         })
+        setLoading(false)
         return
       }
 
       // Obtener los valores del formulario
-      const data = form.getValues();
+      const data = form.getValues()
 
-// Asegurar que capacity y price sean números válidos
-data.capacity = Number(data.capacity);
-data.price = Number(data.price);
+      // Asegurar que capacity y price sean números válidos
+      data.capacity = Number(data.capacity)
+      data.price = Number(data.price)
 
-if (isNaN(data.capacity) || data.capacity < 1) {
-  toast({
-    title: "Error",
-    description: "La capacidad debe ser un número válido y mayor o igual a 1",
-    variant: "destructive",
-  });
-  setLoading(false);
-  return;
-}
+      // Permitir capacidad 0 - solo validar que sea un número válido
+      if (isNaN(data.capacity) || data.capacity < 0) {
+        toast({
+          title: "Error",
+          description: "La capacidad debe ser un número válido y mayor o igual a 0",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
 
-if (isNaN(data.price) || data.price < 0) {
-  toast({
-    title: "Error",
-    description: "El precio debe ser un número válido y mayor o igual a 0",
-    variant: "destructive",
-  });
-  setLoading(false);
-  return;
-}
+      if (isNaN(data.price) || data.price < 0) {
+        toast({
+          title: "Error",
+          description: "El precio debe ser un número válido y mayor o igual a 0",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
 
+      // Validar formato de hora de fin (HH:MM)
+      const timePattern = /^\d{2}:\d{2}$/
+      if (!timePattern.test(data.endTime)) {
+        toast({
+          title: "Error",
+          description: "El formato de hora de fin debe ser HH:MM (ejemplo: 13:00)",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
+
+      // CORREGIR EL PROBLEMA DE TIMEZONE:
+      // Crear fecha local sin conversión automática
+      const [datePart, timePart] = data.dateTime.split('T')
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hours, minutes] = timePart.split(':').map(Number)
+      
+      // Crear fecha en timezone local
+      const localDate = new Date(year, month - 1, day, hours, minutes)
+      const dateTimeISO = localDate.toISOString()
+
+      // Preparar datos para enviar al backend - ENVIAR endTime como HH:MM (NO HH:MM:SS)
+      const dataToSend = {
+        ...data,
+        dateTime: dateTimeISO,
+        endTime: data.endTime, // Mantener formato HH:MM como espera el backend
+        price: data.price.toString(), // Convertir precio a string como espera el backend
+      }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
       const url = isEditing ? `${apiUrl}/event/${eventId}` : `${apiUrl}/event`
       const method = isEditing ? "PATCH" : "POST"
 
       console.log(`Enviando ${method} a ${url}`)
+      console.log("Datos a enviar:", dataToSend)
 
       // Realizar la petición
       const response = await fetch(url, {
@@ -224,7 +275,7 @@ if (isNaN(data.price) || data.price < 0) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(dataToSend),
       })
 
       console.log("Respuesta del servidor:", response.status)
@@ -296,16 +347,40 @@ if (isNaN(data.price) || data.price < 0) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="dateTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fecha y Hora</FormLabel>
+                    <FormLabel>Fecha y Hora de Inicio</FormLabel>
                     <FormControl>
                       <Input type="datetime-local" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      Fecha y hora de inicio del evento
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Fin</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="time"
+                        {...field}
+                        placeholder="13:00"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Hora de finalización (HH:MM)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -334,8 +409,11 @@ if (isNaN(data.price) || data.price < 0) {
                   <FormItem>
                     <FormLabel>Capacidad</FormLabel>
                     <FormControl>
-                      <Input type="number" min="1" {...field} />
+                      <Input type="number" min="0" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      Número máximo de participantes (0 = sin límite)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -350,6 +428,9 @@ if (isNaN(data.price) || data.price < 0) {
                     <FormControl>
                       <Input type="number" min="0" step="0.01" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      Precio en USD (0 = evento gratuito)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

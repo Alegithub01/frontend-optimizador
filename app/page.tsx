@@ -62,7 +62,7 @@ export default function Home() {
       name: "Kelly Queen",
       title: "Emprendedora",
       country: "boliviana",
-      image: "/pastel.jpeg",
+      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/KELLY1_loco2c.jpg",
       iconColor: "#20c997",
       vimeoId: "1089335881"
     },
@@ -71,7 +71,7 @@ export default function Home() {
       name: "Luz Marquina",
       title: "Emprendedora",
       country: "boliviana",
-      image: "/luz.jpeg",
+      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUZ1_vex832.jpg",
       iconColor: "#ffffff",
       vimeoId: "1089335914"
     },
@@ -80,7 +80,7 @@ export default function Home() {
       name: "Luka Marquina",
       title: "Emprendedora",
       country: "boliviana",
-      image: "/lukamarqui.jpg",
+      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUKA3_rc38lj.jpg",
       iconColor: "#0d6efd",
       vimeoId: "1089335939"
     },
@@ -102,7 +102,7 @@ export default function Home() {
     {
       id: "3",
       title: "OPTI KIDS",
-      image: "/ajedrez.png",
+      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1749226552/PersonajeOptikidsTutores_d1lnmh.png",
       link: "/proyectos/3",
       featured: true,
     },
@@ -245,7 +245,7 @@ export default function Home() {
         {/* Mentoring CTA Section */}
         <CTASection />
 
-       {/*  <ProyectosSection proyectos={proyectos} />*/}
+        <ProyectosSection proyectos={proyectos} />
       </div>
     </div>
   )

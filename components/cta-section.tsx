@@ -9,18 +9,18 @@ export default function CTASection() {
         {/* Columna izquierda - CTA */}
         <div className="bg-gray-100 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-12 flex-1">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-black mb-4 md:mb-6 max-w-md leading-tight">
-            OPTIMIZA TU VIDA Y ALCANZA LO QUE TE PROPONES
+            ¿ESTÁS LISTO PARA EL SIGUIENTE NIVEL?
           </h2>
 
           <p className="text-gray-700 mb-6 md:mb-8 max-w-md">
-            Agenda tu mentoría para llevar tu empresa al siguiente nivel
+            Resultados reales, estrategias claras y acompañamiento que transforma. Tu crecimiento no es una casualidad, es una decisión.
           </p>
 
           <Link
             href="/"
             className="inline-flex items-center bg-orange-700 hover:bg-orange-500 text-black font-medium py-3 px-6 rounded-full transition-colors"
           >
-            ¡Reserva tu mentoría hoy!
+            Quiero crecer
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </div>
@@ -30,7 +30,7 @@ export default function CTASection() {
           {/* Estadística 1 */}
           <div className="bg-gray-200 rounded-2xl md:rounded-3xl p-4 md:p-6 flex items-center justify-between">
             <div>
-              <div className="text-2xl md:text-3xl font-black text-black">+300</div>
+              <div className="text-2xl md:text-3xl font-black text-black">+30</div>
               <div className="text-gray-600 text-sm">Empresas</div>
             </div>
             <div className="text-gray-400">
@@ -41,7 +41,7 @@ export default function CTASection() {
           {/* Estadística 2 */}
           <div className="bg-gray-200 rounded-2xl md:rounded-3xl p-4 md:p-6 flex items-center justify-between">
             <div>
-              <div className="text-2xl md:text-3xl font-black text-black">+10</div>
+              <div className="text-2xl md:text-3xl font-black text-black">5</div>
               <div className="text-gray-600 text-sm">Resultados</div>
             </div>
             <div className="text-gray-400">
@@ -52,8 +52,8 @@ export default function CTASection() {
           {/* Estadística 3 */}
           <div className="bg-gray-200 rounded-2xl md:rounded-3xl p-4 md:p-6 flex items-center justify-between">
             <div>
-              <div className="text-2xl md:text-3xl font-black text-black">+5</div>
-              <div className="text-gray-600 text-sm">Premios</div>
+              <div className="text-2xl md:text-3xl font-black text-black">+100</div>
+              <div className="text-gray-600 text-sm">Ideas Innovadoras</div>
             </div>
             <div className="text-gray-400">
               <Image src="/trophy-outline.svg" alt="Gráfico" width={32} height={32} className="md:w-10 md:h-10" />

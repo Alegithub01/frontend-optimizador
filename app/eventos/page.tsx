@@ -12,8 +12,17 @@ interface Event {
   title: string
   description: string
   dateTime: string // ISO string from backend
+  endTime: string // Hora de fin en formato HH:MM:SS
   location: string
   image: string
+  logo: string
+  logo1?: string
+  logo2?: string
+  logo3?: string
+  capacity: number
+  price: string
+  topics: string[]
+  trailerUrl?: string
 }
 
 // Custom hook to fetch events
@@ -42,14 +51,16 @@ function useEvents() {
 }
 
 // Format date from ISO string
-function formatEventDate(dateTimeStr: string): {
+function formatEventDate(dateTimeStr: string, endTimeStr: string): {
   day: string
   month: string
   year: string
   fullDate: string
   time: string
+  endTimeFormatted: string
 } {
   const dateTime = new Date(dateTimeStr)
+  const [hours, minutes] = endTimeStr.split(':').slice(0, 2)
 
   const day = dateTime.getDate().toString()
   const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
@@ -59,32 +70,27 @@ function formatEventDate(dateTimeStr: string): {
   // Format for display: "Sábado, 10 de mayo 2024"
   const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
   const monthsLong = [
-    "enero",
-    "febrero",
-    "marzo",
-    "abril",
-    "mayo",
-    "junio",
-    "julio",
-    "agosto",
-    "septiembre",
-    "octubre",
-    "noviembre",
-    "diciembre",
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
   ]
   const fullDate = `${days[dateTime.getDay()]}, ${dateTime.getDate()} de ${monthsLong[dateTime.getMonth()]} ${dateTime.getFullYear()}`
 
-  // Format time: "10:00 am - 14:00 pm"
-  const hours = dateTime.getHours()
-  const minutes = dateTime.getMinutes().toString().padStart(2, "0")
+  // Format start time
+  const startHours = dateTime.getHours()
+  const startMinutes = dateTime.getMinutes().toString().padStart(2, "0")
+  const startAmPm = startHours < 12 ? "am" : "pm"
+  const startTime12 = startHours % 12 || 12
 
-  // Assuming events last 3 hours
-  const endHours = (hours + 3) % 24
-  const endMinutes = minutes
+  // Format end time
+  const endHours = parseInt(hours)
+  const endMinutes = minutes.padStart(2, "0")
+  const endAmPm = endHours < 12 ? "am" : "pm"
+  const endTime12 = endHours % 12 || 12
 
-  const time = `${hours}:${minutes} ${hours < 12 ? "am" : "pm"} - ${endHours}:${endMinutes} ${endHours < 12 ? "am" : "pm"}`
+  const time = `${startTime12}:${startMinutes} ${startAmPm} - ${endTime12}:${endMinutes} ${endAmPm}`
+  const endTimeFormatted = `${endTime12}:${endMinutes} ${endAmPm}`
 
-  return { day, month, year, fullDate, time }
+  return { day, month, year, fullDate, time, endTimeFormatted }
 }
 
 // Calculate countdown to the next event
@@ -126,7 +132,7 @@ function useCountdown(targetDate: string) {
 export default function EventsPage() {
   const { events, loading, error } = useEvents()
   const [featuredEvent, setFeaturedEvent] = useState<Event | null>(null)
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const countdown = useCountdown(featuredEvent?.dateTime || "")
 
   // Set the featured event (first upcoming event)
   useEffect(() => {
@@ -144,34 +150,6 @@ export default function EventsPage() {
       }
     }
   }, [events])
-
-  // Calculate countdown for featured event
-  useEffect(() => {
-    if (featuredEvent) {
-      const targetDate = featuredEvent.dateTime
-      const target = new Date(targetDate).getTime()
-
-      const interval = setInterval(() => {
-        const now = new Date().getTime()
-        const difference = target - now
-
-        if (difference <= 0) {
-          clearInterval(interval)
-          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-          return
-        }
-
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
-
-        setCountdown({ days, hours, minutes, seconds })
-      }, 1000)
-
-      return () => clearInterval(interval)
-    }
-  }, [featuredEvent])
 
   if (loading) {
     return (
@@ -212,9 +190,14 @@ export default function EventsPage() {
               {/* Left side - Image */}
               <div className="relative h-[300px] md:h-auto">
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="bg-white/20 rounded-full p-4 backdrop-blur-sm">
-                    <Play className="h-8 w-8 text-white fill-white" />
-                  </div>
+                  {featuredEvent.trailerUrl && (
+                    <button 
+                      onClick={() => window.open(featuredEvent.trailerUrl, '_blank')}
+                      className="bg-white/20 rounded-full p-4 backdrop-blur-sm hover:bg-white/30 transition-colors"
+                    >
+                      <Play className="h-8 w-8 text-white fill-white" />
+                    </button>
+                  )}
                 </div>
                 <Image
                   src={featuredEvent.image || "/placeholder.svg?height=400&width=600&query=event"}
@@ -233,12 +216,29 @@ export default function EventsPage() {
 
                 <div className="flex items-center mb-2">
                   <Calendar className="h-5 w-5 mr-2" />
-                  <span>{formatEventDate(featuredEvent.dateTime).fullDate}</span>
+                  <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).fullDate}</span>
                 </div>
 
-                <div className="flex items-center mb-6">
+                <div className="flex items-center mb-2">
                   <Clock className="h-5 w-5 mr-2" />
-                  <span>{formatEventDate(featuredEvent.dateTime).time}</span>
+                  <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).time}</span>
+                </div>
+
+                <div className="flex items-center mb-4">
+                  <span className="text-sm text-gray-300">
+                    📍 {featuredEvent.location} • 👥 {featuredEvent.capacity} personas • 💰 ${featuredEvent.price}
+                  </span>
+                </div>
+
+                {/* Topics */}
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {featuredEvent.topics.map((topic, index) => (
+                      <span key={index} className="bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full text-xs">
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Countdown */}
@@ -276,7 +276,7 @@ export default function EventsPage() {
         {/* Event List */}
         <div className="space-y-12">
           {events.map((event) => {
-            const { day, month, year, time } = formatEventDate(event.dateTime)
+            const { day, month, year, time } = formatEventDate(event.dateTime, event.endTime)
 
             return (
               <div key={event.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -304,12 +304,27 @@ export default function EventsPage() {
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
 
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-2">
                       <Clock className="h-5 w-5 text-gray-500 mr-2" />
                       <span className="text-gray-700">{time}</span>
                     </div>
 
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm text-gray-600">
+                        📍 {event.location} • 👥 {event.capacity} personas • 💰 ${event.price}
+                      </span>
+                    </div>
+
                     <p className="text-gray-600 mb-4">{event.description}</p>
+
+                    {/* Topics */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {event.topics.map((topic, index) => (
+                        <span key={index} className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs">
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
 
                     <Link
                       href={`/eventos/${event.id}`}
@@ -320,21 +335,15 @@ export default function EventsPage() {
                     </Link>
                   </div>
 
-                  {/* Logo placeholder - you can replace this with actual logos */}
+                  {/* Logo */}
                   <div className="hidden md:block w-[120px] h-[60px] relative">
-                    {event.title.includes("Kinder") && (
-                      <div className="text-gray-400 text-lg font-light italic">
-                        kinder
-                        <div className="text-xs">para emprendedores</div>
-                      </div>
-                    )}
-                    {event.title.includes("Optikids") && (
-                      <div className="flex flex-col items-center">
-                        <div className="text-gray-400 text-2xl">
-                          <span className="text-gray-300">$</span>
-                          OPTI-Kids
-                        </div>
-                      </div>
+                    {event.logo && (
+                      <Image 
+                        src={event.logo} 
+                        alt="Event logo" 
+                        fill
+                        className="object-contain"
+                      />
                     )}
                   </div>
                 </div>
