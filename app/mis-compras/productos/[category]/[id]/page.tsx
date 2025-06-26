@@ -73,12 +73,12 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
       try {
         setLoading(true)
         const productData = await api.get<Product>(`/product/${id}`)
-        
+
         // Ordenar secciones por ID para asegurar el orden correcto
         if (productData.sections) {
           productData.sections.sort((a, b) => a.id - b.id)
         }
-        
+
         setProduct(productData)
       } catch (error) {
         console.error("Error fetching product:", error)
@@ -303,6 +303,20 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
               <div className="text-orange-500 text-sm font-medium">Toolkit</div>
               <h1 className="text-2xl font-bold text-gray-900">{product?.name}</h1>
               {currentSectionData && <p className="text-gray-600 mt-2">{currentSectionData.title}</p>}
+
+              {/* Botón OptiKids - Prominente cerca del título */}
+              {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
+                <div className="mt-4">
+                  <a
+                    href="https://sanatoriumbusiness.com/optikids/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    🎯 Ingresar a OptiKids
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -560,6 +574,20 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
         <div className="text-center py-8 border-b">
           <h1 className="text-2xl font-bold text-gray-900">{product?.name}</h1>
           {product?.author && <p className="text-gray-600 mt-2">Por {product.author}</p>}
+
+          {/* Botón OptiKids - Prominente cerca del título */}
+          {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
+            <div className="mt-6">
+              <a
+                href="https://sanatoriumbusiness.com/optikids/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                🎯 Ingresar a OptiKids
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Visor de PDF */}

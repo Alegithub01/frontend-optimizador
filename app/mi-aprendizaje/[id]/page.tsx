@@ -236,7 +236,7 @@ export default function CoursePlayerPage() {
                 className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
               >
                 Ingresar a OptiKids
-              </a>
+              </a>  
             </div>
           )}
         </div>
