@@ -98,37 +98,27 @@ export default function MainNav() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-xs bg-white text-black border-gray-200">
-                <div className="h-full flex flex-col items-center justify-center gap-8 px-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
-                      className="w-full text-center"
-                    >
-                      <span className="text-2xl font-bold text-black hover:text-orange-500 transition-colors block py-3">
-                        {link.label}
-                      </span>
-                    </Link>
-                  ))}
-
-                  <div className="w-full border-t border-gray-200 pt-6 mt-4">
+                <div className="h-full flex flex-col">
+                  {/* Sección de usuario ARRIBA */}
+                  <div className="w-full border-b border-gray-200 pb-6 mb-6">
                     {isAuthenticated ? (
-                      <UserDropdown user={user!} onLogout={logout} />
+                      <div className="flex flex-col items-center">
+                        <UserDropdown user={user!} onLogout={logout} customIcon="/logo-plomo.svg" isMobile={true} />
+                      </div>
                     ) : (
                       <div className="flex flex-col gap-4 w-full">
-                        <Link 
+                        <Link
                           href="/login"
-                          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+                          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
                           className="w-full"
                         >
                           <button className="w-full border-2 border-black text-black hover:bg-black hover:text-white px-4 py-3 rounded-md transition text-xl font-bold">
                             Iniciar sesión
                           </button>
                         </Link>
-                        <Link 
+                        <Link
                           href="/registro"
-                          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))}
+                          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
                           className="w-full"
                         >
                           <button className="w-full bg-orange-700 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition text-xl font-bold">
@@ -137,6 +127,22 @@ export default function MainNav() {
                         </Link>
                       </div>
                     )}
+                  </div>
+
+                  {/* Enlaces de navegación en el centro */}
+                  <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
+                        className="w-full text-center"
+                      >
+                        <span className="text-2xl font-bold text-black hover:text-orange-500 transition-colors block py-3">
+                          {link.label}
+                        </span>
+                      </Link>
+                    ))}
                   </div>
                 </div>
               </SheetContent>

@@ -200,9 +200,9 @@ export function prepareQrData(itemData: any, userId: string | number): GenerarQr
   // Crear la glosa con el formato específico requerido por Red Enlace
   // Formato: "00004|APAPACHANDO|5462|TRANSACCION QR CON Comercio Apapachando"
   const comercioId = "454691" // ID del comercio (ajustar según corresponda)
-  const comercioNombre = "OPTIMIZACION - API QR" // Nombre del comercio (ajustar según corresponda)
-  const transaccionId = String(numeroReferencia).padStart(4, "0") // ID de transacción de 4 dígitos
-  const descripcion = `TRANSACCION QR CON Comercio ${comercioNombre}`
+  const comercioNombre = "OPTIMIZADOR API QR" // Nombre del comercio (ajustar según corresponda)
+  const transaccionId = "5499" // ID de transacción de 4 dígitos
+  const descripcion = "TRANSACCION QR prueba"
 
   // Formato final de la glosa
   const glosa = `${comercioId}|${comercioNombre}|${transaccionId}|${descripcion}`
