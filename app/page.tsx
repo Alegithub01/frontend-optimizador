@@ -101,7 +101,7 @@ export default function Home() {
     },
     {
       id: "3",
-      title: "OPTI KIDS",
+      title: "",
       image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1749226552/PersonajeOptikidsTutores_d1lnmh.png",
       link: "/proyectos/3",
       featured: true,
@@ -140,7 +140,7 @@ export default function Home() {
       </section>
 
       {/* Categories Section - Hidden on mobile */}
-      <section className="hidden md:block container mx-auto py-12 md:py-20 px-4">
+      <section className="hidden md:block container mx-auto py-12 md:py-0 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
           <CategoryCard
             title="Energía"
@@ -180,23 +180,24 @@ export default function Home() {
                 <h3 className="text-3xl md:text-4xl lg:text-5xl text-black font-black">CURSOS</h3>
               </div>
 
-              <p className="text-gray-400 mb-8 lg:mb-20">
+              <p className="text-gray-3 mb-8 lg:mb-20">
                 <strong className="text-black">Descubre tu potencial</strong>, domina nuevas habilidades con nuestros
                 cursos y programas diseñados para llevarte al siguiente nivel.
               </p>
 
+              {/* ✅ Botón visible solo en escritorio */}
               <Link
-              href="/cursos"
-              className="flex items-center justify-center lg:justify-start text-gray-400 font-semibold hover:text-orange-700 text-lg px-4 py-2"
-            >
-              Todos los cursos
-              <ChevronRight className="h-6 w-6 ml-2" />
-            </Link>
+                href="/cursos"
+                className="hidden lg:flex items-center justify-start text-gray-2 font-semibold hover:text-orange-700 text-lg px-4 py-2"
+              >
+                Todos los cursos
+                <ChevronRight className="h-6 w-6 ml-2" />
+              </Link>
             </div>
 
             {/* DERECHA - scroll horizontal */}
             <div className="overflow-x-auto w-full">
-              <div className="flex gap-4 md:gap-6 min-w-max pb-4">
+              <div className="flex gap-4 md:gap-6 min-w-max">
                 {loading && <p className="text-black">Cargando cursos...</p>}
                 {error && <p className="text-red-600">{error}</p>}
                 {!loading && !error && courses.length === 0 && <p className="text-black">No hay cursos disponibles.</p>}
@@ -210,36 +211,59 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Events Section */}
-        <section id="eventos" className="container mx-auto py-12 md:py-20 px-4">
-          <EventsSection />
-        </section>
-
-        {/* Products Section */}
-        <section id="productos" className="container mx-auto py-12 md:py-20 px-4">
-          <div className="mb-8 md:mb-12 text-center">
-            <h2 className="text-lg font-medium text-orange-700 mb-4">Categoría</h2>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">PRODUCTOS</h3>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 md:gap-12 mb-8">
-            {productCategories.map((category) => (
-              <ProductCategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            <Link href="/productos" className="flex items-center text-gray-400 hover:text-orange-700 text-lg px-4 py-2">
-              Todos los productos
-              <ArrowRight className="h-5 w-5 ml-1" />
+          {/* ✅ Botón móvil (solo visible en pantallas pequeñas) */}
+          <div className="mt-8 flex lg:hidden justify-center">
+            <Link
+              href="/cursos"
+              className="flex items-center rounded-full text-black font-semibold bg-orange-700 hover:text-orange-500 text-lg px-4 py-2"
+            >
+              Todos los cursos
+              <img src="/botones/arrowRigth.svg" alt="Flecha" className="h-6 w-6" />
             </Link>
           </div>
         </section>
 
+        {/* Events Section */}
+        <section id="eventos" className="container mx-auto py-12 md:py-0 px-4">
+          <EventsSection />
+        </section>
+
+        {/* Products Section */}
+        <section id="productos" className="container mx-auto py-12 md:py-0 px-4">
+          <div className="mb-8 md:mb-12 text-center">
+            <h2 className="text-lg font-medium text-orange-700 mb-4">Categoría</h2>
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">PRODUCTOS</h3>
+          </div>
+ 
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 mb-8">
+            {productCategories.map((category, index) => (
+              <div
+                key={category.id}
+                className={`
+                  ${productCategories.length % 2 !== 0 && index === productCategories.length - 1
+                    ? "col-span-2 justify-self-center w-full max-w-[280px] md:col-span-1 md:justify-self-auto md:max-w-full"
+                    : ""}
+                `}
+              >
+                <ProductCategoryCard category={category} />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+          <Link
+            href="/productos"
+            className="hidden lg:flex items-center text-gray-2 font-semibold hover:text-orange-500 transition-colors text-lg px-4 py-2"
+          >
+            Todos los productos
+            <ChevronRight className="h-6 w-6 ml-2" />
+          </Link>
+        </div>
+        </section>
+
         {/* Testimonials Section */}
-        <section id="testimonios" className="container mx-auto py-12 md:py-20 px-4">
+        <section id="testimonios" className="container mx-auto py-12 md:py-0 px-4">
           <TestimonialsSection testimonials={testimonials} />
         </section>
         {/* Mentoring CTA Section */}

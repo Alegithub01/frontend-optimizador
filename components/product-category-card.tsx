@@ -28,7 +28,7 @@ export default function ProductCategoryCard({ category }: ProductCategoryCardPro
       <h3 className="text-sm md:text-xl text-black font-bold mb-2 md:mb-4 text-center">{category.title}</h3>
 
       <Link href={category.href}>
-        <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-orange-700 flex items-center justify-center hover:bg-orange-600 transition-colors">
+        <div className="w-8 h-8 md:w-8 md:h-8 rounded-full bg-orange-700 flex items-center justify-center hover:bg-orange-600 transition-colors">
           <ArrowRight className="h-3 w-3 md:h-5 md:w-5 text-white" />
         </div>
       </Link>

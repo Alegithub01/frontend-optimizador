@@ -135,7 +135,7 @@ export default function CoursesPage() {
                 <p className="text-gray-500 text-sm mb-4">Bolivia cambio oficial: 6.96 bs</p>
 
                 <Button
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 py-6"
+                  className="w-full bg-orange-700 hover:bg-orange-500 text-black font-bold flex items-center justify-center gap-2 py-6"
                   onClick={() => handleCourseClick(course.id)}
                 >
                   Comprar <ShoppingCart className="h-4 w-4" />
@@ -146,11 +146,11 @@ export default function CoursesPage() {
         </div>
 
         <div className="mt-16 max-w-6xl mx-auto rounded-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-700 to-black p-10 text-white text-center">
-            <h2 className="text-3xl font-bold mb-2">CONVIERTE EN</h2>
-            <h3 className="text-3xl font-bold mb-6">PREMIUM</h3>
-            <p className="mb-8 max-w-md mx-auto">Accede a todos los cursos y recursos y asistente de IA</p>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6">Sí quiero ser opitmizado</Button>
+          <div className="bg-gradient-to-r from-orange-700 via-black to-orange-700 p-10 text-white text-center">
+            <h2 className="text-3xl font-extrabold mb-2">CONVIERTE EN</h2>
+            <h3 className="text-3xl font-extrabold mb-6">PREMIUM</h3>
+            <p className="mb-8 max-w-md mx-auto font-light">Accede a todos los cursos y recursos y asistente de IA</p>
+            <Button className="bg-orange-700 hover:bg-orange-600 rounded-full font-black text-black px-8 py-6">Sí quiero ser opitmizado</Button>
           </div>
         </div>
       </div>

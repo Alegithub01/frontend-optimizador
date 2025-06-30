@@ -270,7 +270,7 @@ export default function CoursePage({ params }: CoursePageProps) {
       <div className="container mx-auto py-8 px-4">
         {/* Migas de pan */}
         <div className="mb-8">
-          <Link href="/cursos" className="text-orange-500 hover:text-orange-600 flex items-center">
+          <Link href="/cursos" className="text-orange-700 hover:text-orange-600 flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a cursos
           </Link>
@@ -302,7 +302,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                     {!isPlaying && (
                       <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
                         <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                          <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-500 border-b-8 border-b-transparent ml-1"></div>
+                          <div className="w-0 h-0 border-y-[12px] border-l-[20px] border-l-black ml-1"></div>
                         </div>
                       </div>
                     )}
@@ -327,7 +327,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                      <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-500 border-b-8 border-b-transparent ml-1"></div>
+                      <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-700 border-b-8 border-b-transparent ml-1"></div>
                     </div>
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export default function CoursePage({ params }: CoursePageProps) {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
                   <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-500 border-b-8 border-b-transparent ml-1"></div>
+                    <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-700 border-b-8 border-b-transparent ml-1"></div>
                   </div>
                 </div>
               </div>
@@ -356,7 +356,7 @@ export default function CoursePage({ params }: CoursePageProps) {
           {/* Información del curso - 2/3 de ancho */}
           <div className="lg:col-span-2">
             <div className="mb-8">
-              <div className="text-orange-500 font-medium mb-2">CURSO</div>
+              <div className="text-orange-700 font-medium mb-2">CURSO</div>
               <h1 className="text-4xl font-black mb-6">{course.title}</h1>
 
               <p className="text-lg mb-8">{course.description}</p>
@@ -389,9 +389,9 @@ export default function CoursePage({ params }: CoursePageProps) {
                                 <li key={content.id} className="flex items-center">
                                   {hasPurchased ? (
                                     content.type === "video" ? (
-                                      <Play className="h-4 w-4 text-orange-500 mr-2" />
+                                      <Play className="h-4 w-4 text-orange-700 mr-2" />
                                     ) : (
-                                      <FileText className="h-4 w-4 text-orange-500 mr-2" />
+                                      <FileText className="h-4 w-4 text-orange-700 mr-2" />
                                     )
                                   ) : (
                                     <Lock className="h-4 w-4 text-gray-400 mr-2" />
@@ -408,7 +408,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                                 <ul className="space-y-2">
                                   {parseTemario(section.temario).map((item, index) => (
                                     <li key={index} className="flex items-start">
-                                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1.5 mr-2"></div>
+                                      <div className="w-1.5 h-1.5 bg-orange-700 rounded-full mt-1.5 mr-2"></div>
                                       <span className="text-sm">{item}</span>
                                     </li>
                                   ))}
@@ -439,7 +439,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                     </svg>
                     <span>Ya tienes acceso a este curso</span>
                   </div>
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600">Continuar aprendiendo</Button>
+                  <Button className="w-full bg-orange-700 hover:bg-orange-600">Continuar aprendiendo</Button>
                 </div>
               ) : (
                 <>
@@ -482,7 +482,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                   </div>
 
                   <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white mb-6 py-6"
+                    className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full mb-6 py-6"
                     onClick={handleBuy}
                     disabled={purchasing}
                   >
@@ -528,14 +528,14 @@ export default function CoursePage({ params }: CoursePageProps) {
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center">
                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                              <div className="w-0 h-0 border-t-6 border-t-transparent border-l-8 border-l-orange-500 border-b-6 border-b-transparent ml-1"></div>
+                              <div className="w-0 h-0 border-t-6 border-t-transparent border-l-8 border-l-orange-700 border-b-6 border-b-transparent ml-1"></div>
                             </div>
                           </div>
                         </div>
                       )}
                     </div>
                     <div className="p-4">
-                      <div className="text-orange-500 text-sm font-medium mb-1">Curso</div>
+                      <div className="text-orange-700 text-sm font-medium mb-1">Curso</div>
                       <h3 className="font-bold mb-2">{relatedCourse.title}</h3>
                       <p className="text-gray-600 text-sm mb-4">{relatedCourse.description}</p>
 
@@ -571,7 +571,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                       </div>
 
                       <Button
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                        className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full"
                         onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />

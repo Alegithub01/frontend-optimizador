@@ -26,14 +26,16 @@ export default function ProyectosSection({ proyectos }: ProyectosSectionProps) {
       </div>
 
       {/* Mobile Layout */}
-      <div className="block md:hidden space-y-6">
+      <div className="block md:hidden space-y-8">
         {/* Proyecto destacado primero en móvil */}
         {proyectoDestacado && <ProyectoCard proyecto={proyectoDestacado} featured />}
 
-        {/* Resto de proyectos */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Resto de proyectos en columna con espacio y tamaño fijo */}
+        <div className="space-y-8">
           {proyectosRegulares.map((proyecto) => (
-            <ProyectoCard key={proyecto.id} proyecto={proyecto} />
+            <div key={proyecto.id}>
+              <ProyectoCard proyecto={proyecto} />
+            </div>
           ))}
         </div>
       </div>
@@ -71,9 +73,9 @@ function ProyectoCard({ proyecto, featured = false }: { proyecto: Proyecto; feat
   return (
     <Link href={proyecto.link} className="group">
       <div
-        className={`relative rounded-2xl md:rounded-3xl overflow-hidden ${
-          featured ? "h-[300px] md:h-[400px]" : "h-[150px] md:h-[200px]"
-        } transition-transform duration-300 group-hover:scale-[0.98]`}
+        className={`relative rounded-2xl md:rounded-3xl overflow-hidden transition-transform duration-300 group-hover:scale-[0.98] ${
+          featured ? "h-[300px] md:h-[400px]" : "h-[300px] md:h-[200px]"
+        }`}
       >
         <Image
           src={proyecto.image || "/placeholder.svg"}
@@ -81,15 +83,12 @@ function ProyectoCard({ proyecto, featured = false }: { proyecto: Proyecto; feat
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
-
         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
-
         {featured && proyecto.title && (
           <div className="absolute top-1/4 left-0 right-0 text-center text-white">
             <div className="text-2xl md:text-4xl font-bold">{proyecto.title}</div>
           </div>
         )}
-
         <div className="absolute bottom-3 md:bottom-4 left-1/2 transform -translate-x-1/2">
           <div className="bg-orange-700 text-white rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center group-hover:bg-orange-600 transition-colors">
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
