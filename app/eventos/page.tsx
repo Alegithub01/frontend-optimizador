@@ -197,129 +197,84 @@ export default function EventsPage() {
           <h1 className="text-5xl font-black">EVENTOS</h1>
         </div>
 
-        {/* Featured Event - Desktop y Mobile */}
+        {/* Featured Event - Solo Desktop */}
         {featuredEvent && (
-          <>
-            {/* Desktop Layout */}
-            <div className="hidden lg:block bg-gray-1 text-white rounded-3xl overflow-hidden mb-16">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                {/* Left side - Video/Image con contador debajo */}
-                <div className="flex flex-col">
-                  {/* Video/Image con bordes */}
-                  <div className="p-6">
-                    <div className="relative h-[300px] lg:h-[300px] rounded-2xl overflow-hidden">
-                      <div className="absolute inset-0 flex items-center justify-center z-10">
-                        {featuredEvent.trailerUrl && (
-                          <button
-                            onClick={() => window.open(featuredEvent.trailerUrl, "_blank")}
-                            className="bg-white/20 rounded-full p-4 backdrop-blur-sm hover:bg-white/30 transition-colors"
-                          >
-                            <Play className="h-8 w-8 fill-white" />
-                          </button>
-                        )}
-                      </div>
-                      <Image
-                        src={featuredEvent.image || "/placeholder.svg?height=400&width=600&query=event"}
-                        alt={featuredEvent.title}
-                        fill
-                        className="object-cover"
-                      />
+          <div className="hidden lg:block bg-gray-1 text-white rounded-3xl overflow-hidden mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+              {/* Left side - Video/Image con contador debajo */}
+              <div className="flex flex-col">
+                {/* Video/Image con bordes */}
+                <div className="p-6">
+                  <div className="relative h-[300px] lg:h-[300px] rounded-2xl overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      {featuredEvent.trailerUrl && (
+                        <button
+                          onClick={() => window.open(featuredEvent.trailerUrl, "_blank")}
+                          className="bg-white/20 rounded-full p-4 backdrop-blur-sm hover:bg-white/30 transition-colors"
+                        >
+                          <Play className="h-8 w-8 fill-white" />
+                        </button>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Countdown debajo del video */}
-                  <div className="px-6 pb-6">
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="text-center">
-                        <div className="text-xs text-white mb-1">Días</div>
-                        <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.days}</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-white mb-1">Horas</div>
-                        <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.hours}</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-white mb-1">Minutos</div>
-                        <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.minutes}</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-white mb-1">Segundos</div>
-                        <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.seconds}</div>
-                      </div>
-                    </div>
+                    <Image
+                      src={featuredEvent.image || "/placeholder.svg?height=400&width=600&query=event"}
+                      alt={featuredEvent.title}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
 
-                {/* Right side - Content */}
-                <div className="p-8 flex flex-col justify-center">
-                  <h2 className="text-3xl font-extrabold mb-4">{featuredEvent.title}</h2>
-                  <p className="text-white mb-6 font-light">{featuredEvent.description}</p>
-
-                  <div className="text-orange-500 font-light mb-4">Evento más próximo</div>
-
-                  <div className="flex items-center mb-3 font-light">
-                    <Calendar className="h-5 w-5 mr-3" />
-                    <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).fullDate}</span>
+                {/* Countdown debajo del video */}
+                <div className="px-6 pb-6">
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="text-center">
+                      <div className="text-xs text-white mb-1">Días</div>
+                      <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.days}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-white mb-1">Horas</div>
+                      <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.hours}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-white mb-1">Minutos</div>
+                      <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.minutes}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-white mb-1">Segundos</div>
+                      <div className="text-3xl font-black bg-gray-4 rounded-lg py-3 px-2">{countdown.seconds}</div>
+                    </div>
                   </div>
-
-                  <div className="flex items-center mb-6 font-light">
-                    <Clock className="h-5 w-5 mr-3" />
-                    <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).time}</span>
-                  </div>
-
-                  <Link
-                    href={`/eventos/${featuredEvent.id}`}
-                    className="inline-flex items-center bg-orange-700 text-black font-semibold px-6 py-3 rounded-full hover:bg-orange-600 transition-colors w-fit"
-                  >
-                    Ver más
-                    <ChevronRight className="h-5 w-5 ml-2" />
-                  </Link>
                 </div>
+              </div>
+
+              {/* Right side - Content */}
+              <div className="p-8 flex flex-col justify-center">
+                <h2 className="text-3xl font-extrabold mb-4">{featuredEvent.title}</h2>
+                <p className="text-white mb-6 font-light">{featuredEvent.description}</p>
+
+                <div className="text-orange-500 font-light mb-4">Evento más próximo</div>
+
+                <div className="flex items-center mb-3 font-light">
+                  <Calendar className="h-5 w-5 mr-3" />
+                  <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).fullDate}</span>
+                </div>
+
+                <div className="flex items-center mb-6 font-light">
+                  <Clock className="h-5 w-5 mr-3" />
+                  <span>{formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).time}</span>
+                </div>
+
+                <Link
+                  href={`/eventos/${featuredEvent.id}`}
+                  className="inline-flex items-center bg-orange-700 text-black font-semibold px-6 py-3 rounded-full hover:bg-orange-600 transition-colors w-fit"
+                >
+                  Ver más
+                  <ChevronRight className="h-5 w-5 ml-2" />
+                </Link>
               </div>
             </div>
-
-            {/* Mobile Layout - Como en la imagen */}
-            <div className="lg:hidden bg-gray-1 text-white rounded-3xl overflow-hidden mb-16 relative">
-              {/* Background Image */}
-              <div className="absolute inset-0">
-                <Image
-                  src={featuredEvent.image || "/placeholder.svg?height=400&width=600&query=event"}
-                  alt={featuredEvent.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-black/60"></div>
-              </div>
-
-              {/* Content */}
-              <div className="relative z-10 p-6 flex flex-col justify-between min-h-[400px]">
-                {/* Top Content */}
-                <div>
-                  <h2 className="text-3xl font-black mb-4">{featuredEvent.title}</h2>
-                  <p className="text-white font-light text-sm leading-relaxed">{featuredEvent.description}</p>
-                </div>
-
-                {/* Bottom Content */}
-                <div className="mt-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-black">
-                        {formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).day}{" "}
-                        {formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).month}{" "}
-                        {formatEventDate(featuredEvent.dateTime, featuredEvent.endTime).year}
-                      </div>
-                    </div>
-                    <Link
-                      href={`/eventos/${featuredEvent.id}`}
-                      className="bg-orange-500 text-black font-bold px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors"
-                    >
-                      Agotado
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
+          </div>
         )}
 
         {/* Event List - Solo Desktop */}
@@ -383,44 +338,72 @@ export default function EventsPage() {
           })}
         </div>
 
-        {/* Mobile Event List - Simple cards */}
+        {/* Mobile Event List - Todos los eventos en una sola columna */}
         <div className="lg:hidden space-y-6">
-          {events.slice(1).map((event) => {
-            const { day, month, year } = formatEventDate(event.dateTime, event.endTime)
+          {events.map((event) => {
+            const { day, month, year, time } = formatEventDate(event.dateTime, event.endTime)
             return (
-              <div key={event.id} className="bg-gray-1 text-white rounded-3xl overflow-hidden relative">
-                {/* Background Image */}
-                <div className="absolute inset-0">
+              <div key={event.id} className="bg-gray-6 rounded-3xl overflow-hidden shadow-lg border border-gray-200">
+                {/* Header Image */}
+                <div className="relative h-[150px] w-full">
                   <Image
-                    src={event.image || "/placeholder.svg?height=300&width=400&query=event"}
+                    src={event.image || "/placeholder.svg?height=200&width=400&query=event"}
                     alt={event.title}
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/60"></div>
+                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                    {/* Logo del evento centrado */}
+                    {event.logo && (
+                      <div className="text-center">
+                        <Image
+                          src={event.logo || "/placeholder.svg"}
+                          alt={`${event.title} logo`}
+                          width={120}
+                          height={80}
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="relative z-10 p-6 flex flex-col justify-between min-h-[300px]">
-                  <div>
-                    <h3 className="text-2xl font-black mb-3">{event.title}</h3>
-                    <p className="text-white font-light text-sm leading-relaxed line-clamp-3">{event.description}</p>
+                {/* Content - resto del contenido permanece igual */}
+                <div className="p-6">
+                  {/* Title */}
+                  <h3 className="text-xl font-black text-black mb-4 leading-tight">{event.title}</h3>
+
+                  {/* Description */}
+                  <p className="text-black font-normal text-sm leading-relaxed mb-6">{event.description}</p>
+
+                  {/* Date and Button */}
+                  <div className="flex items-center justify-between mb-4">
+                    {/* Fecha con estilos separados */}
+                    <div className="flex items-center text-2xl text-black">
+                      <span className="font-black text-5xl">{day}</span>
+                      <span className="font-black  text-l ml-2">{month}</span>
+                      
+                      {/* Línea vertical separadora */}
+                      <div className="h-6 w-[2px] bg-orange-700 mx-2" />
+
+                      <span className="font-black text-xl">{year}</span>
+                    </div>
+
+                    {/* Botón "Ver más" con flecha a la derecha */}
+                    <Link
+                      href={`/eventos/${event.id}`}
+                      className="bg-orange-700 text-black px-2 py-1 rounded-full text-sm hover:bg-orange-600 transition-colors flex items-center gap-2"
+                    >
+                      Ver más
+                      <img src="/botones/arrowRigthP.svg" alt="flecha" className="w-4 h-4" />
+                    </Link>
                   </div>
 
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xl font-black">
-                          {day} {month} {year}
-                        </div>
-                      </div>
-                      <Link
-                        href={`/eventos/${event.id}`}
-                        className="bg-orange-500 text-black font-bold px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors"
-                      >
-                        Ver más
-                      </Link>
-                    </div>
+
+                  {/* Time */}
+                  <div className="flex items-center text-black">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-normal">{time}</span>
                   </div>
                 </div>
               </div>

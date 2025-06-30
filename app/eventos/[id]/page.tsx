@@ -336,7 +336,7 @@ export default function EventPage({ params }: EventPageProps) {
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto py-8 px-4">
         <div className="mb-8">
-          <Link href="/eventos" className="text-orange-500 hover:text-orange-600 flex items-center">
+          <Link href="/eventos" className="text-orange-700 hover:text-orange-600 flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a eventos
           </Link>
