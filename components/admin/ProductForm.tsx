@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link } from "lucide-react"
+import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link, ImageIcon, Film } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface ProductFormProps {
@@ -42,6 +42,9 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     author: product?.author || "",
     price: product?.price || 0,
     image: product?.image || "",
+    extraImageUrl: product?.extraImageUrl || "",
+    extraImageUrlDos: product?.extraImageUrlDos || "",
+    gifUrl: product?.gifUrl || "",
     stock: product?.stock || 0,
     category: product?.category || "libro",
     subCategory: product?.subCategory,
@@ -54,17 +57,17 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   // Función para transformar URLs de Google Drive
   const transformDriveUrl = (url: string | undefined): string | undefined => {
     if (!url) return undefined
-    
+
     // Si ya es un enlace de descarga directa, no hacer nada
-    if (url.includes('uc?export=download')) return url
-    
+    if (url.includes("uc?export=download")) return url
+
     // Extraer el ID del archivo de diferentes formatos de URL de Drive
     const patterns = [
-      /drive\.google\.com\/file\/d\/([^\/]+)/,
+      /drive\.google\.com\/file\/d\/([^/]+)/,
       /drive\.google\.com\/open\?id=([^&]+)/,
-      /drive\.google\.com\/uc\?id=([^&]+)/
+      /drive\.google\.com\/uc\?id=([^&]+)/,
     ]
-    
+
     let fileId = null
     for (const pattern of patterns) {
       const match = url.match(pattern)
@@ -73,20 +76,20 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         break
       }
     }
-    
+
     if (fileId) {
       return `https://drive.google.com/uc?export=download&id=${fileId}`
     }
-    
+
     return url
   }
 
-  const handleInputChange = <K extends keyof Product>(field: K, value: Product[K]) => {
+  const handleInputChange = (field: keyof Product, value: any) => {
     // Transformar automáticamente URLs de Drive para el campo pdfUrl
-    if (field === 'pdfUrl' && typeof value === 'string') {
-      value = transformDriveUrl(value) as Product[K]
+    if (field === "pdfUrl" && typeof value === "string") {
+      value = transformDriveUrl(value)
     }
-    
+
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -106,7 +109,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     const newSections = [...(formData.sections || [])]
     newSections[index] = {
       ...newSections[index],
-      [field]: field === 'fileUrl' ? transformDriveUrl(value) : value,
+      [field]: field === "fileUrl" ? transformDriveUrl(value) : value,
     }
     setFormData((prev) => ({
       ...prev,
@@ -137,7 +140,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     try {
       const cleanUrl = (url: string | undefined): string | undefined => {
         if (!url || url.trim() === "") return undefined
@@ -149,7 +151,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           ? formData.sections.map((section) => ({
               ...section,
               videoUrl: cleanUrl(section.videoUrl),
-              fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)), // Asegurar transformación aquí también
+              fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)),
               description: section.description?.trim() || undefined,
             }))
           : undefined
@@ -160,13 +162,17 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         price: formData.price,
         stock: formData.stock,
         image: formData.image?.trim(),
+        extraImageUrl: cleanUrl(formData.extraImageUrl),
+        extraImageUrlDos: cleanUrl(formData.extraImageUrlDos),
+        gifUrl: cleanUrl(formData.gifUrl),
         category: formData.category,
         subCategory: formData.subCategory || undefined,
         description: formData.description?.trim(),
         trailerUrl: cleanUrl(formData.trailerUrl),
-        pdfUrl: (formData.category === "libro" || formData.category === "revista") 
-          ? cleanUrl(transformDriveUrl(formData.pdfUrl)) 
-          : undefined,
+        pdfUrl:
+          formData.category === "libro" || formData.category === "revista"
+            ? cleanUrl(transformDriveUrl(formData.pdfUrl))
+            : undefined,
         sections: cleanedSections,
       }
 
@@ -286,81 +292,25 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             </div>
 
             {isToolkit && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subCategory">Subcategoría</Label>
-                  <Select
-                    value={formData.subCategory || ""}
-                    onValueChange={(value) => handleInputChange("subCategory", value as Product["subCategory"])}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una subcategoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TOOLKIT_SUBCATEGORIES.map((subCategory) => (
-                        <SelectItem key={subCategory.value} value={subCategory.value}>
-                          {subCategory.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="image">URL de Imagen</Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) => handleInputChange("image", e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="subCategory">Subcategoría</Label>
+                <Select
+                  value={formData.subCategory || ""}
+                  onValueChange={(value) => handleInputChange("subCategory", value as Product["subCategory"])}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una subcategoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TOOLKIT_SUBCATEGORIES.map((subCategory) => (
+                      <SelectItem key={subCategory.value} value={subCategory.value}>
+                        {subCategory.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
-
-            {!isToolkit && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="image">URL de Imagen</Label>
-                  <Input
-                    id="image"
-                    value={formData.image}
-                    onChange={(e) => handleInputChange("image", e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
-                </div>
-                {isBookOrMagazine && (
-                  <div className="space-y-2">
-                    <Label htmlFor="pdfUrl">URL del PDF</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        id="pdfUrl"
-                        value={formData.pdfUrl || ""}
-                        onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
-                        placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.pdfUrl && formData.pdfUrl.includes('drive.google.com') && 
-                       !formData.pdfUrl.includes('uc?export=download') && (
-                        <span>✔ El enlace de Drive será convertido automáticamente</span>
-                      )}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="trailerUrl">URL del Trailer</Label>
-              <Input
-                id="trailerUrl"
-                value={formData.trailerUrl}
-                onChange={(e) => handleInputChange("trailerUrl", e.target.value)}
-                placeholder="https://example.com/trailer.mp4"
-              />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
@@ -373,6 +323,106 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 required
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Card de Multimedia */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ImageIcon className="h-5 w-5 mr-2" />
+              Contenido Multimedia
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="image" className="flex items-center">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  URL de Imagen Principal
+                </Label>
+                <Input
+                  id="image"
+                  value={formData.image}
+                  onChange={(e) => handleInputChange("image", e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="extraImageUrl" className="flex items-center">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  URL de Imagen Extra
+                </Label>
+                <Input
+                  id="extraImageUrl"
+                  value={formData.extraImageUrl}
+                  onChange={(e) => handleInputChange("extraImageUrl", e.target.value)}
+                  placeholder="https://example.com/extra-image.jpg"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="extraImageUrlDos" className="flex items-center">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  URL de Imagen Extra 2
+                </Label>
+                <Input
+                  id="extraImageUrlDos"
+                  value={formData.extraImageUrlDos}
+                  onChange={(e) => handleInputChange("extraImageUrlDos", e.target.value)}
+                  placeholder="https://example.com/extra-image-2.jpg"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="gifUrl" className="flex items-center">
+                  <Film className="h-4 w-4 mr-2" />
+                  URL del GIF
+                </Label>
+                <Input
+                  id="gifUrl"
+                  value={formData.gifUrl}
+                  onChange={(e) => handleInputChange("gifUrl", e.target.value)}
+                  placeholder="https://example.com/animation.gif"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trailerUrl" className="flex items-center">
+                  <Video className="h-4 w-4 mr-2" />
+                  URL del Trailer
+                </Label>
+                <Input
+                  id="trailerUrl"
+                  value={formData.trailerUrl}
+                  onChange={(e) => handleInputChange("trailerUrl", e.target.value)}
+                  placeholder="https://example.com/trailer.mp4"
+                />
+              </div>
+            </div>
+
+            {isBookOrMagazine && (
+              <div className="space-y-2">
+                <Label htmlFor="pdfUrl" className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2" />
+                  URL del PDF
+                </Label>
+                <Input
+                  id="pdfUrl"
+                  value={formData.pdfUrl || ""}
+                  onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
+                  placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
+                />
+                {formData.pdfUrl &&
+                  formData.pdfUrl.includes("drive.google.com") &&
+                  !formData.pdfUrl.includes("uc?export=download") && (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✔ El enlace de Drive será convertido automáticamente para descarga directa
+                    </p>
+                  )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -427,34 +477,37 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label className="flex items-center">
-                            <Video className="h-4 w-4 mr-2" />
-                            URL del Video (opcional)
-                          </Label>
-                          <Input
-                            value={section.videoUrl || ""}
-                            onChange={(e) => handleSectionChange(index, "videoUrl", e.target.value)}
-                            placeholder="https://example.com/video.mp4"
-                          />
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="flex items-center">
+                              <Video className="h-4 w-4 mr-2" />
+                              URL del Video (opcional)
+                            </Label>
+                            <Input
+                              value={section.videoUrl || ""}
+                              onChange={(e) => handleSectionChange(index, "videoUrl", e.target.value)}
+                              placeholder="https://example.com/video.mp4"
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label className="flex items-center">
-                            <Link className="h-4 w-4 mr-2" />
-                            URL del Archivo (opcional)
-                          </Label>
-                          <Input
-                            value={section.fileUrl || ""}
-                            onChange={(e) => handleSectionChange(index, "fileUrl", e.target.value)}
-                            placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
-                          />
-                          <p className="text-xs text-gray-500">
-                            {section.fileUrl && section.fileUrl.includes('drive.google.com') && 
-                             !section.fileUrl.includes('uc?export=download') && (
-                              <span>✔ El enlace de Drive será convertido automáticamente</span>
-                            )}
-                          </p>
+                          <div className="space-y-2">
+                            <Label className="flex items-center">
+                              <Link className="h-4 w-4 mr-2" />
+                              URL del Archivo (opcional)
+                            </Label>
+                            <Input
+                              value={section.fileUrl || ""}
+                              onChange={(e) => handleSectionChange(index, "fileUrl", e.target.value)}
+                              placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
+                            />
+                            {section.fileUrl &&
+                              section.fileUrl.includes("drive.google.com") &&
+                              !section.fileUrl.includes("uc?export=download") && (
+                                <p className="text-xs text-green-600">
+                                  ✔ El enlace de Drive será convertido automáticamente
+                                </p>
+                              )}
+                          </div>
                         </div>
 
                         <div className="space-y-2">

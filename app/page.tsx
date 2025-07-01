@@ -123,21 +123,22 @@ export default function Home() {
   return (
     <div className="min-h-[100vh] bg-black text-white">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 text-center relative h-screen flex flex-col justify-center items-center">
-        <h1 className="text-3xl md:text-4xl lg:text-6xl font-sans mb-8 md:mb-12 leading-tight">
+      <section className="container mx-auto px-4 text-center relative min-h-screen pt-10 md:pt-0 flex flex-col justify-start md:justify-center items-center">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-sans mb-4 md:mb-8 leading-tight">
           ¿QUÉ TE FALTA PARA SER FELIZ?
         </h1>
 
-        <div className="relative w-48 h-48 md:w-80 md:h-80 mx-auto mb-8 md:mb-16">
+        <div className="relative w-[80vw] h-[80vw] sm:w-64 sm:h-64 md:w-80 md:h-80 mx-auto mb-6 md:mb-12 mt-20">
           <div className="w-full h-full relative glow-strong">
             <Lottie animationData={animacionLogo} loop autoplay className="object-contain w-full h-full" />
           </div>
         </div>
 
-        <Button className="bg-white text-black hover:bg-orange-700 hover:text-white transition-colors px-6 md:px-8 py-3 md:py-6 text-base md:text-lg rounded-full">
+        <Button className="mt-20 bg-white text-black hover:bg-orange-700 hover:text-white transition-colors px-6 md:px-8 py-3 md:py-6 text-base md:text-lg rounded-full">
           Descúbrelo
         </Button>
       </section>
+
 
       {/* Categories Section - Hidden on mobile */}
       <section className="hidden md:block container mx-auto py-12 md:py-0 px-4">

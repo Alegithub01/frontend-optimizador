@@ -106,7 +106,7 @@ export default function CoursesPage() {
                   src={course.image || "/placeholder.svg?height=300&width=400"}
                   alt={course.title}
                   fill
-                  className="object-cover"
+                  className="object-cover rounded-xl"
                 />
                 {course.hasVideo && (
                   <div className="absolute inset-0 flex items-center justify-center">

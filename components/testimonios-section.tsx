@@ -51,7 +51,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
     <section className="container mx-auto py-12 md:py-20 px-4">
       <div className="flex flex-col md:flex-row justify-center items-start md:items-center mb-8 md:mb-12">
         <div className="text-center">
-          <h2 className="text-lg font-medium text-orange-500 mb-3">Todos los</h2>
+          <h2 className="text-lg font-medium text-orange-500 mb-3">Categoría</h2>
           <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">TESTIMONIOS</h3>
         </div>
       </div>
@@ -200,7 +200,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                         <Play className="h-6 w-6 text-gray-800 fill-gray-800 ml-1" />
                       </button>
                     </div>
-                  </>
+                 </>
                 )}
 
                 <div className="absolute bottom-0 left-0 right-0 bg-white p-3 rounded-t-xl">

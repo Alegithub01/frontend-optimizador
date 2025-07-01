@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ShoppingCart, Truck, Package } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, Truck, Package, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { api } from "@/lib/api"
@@ -19,6 +19,10 @@ interface Product {
   originalPrice?: string | number
   discount?: number
   image: string
+  extraImageUrl?: string
+  extraImageUrlDos?: string
+  gifUrl?: string
+  trailerUrl?: string
   stock: number
   category: "libro" | "revista"
   description?: string
@@ -103,13 +107,14 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const router = useRouter()
   const { toast } = useToast()
   const { isAuthenticated, user } = useAuthContext()
-
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("fisico")
   const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null)
+  const [showVideoModal, setShowVideoModal] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   // Estados para información de envío
   const [selectedDepartment, setSelectedDepartment] = useState("")
@@ -120,12 +125,91 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   // Obtener información del departamento seleccionado
   const selectedDeptInfo = BOLIVIA_DEPARTMENTS.find((dept) => dept.code === selectedDepartment)
 
+  // Función para obtener URL de embed de Vimeo
+  const getEmbedUrl = (url: string) => {
+    if (url.includes("vimeo.com")) {
+      const videoId = url.split("/").pop()?.split("?")[0]
+      return `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`
+    }
+    if (url.includes("youtube.com/watch")) {
+      const videoId = url.split("v=")[1]?.split("&")[0]
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
+    }
+    if (url.includes("youtu.be/")) {
+      const videoId = url.split("/").pop()?.split("?")[0]
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
+    }
+    return url
+  }
+
+  // Crear array de slides para el carrusel
+  const getCarouselSlides = () => {
+    if (!product) return []
+
+    const slides = []
+
+    // Slide 1: GIF principal
+    slides.push({
+      type: "image",
+      src: product.gifUrl || product.image,
+      alt: product.name,
+      isMain: true,
+    })
+
+    // Slide 2: Primera imagen extra
+    if (product.extraImageUrl) {
+      slides.push({
+        type: "image",
+        src: product.extraImageUrl,
+        alt: `${product.name} imagen 1`,
+        isMain: false,
+      })
+    }
+
+    // Slide 3: Segunda imagen extra
+    if (product.extraImageUrlDos) {
+      slides.push({
+        type: "image",
+        src: product.extraImageUrlDos,
+        alt: `${product.name} imagen 2`,
+        isMain: false,
+      })
+    }
+
+    // Slide 4: Video trailer
+    if (product.trailerUrl) {
+      slides.push({
+        type: "video",
+        src: product.trailerUrl,
+        alt: `Video trailer de ${product.name}`,
+        isMain: false,
+      })
+    }
+
+    return slides
+  }
+
+  const slides = getCarouselSlides()
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
+
+  const handleVideoClick = () => {
+    if (slides[currentSlide]?.type === "video") {
+      setShowVideoModal(true)
+    }
+  }
+
   useEffect(() => {
     const detectUserCountry = async () => {
       const detectedCountry = await CountryService.detectCountry()
       setCountryInfo(detectedCountry)
     }
-
     detectUserCountry()
   }, [])
 
@@ -220,7 +304,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
       }
 
       // Validación especial para Cochabamba
-      if (selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "shipping" && needsHomeDelivery && !shippingAddress.trim()) {
+      if (
+        selectedDepartment === "CBBA" &&
+        cochabambaDeliveryMethod === "shipping" &&
+        needsHomeDelivery &&
+        !shippingAddress.trim()
+      ) {
         toast({
           title: "Dirección requerida",
           description: "Por favor ingresa tu dirección completa para envío a domicilio.",
@@ -239,6 +328,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         return false
       }
     }
+
     return true
   }
 
@@ -251,7 +341,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
     }
 
     setPurchasing(true)
-
     try {
       // Función para convertir precio a número si es string
       const parsePrice = (price: string | number): number => {
@@ -288,7 +377,8 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           deliveryType: selectedFormat === "digital" ? "digital" : "physical",
           department: selectedDepartment,
           departmentName: selectedDeptInfo?.name,
-          needsHomeDelivery: selectedDepartment === "CBBA" ? cochabambaDeliveryMethod === "shipping" : needsHomeDelivery,
+          needsHomeDelivery:
+            selectedDepartment === "CBBA" ? cochabambaDeliveryMethod === "shipping" : needsHomeDelivery,
           shippingAddress,
           fedexAvailable: selectedDeptInfo?.fedexAvailable || false,
           isCapital: selectedDeptInfo?.isCapital || false,
@@ -359,54 +449,131 @@ export default function ProductDetailPage({ params }: { params: { category: stri
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-4 md:py-8 px-4">
         {/* Breadcrumb */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-4 md:mb-8">
           <Link
             href={`/productos/${params.category}`}
-            className="text-orange-500 hover:text-orange-600 flex items-center"
+            className="text-orange-500 hover:text-orange-600 flex items-center text-sm md:text-base"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver a {params.category}s
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
           {/* Galería de imágenes */}
           <div className="space-y-4">
-            {/* Imagen principal */}
-            <div className="relative h-96 bg-gray-50 rounded-lg overflow-hidden">
-              <Image
-                src={product.images?.[selectedImage] || product.image}
-                alt={product.name}
-                fill
-                className="object-contain p-4"
-              />
-            </div>
+            {/* Vista Desktop - Layout original */}
+            <div className="hidden md:block">
+              {/* Imagen principal - GIF */}
+              <div className="relative h-96 bg-gray-50 rounded-lg overflow-hidden mb-4">
+                <Image src={product.gifUrl || product.image} alt={product.name} fill className="object-contain p-4" />
+              </div>
 
-            {/* Miniaturas */}
-            <div className="grid grid-cols-4 gap-2">
-              {product.images?.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? "border-orange-500" : "border-transparent hover:border-gray-300"
-                  }`}
-                >
+              {/* Miniaturas - 3 elementos */}
+              <div className="grid grid-cols-3 gap-2">
+                {/* Primera imagen extra */}
+                <div className="relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer">
                   <Image
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} vista ${index + 1}`}
+                    src={product.extraImageUrl || product.image}
+                    alt={`${product.name} imagen 1`}
                     fill
                     className="object-contain p-1"
                   />
-                </button>
-              ))}
+                </div>
+
+                {/* Segunda imagen extra */}
+                <div className="relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer">
+                  <Image
+                    src={product.extraImageUrlDos || product.image}
+                    alt={`${product.name} imagen 2`}
+                    fill
+                    className="object-contain p-1"
+                  />
+                </div>
+
+                {/* Video trailer */}
+                <div
+                  className="relative h-20 bg-gray-900 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer"
+                  onClick={() => product.trailerUrl && setShowVideoModal(true)}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-1 left-1 text-white text-xs font-medium">Video</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Vista Mobile - Carrusel */}
+            <div className="md:hidden">
+              <div className="relative">
+                {/* Carrusel principal */}
+                <div className="relative h-80 bg-gray-50 rounded-lg overflow-hidden">
+                  {slides.length > 0 && (
+                    <>
+                      {slides[currentSlide].type === "image" ? (
+                        <Image
+                          src={slides[currentSlide].src || "/placeholder.svg"}
+                          alt={slides[currentSlide].alt}
+                          fill
+                          className="object-contain p-4"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full bg-gray-900 cursor-pointer" onClick={handleVideoClick}>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                            </div>
+                          </div>
+                          <span className="absolute bottom-4 left-4 text-white text-sm font-medium">Video Trailer</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Botones de navegación */}
+                  {slides.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Indicadores de puntos */}
+                {slides.length > 1 && (
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {slides.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentSlide ? "bg-orange-500" : "bg-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Información del producto */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Categoría */}
             <div>
               <span className="text-orange-500 text-sm font-medium uppercase tracking-wide">{params.category}</span>
@@ -414,21 +581,21 @@ export default function ProductDetailPage({ params }: { params: { category: stri
 
             {/* Título y autor */}
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              {product.author && <p className="text-gray-600">By {product.author}</p>}
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
+              {product.author && <p className="text-gray-600 text-sm md:text-base">By {product.author}</p>}
             </div>
 
             {/* Descripción */}
             <div>
-              <h3 className="font-semibold mb-2">Descripción</h3>
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              <h3 className="font-semibold mb-2 text-sm md:text-base">Descripción</h3>
+              <p className="text-gray-700 leading-relaxed text-sm md:text-base">{product.description}</p>
             </div>
 
             {/* Formato */}
             {product.formats && product.formats.length > 1 && (
               <div>
-                <h3 className="font-semibold mb-3">Formato</h3>
-                <div className="flex space-x-4">
+                <h3 className="font-semibold mb-3 text-sm md:text-base">Formato</h3>
+                <div className="flex justify-center space-x-6 md:space-x-8">
                   {product.formats.map((format) => (
                     <label key={format} className="flex items-center cursor-pointer">
                       <input
@@ -437,14 +604,14 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                         value={format}
                         checked={selectedFormat === format}
                         onChange={(e) => setSelectedFormat(e.target.value as "digital" | "fisico")}
-                        className="mr-2 text-orange-500 focus:ring-orange-500"
+                        className="mr-2 text-orange-500 focus:ring-orange-500 "
                       />
-                      <span className="capitalize">{format}</span>
+                      <span className="capitalize text-sm md:text-base">{format}</span>
                     </label>
                   ))}
                 </div>
                 {/* Información adicional sobre el formato */}
-                <div className="mt-2 text-sm text-gray-600">
+                <div className="mt-2 text-xs md:text-sm text-black text-center">
                   {selectedFormat === "digital" ? (
                     <p>📱 Descarga inmediata después del pago</p>
                   ) : (
@@ -456,10 +623,10 @@ export default function ProductDetailPage({ params }: { params: { category: stri
 
             {/* Información de envío - Solo para formato físico */}
             {selectedFormat === "fisico" && (
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <div className="bg-white p-4 md:p-6 rounded-lg ">
                 <div className="flex items-center gap-2 mb-4">
-                  <Truck className="h-6 w-6 text-blue-600" />
-                  <h3 className="font-semibold text-blue-900 text-lg">Información de Envío</h3>
+                  <Truck className="h-5 w-5 md:h-6 md:w-6 text-orange-700" />
+                  <h3 className="font-semibold text-orange-700 text-base md:text-lg">Información de Envío</h3>
                 </div>
 
                 {/* Selector de departamento */}
@@ -468,7 +635,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   <select
                     value={selectedDepartment}
                     onChange={(e) => setSelectedDepartment(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
                     required
                   >
                     <option value="">Selecciona tu departamento</option>
@@ -487,16 +654,16 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                       // Para capitales (La Paz, Cochabamba, Santa Cruz) y El Alto
                       needsHomeDelivery ? (
                         // Si marca envío a domicilio en capital
-                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <div className="bg-orange-50 p-3 md:p-4 rounded-lg border border-orange-200">
                           <div className="flex items-center gap-2 mb-2">
-                            <Package className="h-5 w-5 text-orange-600" />
-                            <span className="font-medium text-orange-800">Envío a Domicilio</span>
+                            <Package className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
+                            <span className="font-medium text-orange-800 text-sm md:text-base">Envío a Domicilio</span>
                           </div>
-                          <p className="text-orange-700 text-sm">
+                          <p className="text-orange-700 text-xs md:text-sm">
                             📦 Envío a domicilio en {selectedDeptInfo.name} con <strong>costo adicional</strong>
                           </p>
-                          <p className="text-orange-700 text-sm">🚚 Entrega en 1-3 días hábiles</p>
-                          <p className="text-orange-700 text-sm font-medium mt-2">
+                          <p className="text-orange-700 text-xs md:text-sm">🚚 Entrega en 1-3 días hábiles</p>
+                          <p className="text-orange-700 text-xs md:text-sm font-medium mt-2">
                             💰 El costo se coordinará con atención al cliente una vez realizada su compra
                           </p>
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
@@ -508,29 +675,31 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                         </div>
                       ) : (
                         // Envío normal a capital (gratis)
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div className="bg-green-50 p-3 md:p-4 rounded-lg border border-green-200">
                           <div className="flex items-center gap-2 mb-2">
-                            <Package className="h-5 w-5 text-green-600" />
-                            <span className="font-medium text-green-800">Envío con FedEx</span>
+                            <Package className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                            <span className="font-medium text-green-800 text-sm md:text-base">Envío con FedEx</span>
                           </div>
-                          <p className="text-green-700 text-sm">
+                          <p className="text-green-700 text-xs md:text-sm">
                             ✅ <strong>Envío GRATIS</strong> a {selectedDeptInfo.name}
                           </p>
-                          <p className="text-green-700 text-sm">🚚 Entrega en 1-2 días hábiles</p>
+                          <p className="text-green-700 text-xs md:text-sm">🚚 Entrega en 1-2 días hábiles</p>
                         </div>
                       )
                     ) : (
                       // Para otros departamentos
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                      <div className="bg-orange-50 p-3 md:p-4 rounded-lg border border-orange-200">
                         <div className="flex items-center gap-2 mb-2">
-                          <Package className="h-5 w-5 text-orange-600" />
-                          <span className="font-medium text-orange-800">Envío Interdepartamental</span>
+                          <Package className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
+                          <span className="font-medium text-orange-800 text-sm md:text-base">
+                            Envío Interdepartamental
+                          </span>
                         </div>
-                        <p className="text-orange-700 text-sm">
+                        <p className="text-orange-700 text-xs md:text-sm">
                           📦 Envío a {selectedDeptInfo.name} con <strong>costo adicional</strong>
                         </p>
-                        <p className="text-orange-700 text-sm">🚚 Entrega en 3-5 días hábiles</p>
-                        <p className="text-orange-700 text-sm font-medium mt-2">
+                        <p className="text-orange-700 text-xs md:text-sm">🚚 Entrega en 3-5 días hábiles</p>
+                        <p className="text-orange-700 text-xs md:text-sm font-medium mt-2">
                           💰 El costo se coordinará con atención al cliente una vez realizada su compra
                         </p>
                         <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
@@ -547,7 +716,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 {/* Opciones especiales para Cochabamba */}
                 {selectedDepartment === "CBBA" && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium mb-2">Método de entrega en Cochabamba</h4>
+                    <h4 className="text-xs md:text-sm font-medium mb-2">Método de entrega en Cochabamba</h4>
                     <div className="flex flex-col space-y-2">
                       <label className="flex items-center cursor-pointer">
                         <input
@@ -558,7 +727,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                           onChange={() => setCochabambaDeliveryMethod("office")}
                           className="mr-2 text-orange-500 focus:ring-orange-500"
                         />
-                        <span>Recojo en oficina (Gratis)</span>
+                        <span className="text-xs md:text-sm">Recojo en oficina (Gratis)</span>
                       </label>
                       <label className="flex items-center cursor-pointer">
                         <input
@@ -569,16 +738,26 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                           onChange={() => setCochabambaDeliveryMethod("shipping")}
                           className="mr-2 text-orange-500 focus:ring-orange-500"
                         />
-                        <span>Necesito envío a domicilio o provincia</span>
+                        <span className="text-xs md:text-sm">Necesito envío a domicilio o provincia</span>
                       </label>
                     </div>
+
                     {cochabambaDeliveryMethod === "office" && (
-                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                        <p>📍 Dirección: <a href="https://maps.app.goo.gl/zynnG3QMVnxeoZpC9" target="_blank" rel="noopener noreferrer">https://maps.app.goo.gl/zynnG3QMVnxeoZpC9</a></p>
-                        <p>🕒 Horario de atención: Lunes a Viernes de 8:00 a 12:20 y de 13:30 a 17:30
-                          Sábado de 8:00 a 13:00.
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                        <p>
+                          📍 Dirección:{" "}
+                          <a href="https://maps.app.goo.gl/zynnG3QMVnxeoZpC9" target="_blank" rel="noopener noreferrer">
+                            https://maps.app.goo.gl/zynnG3QMVnxeoZpC9
+                          </a>
                         </p>
-                        <p>Una ves que realice su compra comunique con el nombre que realizo su compra, el nombre del producto y el comprobante de pago</p>
+                        <p>
+                          🕒 Horario de atención: Lunes a Viernes de 8:00 a 12:20 y de 13:30 a 17:30 Sábado de 8:00 a
+                          13:00.
+                        </p>
+                        <p>
+                          Una ves que realice su compra comunique con el nombre que realizo su compra, el nombre del
+                          producto y el comprobante de pago
+                        </p>
                       </div>
                     )}
                   </div>
@@ -596,10 +775,8 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                         disabled={selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "office"}
                       />
                       <div>
-                        <span className="text-sm font-medium">
-                          {selectedDepartment === "CBBA" 
-                            ? "Envío a domicilio o provincia" 
-                            : "Envío a provincia"}
+                        <span className="text-xs md:text-sm font-medium">
+                          {selectedDepartment === "CBBA" ? "Envío a domicilio o provincia" : "Envío a provincia"}
                         </span>
                         <p className="text-xs text-gray-600 mt-1">
                           {selectedDepartment === "CBBA"
@@ -614,19 +791,20 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 {/* Campo de dirección para envío a domicilio */}
                 {needsHomeDelivery && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                       Dirección completa de entrega *
                     </label>
                     <textarea
                       value={shippingAddress}
                       onChange={(e) => setShippingAddress(e.target.value)}
                       placeholder="Ingresa tu dirección completa: zona/barrio, calle, número, referencias..."
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                      rows={4}
+                      className="w-full p-2 md:p-3 text-xs md:text-sm border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                      rows={3}
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Incluye todos los detalles: zona/barrio, calle, número de casa y referencias para facilitar la entrega
+                      Incluye todos los detalles: zona/barrio, calle, número de casa y referencias para facilitar la
+                      entrega
                     </p>
                     {!selectedDeptInfo?.fedexAvailable && (
                       <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
@@ -640,21 +818,20 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             )}
 
             {/* Precio */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3 mb-2">
-                <span className="text-3xl font-bold">${finalPrice.toFixed(2)}</span>
-                <span className="text-sm text-gray-600">USD</span>
+            <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
+              <div className="flex items-center space-x-2 md:space-x-3 mb-2">
+                <span className="text-2xl md:text-3xl font-bold">${finalPrice.toFixed(2)}</span>
+                <span className="text-xs md:text-sm text-gray-600">USD</span>
                 {product.discount && originalPrice && (
                   <>
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
+                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
                       {product.discount}% Dto.
                     </span>
-                    <span className="text-gray-500 line-through">${originalPrice.toFixed(2)}USD</span>
+                    <span className="text-gray-500 line-through text-sm">${originalPrice.toFixed(2)}USD</span>
                   </>
                 )}
               </div>
-              <p className="text-sm text-gray-600">Bolivia cambio oficial: 6.96 bs</p>
-
+              <p className="text-xs md:text-sm text-gray-600">Bolivia cambio oficial: 6.96 bs</p>
               {/* Información adicional de costos de envío */}
               {selectedFormat === "fisico" &&
                 selectedDeptInfo &&
@@ -672,36 +849,67 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             <Button
               onClick={handleBuy}
               disabled={purchasing || (selectedFormat === "fisico" && !selectedDepartment)}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 text-lg disabled:opacity-50"
+              className="rounded-full w-full bg-orange-500 hover:bg-orange-600 text-white py-4 md:py-6 text-base md:text-lg disabled:opacity-50"
             >
               {purchasing ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Procesando...
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                   Comprar {selectedFormat === "digital" ? "Digital" : "Físico"}
                 </>
               )}
             </Button>
 
             {/* Información adicional */}
-            <div className="text-sm text-gray-600 text-center">
+            <div className="text-xs md:text-sm text-gray-600 text-center">
               {selectedFormat === "fisico" && !selectedDepartment && (
                 <p className="text-orange-600">⚠️ Selecciona tu departamento para continuar</p>
               )}
-              {selectedFormat === "fisico" && selectedDepartment && selectedDepartment === "CBBA" && cochabambaDeliveryMethod === "shipping" && needsHomeDelivery && !shippingAddress.trim() && (
-                <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
-              )}
-              {selectedFormat === "fisico" && selectedDepartment && selectedDepartment !== "CBBA" && needsHomeDelivery && !shippingAddress.trim() && (
-                <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
-              )}
+              {selectedFormat === "fisico" &&
+                selectedDepartment &&
+                selectedDepartment === "CBBA" &&
+                cochabambaDeliveryMethod === "shipping" &&
+                needsHomeDelivery &&
+                !shippingAddress.trim() && (
+                  <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
+                )}
+              {selectedFormat === "fisico" &&
+                selectedDepartment &&
+                selectedDepartment !== "CBBA" &&
+                needsHomeDelivery &&
+                !shippingAddress.trim() && (
+                  <p className="text-orange-600">⚠️ Ingresa tu dirección completa para envío a domicilio</p>
+                )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal de Video */}
+      {showVideoModal && product.trailerUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden">
+            <button
+              onClick={() => setShowVideoModal(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full flex items-center justify-center text-white transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <iframe
+              src={getEmbedUrl(product.trailerUrl)}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title={`Trailer de ${product.name}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

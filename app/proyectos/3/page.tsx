@@ -21,7 +21,6 @@ export default function OptikidsPage() {
     courseDate: "Sábado, 10 de mayo 2024",
     courseTime: "10:00 am - 16:00 pm",
     courseAge: "Edad: 7 a 9 años",
-    // Fecha para el contador (formato: YYYY-MM-DDTHH:MM:SS)
     countdownDate: "2024-05-10T10:00:00",
     whatIsTitle: "¿Qué es Optikids?",
     whatIsDescription:
@@ -460,7 +459,7 @@ export default function OptikidsPage() {
                     type="text"
                     value={content.project1Title}
                     onChange={(e) => handleInputChange("project1Title", e.target.value)}
-                    className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-gray-800 text-white"
+                    className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-gray-800"
                   />
                 ) : (
                   <>
@@ -473,10 +472,10 @@ export default function OptikidsPage() {
                   <textarea
                     value={content.project1Description}
                     onChange={(e) => handleInputChange("project1Description", e.target.value)}
-                    className="text-gray-300 mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-gray-800 text-white"
+                    className="mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-gray-800"
                   />
                 ) : (
-                  <p className="text-gray-300 mb-6">{content.project1Description}</p>
+                  <p className="mb-6 opacity-80">{content.project1Description}</p>
                 )}
 
                 {isEditing && (
@@ -484,7 +483,7 @@ export default function OptikidsPage() {
                     type="url"
                     value={content.project1WhatsApp}
                     onChange={(e) => handleInputChange("project1WhatsApp", e.target.value)}
-                    className="border rounded px-2 py-1 w-full bg-gray-800 text-white text-sm mb-2"
+                    className="border rounded px-2 py-1 w-full bg-gray-800 text-sm mb-2"
                     placeholder="URL de WhatsApp"
                   />
                 )}
@@ -528,7 +527,7 @@ export default function OptikidsPage() {
                     type="text"
                     value={content.project2Title}
                     onChange={(e) => handleInputChange("project2Title", e.target.value)}
-                    className="text-xl font-black mb-4 border rounded px-2 py-1 w-full bg-blue-700 text-white"
+                    className="text-xl font-black mb-4 border rounded px-2 py-1 w-full bg-blue-700"
                   />
                 ) : (
                   <>
@@ -541,10 +540,10 @@ export default function OptikidsPage() {
                   <textarea
                     value={content.project2Description}
                     onChange={(e) => handleInputChange("project2Description", e.target.value)}
-                    className="text-blue-100 mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-blue-700 text-white"
+                    className="mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-blue-700"
                   />
                 ) : (
-                  <p className="text-blue-100 mb-6">{content.project2Description}</p>
+                  <p className="mb-6 opacity-80">{content.project2Description}</p>
                 )}
 
                 {isEditing && (
@@ -552,7 +551,7 @@ export default function OptikidsPage() {
                     type="url"
                     value={content.project2WhatsApp}
                     onChange={(e) => handleInputChange("project2WhatsApp", e.target.value)}
-                    className="border rounded px-2 py-1 w-full bg-blue-700 text-white text-sm mb-2"
+                    className="border rounded px-2 py-1 w-full bg-blue-700 text-sm mb-2"
                     placeholder="URL de WhatsApp"
                   />
                 )}
@@ -596,7 +595,7 @@ export default function OptikidsPage() {
                     type="text"
                     value={content.project3Title}
                     onChange={(e) => handleInputChange("project3Title", e.target.value)}
-                    className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-purple-700 text-white"
+                    className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-purple-700"
                   />
                 ) : (
                   <>
@@ -609,10 +608,10 @@ export default function OptikidsPage() {
                   <textarea
                     value={content.project3Description}
                     onChange={(e) => handleInputChange("project3Description", e.target.value)}
-                    className="text-purple-100 mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-purple-700 text-white"
+                    className="mb-6 border rounded px-2 py-1 w-full h-16 resize-none bg-purple-700"
                   />
                 ) : (
-                  <p className="text-purple-100 mb-6">{content.project3Description}</p>
+                  <p className="mb-6 opacity-80">{content.project3Description}</p>
                 )}
 
                 {isEditing && (
@@ -620,7 +619,7 @@ export default function OptikidsPage() {
                     type="url"
                     value={content.project3WhatsApp}
                     onChange={(e) => handleInputChange("project3WhatsApp", e.target.value)}
-                    className="border rounded px-2 py-1 w-full bg-purple-700 text-white text-sm mb-2"
+                    className="border rounded px-2 py-1 w-full bg-purple-700 text-sm mb-2"
                     placeholder="URL de WhatsApp"
                   />
                 )}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, Volume2, VolumeX } from "lucide-react"
+import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, Volume2, VolumeX, ArrowRight } from 'lucide-react';
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { CountryService } from "@/services/country-service"
@@ -277,7 +277,7 @@ export default function CoursePage({ params }: CoursePageProps) {
         </div>
 
         {/* Video/Imagen del trailer */}
-        <div className="relative w-full aspect-video mb-12 rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-video mb-12 rounded-3xl overflow-hidden">
           {course.trailer ? (
             isTrailerVideo ? (
               <div className="relative w-full h-full">
@@ -301,7 +301,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                   >
                     {!isPlaying && (
                       <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center">
                           <div className="w-0 h-0 border-y-[12px] border-l-[20px] border-l-black ml-1"></div>
                         </div>
                       </div>
@@ -324,13 +324,16 @@ export default function CoursePage({ params }: CoursePageProps) {
                   fill
                   className="object-cover"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                      <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-700 border-b-8 border-b-transparent ml-1"></div>
+                <button
+                  onClick={togglePlay}
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                >
+                  {!isPlaying && (
+                    <div className="w-20 h-20 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center hover:scale-105 transition-transform">
+                      <div className="w-0 h-0 border-y-[12px] border-y-transparent border-l-[20px] border-l-orange-700 ml-1"></div>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </button>
               </div>
             )
           ) : (
@@ -516,22 +519,23 @@ export default function CoursePage({ params }: CoursePageProps) {
                 const relatedLocalPrice = convertToLocalCurrency(relatedPriceInfo.finalPrice, countryInfo)
 
                 return (
-                  <div key={relatedCourse.id} className="bg-white rounded-lg overflow-hidden shadow">
+                  <div key={relatedCourse.id} className="bg-gray-6 rounded-3xl overflow-hidden shadow">
                     <div className="relative h-48 w-full">
                       <Image
                         src={relatedCourse.image || "/placeholder.svg?height=200&width=300"}
                         alt={relatedCourse.title}
                         fill
-                        className="object-cover"
+                        className="object-cover rounded-3xl"
                       />
                       {relatedCourse.trailer && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center">
-                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                              <div className="w-0 h-0 border-t-6 border-t-transparent border-l-8 border-l-orange-700 border-b-6 border-b-transparent ml-1"></div>
-                            </div>
+                        <button
+                          onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
+                          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                        >
+                          <div className="w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center hover:scale-105 transition-transform">
+                            <div className="w-0 h-0 border-y-[10px] border-y-transparent border-l-[16px] border-l-orange-700 ml-1"></div>
                           </div>
-                        </div>
+                        </button>
                       )}
                     </div>
                     <div className="p-4">
@@ -569,14 +573,15 @@ export default function CoursePage({ params }: CoursePageProps) {
                           </div>
                         )}
                       </div>
-
-                      <Button
-                        className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full"
-                        onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
-                      >
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        Comprar
-                      </Button>
+                        <div className="flex justify-center">
+                          <Button
+                            className=" bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full"
+                            onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
+                          >
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Comprar
+                          </Button>
+                        </div>  
                     </div>
                   </div>
                 )

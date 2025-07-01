@@ -14,6 +14,9 @@ export interface Product {
   price: number
   stock: number
   image: string
+  extraImageUrl?: string
+  extraImageUrlDos?: string
+  gifUrl?: string
   category: "libro" | "revista" | "toolkit"
   subCategory?: "energia" | "alimentacion" | "meditacion" | "negocio"
   description: string
@@ -22,4 +25,5 @@ export interface Product {
   createdAt?: Date
   updatedAt?: Date
   trailerUrl?: string
+
 }

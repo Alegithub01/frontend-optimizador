@@ -15,6 +15,7 @@ export default function MainNav() {
   const { user, isAuthenticated, logout } = useAuthContext()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const pathname = usePathname()
+
   const isHomePage = pathname === "/" || pathname === "/sobre-nosotros"
 
   const rawLinks = [
@@ -84,7 +85,7 @@ export default function MainNav() {
             )}
           </div>
 
-          {/* Mobile Menu - Versión modificada */}
+          {/* Mobile Menu - Versión corregida */}
           <div className="flex items-center gap-3 md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -98,21 +99,21 @@ export default function MainNav() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-xs bg-white text-black border-gray-200">
-                <div className="h-full flex flex-col">
-                  {/* Sección de usuario ARRIBA */}
-                  <div className="w-full border-b border-gray-200 pb-6 mb-6">
+                <div className="h-full flex flex-col py-4">
+                  {/* Sección de usuario ARRIBA - Altura fija */}
+                  <div className="w-full border-b border-gray-200 pb-4 mb-6 flex-shrink-0">
                     {isAuthenticated ? (
                       <div className="flex flex-col items-center">
                         <UserDropdown user={user!} onLogout={logout} customIcon="/logo-plomo.svg" isMobile={true} />
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-4 w-full">
+                      <div className="flex flex-col gap-3 w-full">
                         <Link
                           href="/login"
                           onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
                           className="w-full"
                         >
-                          <button className="w-full border-2 border-black text-black hover:bg-black hover:text-white px-4 py-3 rounded-md transition text-xl font-bold">
+                          <button className="w-full border-2 border-black text-black hover:bg-black hover:text-white px-4 py-2 rounded-md transition text-lg font-bold">
                             Iniciar sesión
                           </button>
                         </Link>
@@ -121,7 +122,7 @@ export default function MainNav() {
                           onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
                           className="w-full"
                         >
-                          <button className="w-full bg-orange-700 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition text-xl font-bold">
+                          <button className="w-full bg-orange-700 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition text-lg font-bold">
                             Registrarse
                           </button>
                         </Link>
@@ -129,8 +130,8 @@ export default function MainNav() {
                     )}
                   </div>
 
-                  {/* Enlaces de navegación en el centro */}
-                  <div className="flex-1 flex flex-col items-center justify-center gap-8 px-4">
+                  {/* Enlaces de navegación - SIEMPRE VISIBLES */}
+                  <div className="flex-1 flex flex-col justify-center gap-6 px-4 min-h-0">
                     {navLinks.map((link) => (
                       <Link
                         key={link.href}
@@ -138,7 +139,7 @@ export default function MainNav() {
                         onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}
                         className="w-full text-center"
                       >
-                        <span className="text-2xl font-bold text-black hover:text-orange-500 transition-colors block py-3">
+                        <span className="text-xl font-bold text-black hover:text-orange-500 transition-colors block py-2">
                           {link.label}
                         </span>
                       </Link>
