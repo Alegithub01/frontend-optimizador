@@ -26,7 +26,9 @@ export default function FeaturedCourseCard({ course }: FeaturedCourseCardProps) 
         />
         <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
           <h3 className="text-2xl font-bold mb-3 text-white">{course.title}</h3>
-          <p className="text-white mb-6">{course.description}</p>
+          <p className="text-white mb-6">
+            {course.description.split(".")[0] + "."}
+          </p>
           <Link href={`/cursos/${course.id}`}>
             <Button className="bg-orange-700 hover:bg-orange-500 text-black w-full md:w-auto rounded-full">
               Acceder al curso
@@ -55,7 +57,7 @@ export default function FeaturedCourseCard({ course }: FeaturedCourseCardProps) 
         <div className="p-4 pt-2">
           {/* Descripción y botón individual en la misma línea */}
           <div className="flex items-center gap-4">
-            <p className="text-black font-medium flex-1 line-clamp-4">{course.description}</p>
+            <p className="text-black font-medium flex-1 line-clamp-7">{course.description}</p>
 
             {/* Solo el botón individual de cada curso */}
             <Link href={`/cursos/${course.id}`}>
