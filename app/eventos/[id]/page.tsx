@@ -9,6 +9,7 @@ import { ArrowLeft, ShoppingCart, Calendar, MapPin, Clock, Users, Volume2, Volum
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
+import { useCurrency } from "@/hooks/use-currency"
 
 interface Event {
   id: string
@@ -28,14 +29,6 @@ interface Event {
   trailerUrl?: string
 }
 
-interface CountryInfo {
-  country: string
-  countryCode: string
-  currency: string
-  currencySymbol: string
-  exchangeRate: number
-}
-
 interface EventPageProps {
   params: Promise<{
     id: string
@@ -45,6 +38,7 @@ interface EventPageProps {
 export default function EventPage({ params }: EventPageProps) {
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
+  const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
   const resolvedParams = React.use(params)
   const eventId = resolvedParams.id
 
@@ -53,27 +47,11 @@ export default function EventPage({ params }: EventPageProps) {
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [isTrailerVideo, setIsTrailerVideo] = useState(false)
-  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null)
   const [hasRegistered, setHasRegistered] = useState(false)
   const [availableSpots, setAvailableSpots] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-
-  const convertToLocalCurrency = (priceUSD: string) => {
-    const price = Number.parseFloat(priceUSD)
-    if (!countryInfo) return null
-
-    const exchangeRate = countryInfo.countryCode === "BO" ? 6.96 : countryInfo.exchangeRate
-
-    return {
-      price: price * exchangeRate,
-      currency: countryInfo.currency,
-      symbol: countryInfo.currencySymbol,
-      country: countryInfo.country,
-      exchangeRate: exchangeRate,
-    }
-  }
 
   const formatEventDate = (dateTimeStr: string, endTimeStr: string) => {
     const dateTime = new Date(dateTimeStr)
@@ -114,71 +92,22 @@ export default function EventPage({ params }: EventPageProps) {
 
     const formattedTime = `${startHour12}:${startMinutes} ${startAmPm} - ${endHour12}:${endMinutesStr} ${endAmPm}`
 
-    return { 
-      date: formattedDate, 
+    return {
+      date: formattedDate,
       time: formattedTime,
       dayNumber: date,
       monthName: month,
       year: year,
       startTime: `${startHour12}:${startMinutes} ${startAmPm}`,
-      endTime: `${endHour12}:${endMinutesStr} ${endAmPm}`
+      endTime: `${endHour12}:${endMinutesStr} ${endAmPm}`,
     }
   }
-
-  useEffect(() => {
-    const detectCountry = async () => {
-      try {
-        const browserLocale = navigator.language || navigator.languages?.[0]
-
-        if (browserLocale?.includes("es-BO") || browserLocale?.includes("es_BO")) {
-          setCountryInfo({
-            country: "Bolivia",
-            countryCode: "BO",
-            currency: "BOB",
-            currencySymbol: "Bs",
-            exchangeRate: 6.96,
-          })
-          return
-        }
-
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        if (timezone === "America/La_Paz") {
-          setCountryInfo({
-            country: "Bolivia",
-            countryCode: "BO",
-            currency: "BOB",
-            currencySymbol: "Bs",
-            exchangeRate: 6.96,
-          })
-          return
-        }
-
-        setCountryInfo({
-          country: "Bolivia",
-          countryCode: "BO",
-          currency: "BOB",
-          currencySymbol: "Bs",
-          exchangeRate: 6.96,
-        })
-      } catch (error) {
-        console.error("Error detecting country:", error)
-        setCountryInfo({
-          country: "Bolivia",
-          countryCode: "BO",
-          currency: "BOB",
-          currencySymbol: "Bs",
-          exchangeRate: 6.96,
-        })
-      }
-    }
-
-    detectCountry()
-  }, [])
 
   useEffect(() => {
     const fetchEventData = async () => {
       try {
         setLoading(true)
+
         const eventData = await api.get<Event>(`/event/${eventId}`)
         setEvent(eventData)
         setAvailableSpots(eventData.capacity - 0)
@@ -362,7 +291,6 @@ export default function EventPage({ params }: EventPageProps) {
     )
   }
 
-  const localPrice = convertToLocalCurrency(event.price)
   const { date, time, dayNumber, monthName, year, startTime, endTime } = formatEventDate(event.dateTime, event.endTime)
 
   return (
@@ -397,6 +325,7 @@ export default function EventPage({ params }: EventPageProps) {
                     style={{ pointerEvents: "none" }}
                     title="Video trailer"
                   ></iframe>
+
                   <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
                     <div
                       className="absolute inset-0 flex items-center justify-center cursor-pointer group"
@@ -408,6 +337,7 @@ export default function EventPage({ params }: EventPageProps) {
                         </div>
                       )}
                     </div>
+
                     <div
                       className="absolute bottom-2 md:bottom-4 right-2 md:right-4 cursor-pointer group"
                       onClick={toggleMute}
@@ -455,21 +385,20 @@ export default function EventPage({ params }: EventPageProps) {
           </div>
         </div>
 
-        {/* Mobile layout estilo tarjeta como en el diseño */}
-        <div className="lg:hidde rounded-2xl p-4 mb-6">
+        {/* Mobile layout estilo tarjeta - SOLO MÓVIL */}
+        <div className="lg:hidden rounded-2xl p-4 mb-6">
           <div className="flex items-center justify-between w-full mb-3">
             {/* Fecha - Estilo como en la imagen */}
             <div className="flex items-center">
-
               <div className="text-right mr-2">
                 <div className="text-3xl font-black leading-none">{dayNumber}</div>
                 <div className="text-xs font-black uppercase">{monthName}</div>
                 <div className="text-xs font-black">{year}</div>
               </div>
-              
+
               {/* Separador */}
               <div className="h-12 w-px bg-orange-700 mx-3"></div>
-              
+
               {/* Horario */}
               <div className="flex flex-col">
                 <div className="text-sm font-light">{startTime}</div>
@@ -478,7 +407,7 @@ export default function EventPage({ params }: EventPageProps) {
             </div>
 
             <div className="h-12 w-px bg-orange-700 mx-3"></div>
-            
+
             <Button
               className="bg-orange-700 hover:bg-orange-600 text-black rounded-full text-xs px-4 py-2 font-semibold flex items-center gap-2"
               onClick={handleBuy}
@@ -500,8 +429,33 @@ export default function EventPage({ params }: EventPageProps) {
 
           {/* Ubicación */}
           <div className="flex items-center text-xs text-black font-normal">
-            Dirección :
-            <span className="font-light">{event.location}</span>
+            Dirección :<span className="font-light">{event.location}</span>
+          </div>
+
+          {/* Precio en mobile */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg font-bold">
+                  {currencyLoading ? (
+                    <span className="animate-pulse bg-gray-200 rounded px-3 py-1">Cargando...</span>
+                  ) : (
+                    formatPrice(Number.parseFloat(event.price))
+                  )}
+                </div>
+                {!currencyLoading && currency.code !== "USD" && (
+                  <div className="text-xs text-gray-500">
+                    Precio original: ${Number.parseFloat(event.price).toFixed(2)} USD
+                  </div>
+                )}
+                {currency.code === "BOB" && (
+                  <div className="text-xs text-gray-500">Cambio oficial del BCB aplicado</div>
+                )}
+              </div>
+              {!currencyLoading && currency.code !== "USD" && (
+                <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded">{currency.code}</div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -626,18 +580,34 @@ export default function EventPage({ params }: EventPageProps) {
                   </div>
 
                   <div className="mb-4 md:mb-6">
-                    {localPrice && (
-                      <div className="flex items-center mb-2">
-                        <span className="text-2xl md:text-3xl font-bold">
-                          {localPrice.symbol}
-                          {localPrice.price.toFixed(2)}
-                        </span>
-                        <span className="ml-2 text-gray-500 text-sm md:text-base">{localPrice.currency}</span>
+                    <div className="flex items-center mb-2">
+                      <span className="text-2xl md:text-3xl font-bold">
+                        {currencyLoading ? (
+                          <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                        ) : (
+                          formatPrice(Number.parseFloat(event.price))
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Mostrar precio en USD como referencia si no es USD */}
+                    {!currencyLoading && currency.code !== "USD" && (
+                      <div className="text-gray-600 text-xs md:text-sm mt-1">
+                        <span>Precio original: ${Number.parseFloat(event.price).toFixed(2)} USD</span>
                       </div>
                     )}
-                    <div className="text-gray-600 text-xs md:text-sm mt-1">
-                      <span>${Number.parseFloat(event.price).toFixed(2)} USD</span>
-                    </div>
+
+                    {/* Información específica para Bolivia */}
+                    {currency.code === "BOB" && (
+                      <div className="text-gray-500 text-xs md:text-sm mt-1">Cambio oficial del BCB aplicado</div>
+                    )}
+
+                    {/* Indicador de moneda */}
+                    {!currencyLoading && currency.code !== "USD" && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        Precios mostrados en {currency.code} • Tasa de cambio actualizada
+                      </div>
+                    )}
                   </div>
 
                   <Button
@@ -674,7 +644,6 @@ export default function EventPage({ params }: EventPageProps) {
             <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">Otros eventos que te pueden interesar</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
               {relatedEvents.map((relatedEvent) => {
-                const relatedLocalPrice = convertToLocalCurrency(relatedEvent.price)
                 const { date: relatedDate } = formatEventDate(relatedEvent.dateTime, relatedEvent.endTime)
 
                 return (
@@ -694,18 +663,21 @@ export default function EventPage({ params }: EventPageProps) {
                       <p className="text-gray-600 text-xs md:text-sm mb-4 line-clamp-2">{relatedEvent.description}</p>
 
                       <div className="mb-4">
-                        {relatedLocalPrice && (
-                          <div className="flex items-center">
-                            <span className="text-lg md:text-2xl font-bold">
-                              {relatedLocalPrice.symbol}
-                              {relatedLocalPrice.price.toFixed(2)}
-                            </span>
-                            <span className="ml-1 text-xs md:text-sm text-gray-500">{relatedLocalPrice.currency}</span>
+                        <div className="flex items-center">
+                          <span className="text-lg md:text-2xl font-bold">
+                            {currencyLoading ? (
+                              <span className="animate-pulse bg-gray-200 rounded px-2 py-1">...</span>
+                            ) : (
+                              formatPrice(Number.parseFloat(relatedEvent.price))
+                            )}
+                          </span>
+                        </div>
+
+                        {!currencyLoading && currency.code !== "USD" && (
+                          <div className="text-gray-500 text-xs mt-1">
+                            ${Number.parseFloat(relatedEvent.price).toFixed(2)} USD
                           </div>
                         )}
-                        <div className="text-gray-500 text-xs mt-1">
-                          ${Number.parseFloat(relatedEvent.price).toFixed(2)} USD
-                        </div>
                       </div>
 
                       <Button

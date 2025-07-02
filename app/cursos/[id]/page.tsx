@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, Volume2, VolumeX, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, Volume2, VolumeX } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
-import { CountryService } from "@/services/country-service"
 import { VideoService } from "@/services/video-service"
+import { useCurrency } from "@/hooks/use-currency"
 
 // Interfaces que coinciden con la estructura de tu backend
 interface Content {
@@ -37,14 +37,6 @@ interface Course {
   sections: Section[]
 }
 
-interface CountryInfo {
-  country: string
-  countryCode: string
-  currency: string
-  currencySymbol: string
-  exchangeRate: number
-}
-
 interface CoursePageProps {
   params: Promise<{
     id: string
@@ -55,7 +47,6 @@ interface CoursePageProps {
 const calculateDiscountedPrice = (price: string, discount: string) => {
   const originalPrice = Number.parseFloat(price)
   const discountAmount = Number.parseFloat(discount)
-
   if (discountAmount > 0) {
     const savings = originalPrice * (discountAmount / 100)
     const finalPrice = originalPrice - savings
@@ -66,22 +57,11 @@ const calculateDiscountedPrice = (price: string, discount: string) => {
       discountPercentage: discountAmount,
     }
   }
-
   return {
     originalPrice,
     finalPrice: originalPrice,
     savings: 0,
     discountPercentage: 0,
-  }
-}
-
-const convertToLocalCurrency = (priceUSD: number, countryInfo: CountryInfo | null) => {
-  if (!countryInfo) return null
-
-  return {
-    price: priceUSD * countryInfo.exchangeRate,
-    currency: countryInfo.currency,
-    symbol: countryInfo.currencySymbol,
   }
 }
 
@@ -103,12 +83,12 @@ const parseTemario = (temario: string | null) => {
 export default function CoursePage({ params }: CoursePageProps) {
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
+  const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
   const [course, setCourse] = useState<Course | null>(null)
   const [relatedCourses, setRelatedCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState<number | null>(null)
   const [isTrailerVideo, setIsTrailerVideo] = useState(false)
-  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null)
   const [hasPurchased, setHasPurchased] = useState(false)
   const [courseId, setCourseId] = useState<string>("")
   const [purchasing, setPurchasing] = useState(false)
@@ -128,20 +108,12 @@ export default function CoursePage({ params }: CoursePageProps) {
   }, [params])
 
   useEffect(() => {
-    const detectUserCountry = async () => {
-      const detectedCountry = await CountryService.detectCountry()
-      setCountryInfo(detectedCountry)
-    }
-
-    detectUserCountry()
-  }, [])
-
-  useEffect(() => {
     if (!courseId) return
 
     const fetchCourseData = async () => {
       try {
         setLoading(true)
+
         // Obtener curso específico por ID
         const courseData = await api.get<Course>(`/courses/${courseId}`)
         setCourse(courseData)
@@ -200,7 +172,6 @@ export default function CoursePage({ params }: CoursePageProps) {
     if (!course) return
 
     setPurchasing(true)
-
     try {
       // Calcular precio final
       const priceInfo = calculateDiscountedPrice(course.price, course.discount)
@@ -261,9 +232,6 @@ export default function CoursePage({ params }: CoursePageProps) {
 
   // Calcular precio con descuento
   const priceInfo = calculateDiscountedPrice(course.price, course.discount)
-
-  // Convertir a moneda local
-  const localPrice = convertToLocalCurrency(priceInfo.finalPrice, countryInfo)
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -361,8 +329,8 @@ export default function CoursePage({ params }: CoursePageProps) {
             <div className="mb-8">
               <div className="text-orange-700 font-medium mb-2">CURSO</div>
               <h1 className="text-4xl font-black mb-6">{course.title}</h1>
-
               <p className="text-lg mb-8">{course.description}</p>
+
 
               {/* Plan de estudios/Secciones */}
               <div className="mb-8">
@@ -446,40 +414,56 @@ export default function CoursePage({ params }: CoursePageProps) {
                 </div>
               ) : (
                 <>
-                  {/* Precio con mejor visualización de descuento */}
+                  {/* Precio con mejor visualización */}
                   <div className="mb-6">
-                    {/* Precio en moneda local - PRIMERO */}
-                    {localPrice && (
-                      <div className="flex items-center mb-2">
-                        <span className="text-3xl font-bold">
-                          {localPrice.symbol}
-                          {localPrice.price.toFixed(2)}
+                    {/* Precio principal en moneda local */}
+                    <div className="flex items-center mb-2">
+                      <span className="text-3xl font-bold">
+                        {currencyLoading ? (
+                          <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                        ) : (
+                          formatPrice(priceInfo.finalPrice)
+                        )}
+                      </span>
+                      {priceInfo.discountPercentage > 0 && !currencyLoading && (
+                        <span className="ml-3 px-2 py-1 bg-red-100 text-red-600 text-sm font-medium rounded">
+                          {priceInfo.discountPercentage}% OFF
                         </span>
-                        <span className="ml-2 text-gray-500">{localPrice.currency}</span>
-                        {priceInfo.discountPercentage > 0 && (
-                          <span className="ml-3 px-2 py-1 bg-red-100 text-red-600 text-sm font-medium rounded">
-                            {priceInfo.discountPercentage}% OFF
-                          </span>
+                      )}
+                    </div>
+
+                    {/* Mostrar precio original y ahorros si hay descuento */}
+                    {priceInfo.discountPercentage > 0 && !currencyLoading && (
+                      <>
+                        <div className="text-gray-500 text-sm line-through">{formatPrice(priceInfo.originalPrice)}</div>
+                        <div className="text-green-600 text-sm font-medium">
+                          Ahorras: {formatPrice(priceInfo.savings)}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Mostrar precio en USD como referencia si no es USD */}
+                    {!currencyLoading && currency.code !== "USD" && (
+                      <div className="text-gray-600 text-sm mt-2 p-2 bg-gray-50 rounded">
+                        <span className="text-xs text-gray-500">Precio original:</span>
+                        <br />
+                        {priceInfo.discountPercentage > 0 ? (
+                          <>
+                            <span className="line-through text-gray-400">
+                              ${priceInfo.originalPrice?.toFixed(2)} USD
+                            </span>
+                            <span className="ml-2 font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
+                          </>
+                        ) : (
+                          <span className="font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
                         )}
                       </div>
                     )}
 
-                    {/* Precio en USD - SEGUNDO */}
-                    {priceInfo.discountPercentage > 0 ? (
-                      <>
-                        <div className="text-gray-500 text-sm">
-                          Precio original: ${priceInfo.originalPrice?.toFixed(2)} USD
-                        </div>
-                        <div className="text-green-600 text-sm font-medium">
-                          Ahorras: ${priceInfo.savings.toFixed(2)} USD
-                        </div>
-                        <div className="text-gray-600 text-sm mt-1">
-                          <span>${priceInfo.finalPrice.toFixed(2)} USD</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-gray-600 text-sm mt-1">
-                        <span>${priceInfo.finalPrice.toFixed(2)} USD</span>
+                    {/* Información específica para Bolivia */}
+                    {currency.code === "BOB" && (
+                      <div className="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                        🇧🇴 Cambio oficial del BCB aplicado
                       </div>
                     )}
                   </div>
@@ -487,12 +471,17 @@ export default function CoursePage({ params }: CoursePageProps) {
                   <Button
                     className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full mb-6 py-6"
                     onClick={handleBuy}
-                    disabled={purchasing}
+                    disabled={purchasing || currencyLoading}
                   >
                     {purchasing ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                         Procesando...
+                      </>
+                    ) : currencyLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Cargando precio...
                       </>
                     ) : (
                       <>
@@ -515,8 +504,6 @@ export default function CoursePage({ params }: CoursePageProps) {
               {relatedCourses.map((relatedCourse) => {
                 // Calcular precio con descuento para cada curso relacionado
                 const relatedPriceInfo = calculateDiscountedPrice(relatedCourse.price, relatedCourse.discount)
-                // Convertir a moneda local
-                const relatedLocalPrice = convertToLocalCurrency(relatedPriceInfo.finalPrice, countryInfo)
 
                 return (
                   <div key={relatedCourse.id} className="bg-gray-6 rounded-3xl overflow-hidden shadow">
@@ -538,6 +525,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                         </button>
                       )}
                     </div>
+
                     <div className="p-4">
                       <div className="text-orange-700 text-sm font-medium mb-1">Curso</div>
                       <h3 className="font-bold mb-2">{relatedCourse.title}</h3>
@@ -545,43 +533,53 @@ export default function CoursePage({ params }: CoursePageProps) {
 
                       {/* Precio con descuento para cursos relacionados */}
                       <div className="mb-4">
-                        {/* Precio en moneda local - PRIMERO */}
-                        {relatedLocalPrice && (
-                          <div className="flex items-center">
-                            <span className="text-2xl font-bold">
-                              {relatedLocalPrice.symbol}
-                              {relatedLocalPrice.price.toFixed(2)}
-                            </span>
-                            <span className="ml-1 text-sm text-gray-500">{relatedLocalPrice.currency}</span>
-                            {relatedPriceInfo.discountPercentage > 0 && (
-                              <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">
-                                {relatedPriceInfo.discountPercentage}% OFF
-                              </span>
+                        <div className="flex items-center">
+                          <span className="text-2xl font-bold">
+                            {currencyLoading ? (
+                              <span className="animate-pulse bg-gray-200 rounded px-2 py-1">...</span>
+                            ) : (
+                              formatPrice(relatedPriceInfo.finalPrice)
                             )}
+                          </span>
+                          {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
+                            <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">
+                              {relatedPriceInfo.discountPercentage}% OFF
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Precio original tachado si hay descuento */}
+                        {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
+                          <div className="text-gray-500 text-sm line-through">
+                            {formatPrice(relatedPriceInfo.originalPrice)}
                           </div>
                         )}
 
-                        {/* Precio en USD - SEGUNDO */}
-                        {relatedPriceInfo.discountPercentage > 0 ? (
+                        {/* Precio en USD como referencia si no es USD */}
+                        {!currencyLoading && currency.code !== "USD" && (
                           <div className="text-gray-500 text-xs mt-1">
-                            <span className="line-through">${relatedPriceInfo.originalPrice?.toFixed(2)} USD</span>
-                            <span> ${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
-                          </div>
-                        ) : (
-                          <div className="text-gray-500 text-xs mt-1">
-                            ${relatedPriceInfo.finalPrice.toFixed(2)} USD
+                            {relatedPriceInfo.discountPercentage > 0 ? (
+                              <>
+                                <span className="line-through">${relatedPriceInfo.originalPrice?.toFixed(2)} USD</span>
+                                <span className="ml-1">${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
+                              </>
+                            ) : (
+                              <span>${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
+                            )}
                           </div>
                         )}
                       </div>
-                        <div className="flex justify-center">
-                          <Button
-                            className=" bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full"
-                            onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
-                          >
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Comprar
-                          </Button>
-                        </div>  
+
+                      <div className="flex justify-center">
+                        <Button
+                          className="bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full"
+                          onClick={() => router.push(`/cursos/${relatedCourse.id}`)}
+                          disabled={currencyLoading}
+                        >
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          Comprar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )

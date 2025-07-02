@@ -9,6 +9,7 @@ import { ArrowLeft, ShoppingCart, ChevronDown, Lock, Check } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
+import { useCurrency } from "@/hooks/use-currency"
 
 // Interfaces que coinciden con la estructura de tu backend
 interface ToolkitSection {
@@ -37,14 +38,6 @@ interface ToolkitProduct {
   trailerUrl: string | null
 }
 
-interface CountryInfo {
-  country: string
-  countryCode: string
-  currency: string
-  currencySymbol: string
-  exchangeRate: number
-}
-
 interface ToolkitProductPageProps {
   params: {
     category: string
@@ -71,12 +64,13 @@ const categoryDisplayNames: Record<string, string> = {
 export default function ToolkitProductPage({ params }: ToolkitProductPageProps) {
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
+  const { currency, formatPrice, isLoading: currencyLoading, error: currencyError } = useCurrency()
+  
   const [product, setProduct] = useState<ToolkitProduct | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<ToolkitProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [activeSection, setActiveSection] = useState<number | null>(null)
-  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null)
   const [hasPurchased, setHasPurchased] = useState(false)
 
   const category = params.category
@@ -85,24 +79,6 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
   // Obtener el nombre para mostrar de la categoría
   const apiCategory = categoryMapping[category]
   const displayCategory = categoryDisplayNames[apiCategory] || category
-
-  // Función para convertir precio a moneda local
-  const convertToLocalCurrency = (priceUSD: string | number) => {
-    const price = typeof priceUSD === "string" ? Number.parseFloat(priceUSD) : priceUSD
-
-    if (!countryInfo) return null
-
-    // Para Bolivia, usamos un tipo de cambio fijo de 6.96
-    const exchangeRate = countryInfo.countryCode === "BO" ? 6.96 : countryInfo.exchangeRate
-
-    return {
-      price: price * exchangeRate,
-      currency: countryInfo.currency,
-      symbol: countryInfo.currencySymbol,
-      country: countryInfo.country,
-      exchangeRate: exchangeRate,
-    }
-  }
 
   // Función para obtener el color según la categoría
   const getCategoryColor = (category: string) => {
@@ -143,59 +119,6 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
         return "bg-orange-500 hover:bg-orange-600"
     }
   }
-
-  useEffect(() => {
-    const detectCountry = async () => {
-      try {
-        // Primero, intentamos detectar desde el navegador
-        const browserLocale = navigator.language || navigator.languages?.[0]
-        if (browserLocale?.includes("es-BO") || browserLocale?.includes("es_BO")) {
-          setCountryInfo({
-            country: "Bolivia",
-            countryCode: "BO",
-            currency: "BOB",
-            currencySymbol: "Bs",
-            exchangeRate: 6.96,
-          })
-          return
-        }
-
-        // Intentar detectar desde timezone
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        if (timezone === "America/La_Paz") {
-          setCountryInfo({
-            country: "Bolivia",
-            countryCode: "BO",
-            currency: "BOB",
-            currencySymbol: "Bs",
-            exchangeRate: 6.96,
-          })
-          return
-        }
-
-        // Fallback a Bolivia
-        setCountryInfo({
-          country: "Bolivia",
-          countryCode: "BO",
-          currency: "BOB",
-          currencySymbol: "Bs",
-          exchangeRate: 6.96,
-        })
-      } catch (error) {
-        console.error("Error detecting country:", error)
-        // Fallback a Bolivia
-        setCountryInfo({
-          country: "Bolivia",
-          countryCode: "BO",
-          currency: "BOB",
-          currencySymbol: "Bs",
-          exchangeRate: 6.96,
-        })
-      }
-    }
-
-    detectCountry()
-  }, [])
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -328,8 +251,8 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
     )
   }
 
-  // Convertir a moneda local
-  const localPrice = convertToLocalCurrency(product.price)
+  // Convertir precio a número para usar con el hook
+  const productPriceUSD = Number.parseFloat(product.price)
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -458,34 +381,43 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                 <>
                   {/* Precio */}
                   <div className="mb-6">
-                    {/* Precio en moneda local - PRIMERO */}
-                    {localPrice && (
-                      <div className="flex items-center mb-2">
-                        <span className="text-3xl font-bold">
-                          {localPrice.symbol}
-                          {localPrice.price.toFixed(2)}
-                        </span>
-                        <span className="ml-2 text-gray-500">{localPrice.currency}</span>
+                    {currencyLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
                       </div>
+                    ) : currencyError ? (
+                      <div className="text-red-500 text-sm mb-2">
+                        Error cargando precio: {currencyError}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Precio en moneda local - PRIMERO */}
+                        <div className="flex items-center mb-2">
+                          <span className="text-3xl font-bold">
+                            {formatPrice(productPriceUSD)}
+                          </span>
+                          {currency.code !== "USD" && (
+                            <div className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                              🌍 {currency.code}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Precio en USD - SEGUNDO (solo si no es USD) */}
+                        {currency.code !== "USD" && (
+                          <div className="text-gray-600 text-sm mt-1">
+                            <span>${productPriceUSD.toFixed(2)} USD</span>
+                          </div>
+                        )}
+                      </>
                     )}
-
-                    {/* Precio en USD - SEGUNDO */}
-                    <div className="text-gray-600 text-sm mt-1">
-                      <span>${Number.parseFloat(product.price).toFixed(2)} USD</span>
-                    </div>
-                  </div>
-
-                  {/* Badge de producto digital */}
-                  <div className="mb-6">
-                    <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
-                      📱 Producto Digital - Descarga Inmediata
-                    </span>
                   </div>
 
                   <Button
-                    className={`w-full ${getButtonColor(category)} text-white mb-6 py-6`}
+                    className={`w-full ${getButtonColor(category)} rounded-full text-white mb-6 py-5`}
                     onClick={handleBuy}
-                    disabled={purchasing}
+                    disabled={purchasing || currencyLoading}
                   >
                     {purchasing ? (
                       <>
@@ -494,7 +426,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                       </>
                     ) : (
                       <>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        <ShoppingCart className="mr-2 h-5 w-5 " />
                         Comprar
                       </>
                     )}
@@ -511,7 +443,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
             <h2 className="text-2xl font-bold mb-8">Más toolkits de {displayCategory}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedProducts.map((relatedProduct) => {
-                const relatedLocalPrice = convertToLocalCurrency(relatedProduct.price)
+                const relatedPriceUSD = Number.parseFloat(relatedProduct.price)
 
                 return (
                   <div key={relatedProduct.id} className="bg-white rounded-lg overflow-hidden shadow">
@@ -532,23 +464,31 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
 
                       {/* Precio */}
                       <div className="mb-4">
-                        {relatedLocalPrice && (
-                          <div className="flex items-center">
-                            <span className="text-2xl font-bold">
-                              {relatedLocalPrice.symbol}
-                              {relatedLocalPrice.price.toFixed(2)}
-                            </span>
-                            <span className="ml-1 text-sm text-gray-500">{relatedLocalPrice.currency}</span>
+                        {currencyLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-6 bg-gray-200 rounded w-20 mb-1"></div>
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
                           </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center">
+                              <span className="text-2xl font-bold">
+                                {formatPrice(relatedPriceUSD)}
+                              </span>
+                            </div>
+                            {currency.code !== "USD" && (
+                              <div className="text-gray-500 text-xs mt-1">
+                                ${relatedPriceUSD.toFixed(2)} USD
+                              </div>
+                            )}
+                          </>
                         )}
-                        <div className="text-gray-500 text-xs mt-1">
-                          ${Number.parseFloat(relatedProduct.price).toFixed(2)} USD
-                        </div>
                       </div>
 
                       <Button
                         className={`w-full ${getButtonColor(category)} text-white`}
                         onClick={() => router.push(`/productos/toolkit/${category}/${relatedProduct.id}`)}
+                        disabled={currencyLoading}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
                         Comprar

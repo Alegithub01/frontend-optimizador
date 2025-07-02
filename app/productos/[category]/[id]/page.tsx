@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
-import { CountryService } from "@/services/country-service"
+import { useCurrency } from "@/hooks/use-currency"
 
 interface Product {
   id: string
@@ -29,14 +29,6 @@ interface Product {
   images?: string[]
   formats?: ("digital" | "fisico")[]
   longDescription?: string
-}
-
-interface CountryInfo {
-  country: string
-  countryCode: string
-  currency: string
-  currencySymbol: string
-  exchangeRate: number
 }
 
 // Departamentos de Bolivia con información de envío
@@ -107,12 +99,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const router = useRouter()
   const { toast } = useToast()
   const { isAuthenticated, user } = useAuthContext()
+  const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("fisico")
-  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
 
@@ -131,14 +123,17 @@ export default function ProductDetailPage({ params }: { params: { category: stri
       const videoId = url.split("/").pop()?.split("?")[0]
       return `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`
     }
+
     if (url.includes("youtube.com/watch")) {
       const videoId = url.split("v=")[1]?.split("&")[0]
       return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
     }
+
     if (url.includes("youtu.be/")) {
       const videoId = url.split("/").pop()?.split("?")[0]
       return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
     }
+
     return url
   }
 
@@ -206,17 +201,10 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   }
 
   useEffect(() => {
-    const detectUserCountry = async () => {
-      const detectedCountry = await CountryService.detectCountry()
-      setCountryInfo(detectedCountry)
-    }
-    detectUserCountry()
-  }, [])
-
-  useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
+
         // Obtener el producto específico por ID
         const data = await api.get<Product>(`/product/${params.id}`)
 
@@ -610,6 +598,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     </label>
                   ))}
                 </div>
+
                 {/* Información adicional sobre el formato */}
                 <div className="mt-2 text-xs md:text-sm text-black text-center">
                   {selectedFormat === "digital" ? (
@@ -817,21 +806,63 @@ export default function ProductDetailPage({ params }: { params: { category: stri
               </div>
             )}
 
-            {/* Precio */}
+            {/* Precio con funcionalidad completa de moneda */}
             <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
               <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-                <span className="text-2xl md:text-3xl font-bold">${finalPrice.toFixed(2)}</span>
-                <span className="text-xs md:text-sm text-gray-600">USD</span>
-                {product.discount && originalPrice && (
+                <span className="text-2xl md:text-3xl font-bold">
+                  {currencyLoading ? (
+                    <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                  ) : (
+                    formatPrice(finalPrice)
+                  )}
+                </span>
+                {product.discount && originalPrice && !currencyLoading && (
                   <>
                     <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
                       {product.discount}% Dto.
                     </span>
-                    <span className="text-gray-500 line-through text-sm">${originalPrice.toFixed(2)}USD</span>
+                    <span className="text-gray-500 line-through text-sm">{formatPrice(originalPrice)}</span>
                   </>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-gray-600">Bolivia cambio oficial: 6.96 bs</p>
+
+              {/* Mostrar ahorros si hay descuento */}
+              {product.discount && originalPrice && !currencyLoading && (
+                <div className="text-green-600 text-sm font-medium mb-2">
+                  Ahorras: {formatPrice(originalPrice - finalPrice)}
+                </div>
+              )}
+
+              {/* Mostrar precio en USD como referencia si no es USD */}
+              {!currencyLoading && currency.code !== "USD" && (
+                <div className="text-gray-600 text-xs md:text-sm mt-2 p-2 bg-white rounded">
+                  <span className="text-xs text-gray-500">Precio original:</span>
+                  <br />
+                  {product.discount && originalPrice ? (
+                    <>
+                      <span className="line-through text-gray-400">${originalPrice.toFixed(2)} USD</span>
+                      <span className="ml-2 font-medium">${finalPrice.toFixed(2)} USD</span>
+                    </>
+                  ) : (
+                    <span className="font-medium">${finalPrice.toFixed(2)} USD</span>
+                  )}
+                </div>
+              )}
+
+              {/* Información específica para Bolivia */}
+              {currency.code === "BOB" && (
+                <div className="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  🇧🇴 Cambio oficial del BCB aplicado
+                </div>
+              )}
+
+              {/* Indicador de moneda */}
+              {!currencyLoading && currency.code !== "USD" && (
+                <div className="text-xs text-gray-500 mt-2 text-center">
+                  Precios mostrados en {currency.code} • Tasa actualizada
+                </div>
+              )}
+
               {/* Información adicional de costos de envío */}
               {selectedFormat === "fisico" &&
                 selectedDeptInfo &&
@@ -848,13 +879,18 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             {/* Botón de compra */}
             <Button
               onClick={handleBuy}
-              disabled={purchasing || (selectedFormat === "fisico" && !selectedDepartment)}
+              disabled={purchasing || currencyLoading || (selectedFormat === "fisico" && !selectedDepartment)}
               className="rounded-full w-full bg-orange-500 hover:bg-orange-600 text-white py-4 md:py-6 text-base md:text-lg disabled:opacity-50"
             >
               {purchasing ? (
                 <>
                   <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Procesando...
+                </>
+              ) : currencyLoading ? (
+                <>
+                  <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Cargando precio...
                 </>
               ) : (
                 <>

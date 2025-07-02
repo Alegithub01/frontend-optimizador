@@ -4,9 +4,12 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
+import { useAuthContext } from "@/context/AuthContext"
+import { useCurrency } from "@/hooks/use-currency"
+import { ShoppingCart, Eye } from "lucide-react"
 
 interface ToolkitProduct {
   id: string
@@ -21,12 +24,24 @@ interface ToolkitProduct {
   updatedAt: string
 }
 
+interface PurchasedProduct {
+  id: number
+  product: {
+    id: string
+    name: string
+    category: string
+  }
+  status: string
+  deliveryType: "digital" | "physical"
+}
+
 // Mapeo de categorías URL a enums del backend
 const categoryMapping: Record<string, string> = {
   energia: "ENERGY",
   alimentacion: "NUTRITION",
   meditacion: "MEDITATION",
   negocio: "BUSINESS",
+  negocios: "BUSINESS", // ✅ AGREGADO
 }
 
 // Mapeo de enums del backend a nombres para mostrar
@@ -40,9 +55,12 @@ const categoryDisplayNames: Record<string, string> = {
 export default function ToolkitCategoryPage() {
   const params = useParams()
   const router = useRouter()
+  const { isAuthenticated, user } = useAuthContext()
+  const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
   const [products, setProducts] = useState<ToolkitProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [purchasedProducts, setPurchasedProducts] = useState<string[]>([])
 
   // Obtener la categoría de la URL
   const category = params.category as string
@@ -63,7 +81,7 @@ export default function ToolkitCategoryPage() {
   const displayCategory = categoryDisplayNames[finalApiCategory] || category
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
         setError(null)
@@ -79,64 +97,102 @@ export default function ToolkitCategoryPage() {
 
         // Llamar a la API para obtener los productos de la subcategoría
         const data = await api.get<ToolkitProduct[]>(`/product/category/toolkit/${finalApiCategory}`)
-
         console.log("✅ Products received:", data)
         setProducts(data)
 
         if (data.length === 0) {
           setError("No hay productos disponibles en esta categoría.")
         }
+
+        // Obtener productos comprados por el usuario si está autenticado
+        if (isAuthenticated && user?.id) {
+          try {
+            console.log(`🔍 Haciendo fetch a: /sales/user/${user.id}/products`)
+            const purchasedData = await api.get<PurchasedProduct[]>(`/sales/user/${user.id}/products`)
+            console.log("🛒 Respuesta de productos comprados:", purchasedData)
+
+            // Solo considerar productos con status "paid" y que sean toolkits
+            const paidToolkits = purchasedData.filter(
+              (purchase) => purchase.status === "paid" && purchase.product.category === "toolkit",
+            )
+            const purchasedProductIds = paidToolkits.map((purchase) => purchase.product.id)
+            console.log("🛒 IDs de toolkits comprados:", purchasedProductIds)
+
+            setPurchasedProducts(purchasedProductIds)
+          } catch (error) {
+            console.error("❌ Error fetching purchased products:", error)
+            setPurchasedProducts([])
+          }
+        } else {
+          setPurchasedProducts([])
+        }
       } catch (error) {
         console.error("❌ Error fetching toolkit products:", error)
         setError("Error al cargar los productos. Verifica tu conexión e intenta de nuevo.")
-        setProducts([]) // Limpiar productos en caso de error
+        setProducts([])
       } finally {
         setLoading(false)
       }
     }
 
     if (category) {
-      fetchProducts()
+      fetchData()
     }
-  }, [category, finalApiCategory])
+  }, [category, finalApiCategory, isAuthenticated, user])
 
-  // Función para obtener el color según la categoría
+  const handleProductAction = (productId: string) => {
+    const isPurchased = isAuthenticated && purchasedProducts.includes(productId)
+
+    if (isPurchased) {
+      // Si ya compró el producto, ir a mis-productos
+      router.push(`/mis-compras/productos/toolkit/${productId}`)
+    } else {
+      // Si no lo compró, ir a la página de detalle del producto
+      router.push(`/productos/toolkit/${category}/${productId}`)
+    }
+  }
+
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case "energia":
       case "energy":
-        return "text-blue-500"
+        return "text-orange-500" // ENERGÍA = NARANJA
       case "alimentacion":
       case "nutrition":
-        return "text-green-500"
+        return "text-green-500" // ALIMENTACIÓN = VERDE
       case "meditacion":
       case "meditation":
-        return "text-purple-500"
+        return "text-purple-500" // MEDITACIÓN = MORADO
       case "negocio":
+      case "negocios":
       case "business":
-        return "text-orange-500"
+        return "text-blue-500" // NEGOCIO = AZUL
       default:
-        return "text-blue-500"
+        return "text-gray-500"
     }
   }
 
-  // Función para obtener el color del botón según la categoría
-  const getButtonColor = (category: string) => {
+  const getButtonColor = (category: string, isPurchased = false) => {
+    if (isPurchased) {
+      return "bg-gray-500 hover:bg-gray-600"
+    }
+
     switch (category.toLowerCase()) {
       case "energia":
       case "energy":
-        return "bg-blue-500 hover:bg-blue-600"
+        return "bg-orange-500 hover:bg-orange-600" // ENERGÍA = NARANJA
       case "alimentacion":
       case "nutrition":
-        return "bg-green-500 hover:bg-green-600"
+        return "bg-green-500 hover:bg-green-600" // ALIMENTACIÓN = VERDE
       case "meditacion":
       case "meditation":
-        return "bg-purple-500 hover:bg-purple-600"
+        return "bg-purple-500 hover:bg-purple-600" // MEDITACIÓN = MORADO
       case "negocio":
+      case "negocios":
       case "business":
-        return "bg-orange-500 hover:bg-orange-600"
+        return "bg-blue-500 hover:bg-blue-600" // NEGOCIO = AZUL
       default:
-        return "bg-blue-500 hover:bg-blue-600"
+        return "bg-gray-500 hover:bg-gray-600"
     }
   }
 
@@ -178,7 +234,11 @@ export default function ToolkitCategoryPage() {
                 <Button className="w-full bg-orange-500 hover:bg-orange-600" onClick={() => window.location.reload()}>
                   Reintentar
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => router.push("/productos/toolkit")}>
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() => router.push("/productos/toolkit")}
+                >
                   Volver a toolkits
                 </Button>
               </div>
@@ -196,46 +256,111 @@ export default function ToolkitCategoryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {products.map((product) => (
-              <div key={product.id} className="flex flex-col items-center">
-                {/* Imagen del producto */}
-                <div className="relative w-64 h-48 mb-6 bg-gray-50 rounded-lg overflow-hidden">
-                  <Image
-                    src={product.image || "/placeholder.svg?height=200&width=200&query=toolkit+briefcase"}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-4"
-                  />
+            {products.map((product) => {
+              const isPurchased = isAuthenticated && purchasedProducts.includes(product.id)
+              const finalPrice = Number.parseFloat(product.price)
+
+              return (
+                <div
+                  key={product.id}
+                  className="flex flex-col items-center bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
+                >
+                  {/* Imagen del producto */}
+                  <div className="relative w-64 h-48 mb-6 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src={product.image || "/placeholder.svg?height=200&width=200&query=toolkit+briefcase"}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-4"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = "/placeholder.svg?height=200&width=200"
+                      }}
+                    />
+                    {isPurchased && (
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        ✓ ADQUIRIDO
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Nombre del producto */}
+                  <h3 className="text-xl font-bold text-center mb-2 line-clamp-2">{product.name}</h3>
+
+                  {/* Autor si existe */}
+                  {product.author && <p className="text-gray-600 text-sm mb-2">Por {product.author}</p>}
+
+                  {/* Categoría con color actualizado */}
+                  <p className={`${getCategoryColor(category)} font-medium mb-4`}>{displayCategory}</p>
+
+                  {/* Precio */}
+                  {!isPurchased && (
+                    <div className="text-center mb-4">
+                      <div className="flex items-center justify-center mb-1">
+                        <span className="text-lg font-bold">
+                          {currencyLoading ? (
+                            <span className="animate-pulse bg-gray-200 rounded px-3 py-1">Cargando...</span>
+                          ) : (
+                            formatPrice(finalPrice)
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Mostrar precio en USD como referencia si no es USD */}
+                      {!currencyLoading && currency.code !== "USD" && (
+                        <p className="text-gray-500 text-sm">Precio original: ${finalPrice.toFixed(2)} USD</p>
+                      )}
+
+                      {/* Información específica para Bolivia */}
+                      {currency.code === "BOB" && (
+                        <p className="text-gray-500 text-xs">Cambio oficial del BCB aplicado</p>
+                      )}
+                    </div>
+                  )}
+
+                  {isPurchased && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                      <p className="text-green-600 text-sm font-medium">
+                        ¡Ya tienes este toolkit! Accede a tu contenido.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Botón de acción con color actualizado */}
+                  <Button
+                    className={`${getButtonColor(category, isPurchased)} text-white px-6 py-2 flex items-center gap-2 rounded-xl`}
+                    onClick={() => handleProductAction(product.id)}
+                    disabled={currencyLoading}
+                  >
+                    {isPurchased ? (
+                      <>
+                        Continuar <ArrowRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        Comprar <ShoppingCart className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
                 </div>
+              )
+            })}
+          </div>
+        )}
 
-                {/* Nombre del producto */}
-                <h3 className="text-xl font-bold text-center mb-2 line-clamp-2">{product.name}</h3>
-
-                {/* Autor si existe */}
-                {product.author && <p className="text-gray-600 text-sm mb-2">Por {product.author}</p>}
-
-                {/* Categoría */}
-                <p className={`${getCategoryColor(category)} font-medium mb-4`}>{displayCategory}</p>
-
-                {/* Precio */}
-                <div className="text-center mb-4">
-                  <p className="font-bold text-lg">${product.price} USD</p>
-                  <p className="text-gray-500 text-sm">Bolivia cambio oficial: 6.96 bs</p>
-                </div>
-
-                {/* Badge de producto digital */}
-                <div className="mb-4">
-                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                    📱 Producto Digital
-                  </span>
-                </div>
-
-                {/* Botón de compra */}
-                <Link href={`/productos/toolkit/${category}/${product.id}`}>
-                  <Button className={`${getButtonColor(category)} text-white px-6 py-2`}>Ver detalles →</Button>
-                </Link>
-              </div>
-            ))}
+        {/* Mensaje para usuarios no autenticados */}
+        {!isAuthenticated && (
+          <div className="mt-12 max-w-2xl mx-auto text-center p-6 bg-blue-50 border border-blue-200 rounded-xl">
+            <h3 className="text-xl font-bold text-blue-900 mb-2">¿Ya tienes una cuenta?</h3>
+            <p className="text-blue-700 mb-4">
+              Inicia sesión para ver tus toolkits comprados y acceder a tu biblioteca personal.
+            </p>
+            <Button
+              onClick={() => router.push("/login")}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-2"
+            >
+              Iniciar Sesión
+            </Button>
           </div>
         )}
 
@@ -251,6 +376,10 @@ export default function ToolkitCategoryPage() {
             Display Category: {displayCategory}
             <br />
             Products Count: {products.length}
+            <br />
+            Purchased Products: {purchasedProducts.length}
+            <br />
+            Currency: {currency.code}
           </div>
         )}
       </div>

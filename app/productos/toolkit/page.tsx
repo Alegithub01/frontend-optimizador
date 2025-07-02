@@ -64,7 +64,7 @@ export default function ToolkitPage() {
                   alt={toolkit.name}
                   width={256}
                   height={192}
-                  className="rounded-lg shadow-lg object-cover"
+                  className="rounded-lg object-cover"
                 />
               </div>
 
@@ -73,7 +73,7 @@ export default function ToolkitPage() {
 
               {/* Botón Ver más */}
               <Link href={toolkit.href}>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded">
+                <Button className="bg-orange-700 hover:bg-orange-600 text-white px-6 py-2 rounded-xl ">
                   Ver más →
                 </Button>
               </Link>
