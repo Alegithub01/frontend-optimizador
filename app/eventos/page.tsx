@@ -321,13 +321,13 @@ export default function EventsPage() {
                   </div>
 
                   {/* Logo centrado */}
-                  <div className="hidden md:flex items-center justify-center w-[120px] h-[80px]">
+                  <div className="hidden md:flex items-center justify-center w-[300px] h-[300px]">
                     {event.logo && (
                       <Image
                         src={event.logo || "/placeholder.svg"}
                         alt="Event logo"
-                        width={100}
-                        height={60}
+                        width={600}
+                        height={600}
                         className="object-contain"
                       />
                     )}
@@ -352,15 +352,15 @@ export default function EventsPage() {
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
                     {/* Logo del evento centrado */}
                     {event.logo && (
                       <div className="text-center">
                         <Image
                           src={event.logo || "/placeholder.svg"}
                           alt={`${event.title} logo`}
-                          width={120}
-                          height={80}
+                          width={200}
+                          height={200}
                           className="object-contain"
                         />
                       </div>

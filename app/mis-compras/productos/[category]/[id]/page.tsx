@@ -68,6 +68,15 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
   const { category, id } = params
 
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [modalImageUrl, setModalImageUrl] = useState("")
+
+  const openImageModal = (url: string) => {
+  setModalImageUrl(url)
+  setShowImageModal(true)
+}
+
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -450,8 +459,9 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                           src={currentSectionData.fileUrl || "/placeholder.svg"}
                           alt={`Material de ${currentSectionData.title}`}
                           className="w-24 h-18 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => window.open(currentSectionData.fileUrl!, "_blank")}
+                          onClick={() => openImageModal(currentSectionData.fileUrl!)}
                         />
+
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 mb-1">Material complementario</h4>
@@ -591,8 +601,10 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
         </div>
 
         {/* Visor de PDF */}
-        <div className="relative h-[calc(100vh-200px)]">
-          <PDFViewerSecure src={pdfUrl} title={product?.name} className="w-full h-full" />
+        <div className="relative h-[calc(250vh-160px)] flex justify-center items-center pb-12">
+          <div className="w-full max-w-4xl h-full">
+            <PDFViewerSecure src={product?.pdfUrl || ""} title={product?.name} className="w-full h-full" />
+          </div>
         </div>
       </div>
     )
@@ -637,6 +649,25 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
       </div>
 
       {product.category === "toolkit" ? renderToolkitContent() : renderBookContent()}
+
+      {showImageModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center" onClick={() => setShowImageModal(false)}>
+        <div className="relative max-w-4xl w-full mx-4">
+          <img
+            src={modalImageUrl}
+            alt="Vista previa"
+            className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-lg"
+            onClick={(e) => e.stopPropagation()} // evita cerrar al hacer clic en la imagen
+          />
+          <button
+            onClick={() => setShowImageModal(false)}
+            className="absolute top-2 right-2 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 shadow"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    )}    
     </div>
   )
 }

@@ -266,6 +266,28 @@ export default function Home() {
         {/* Testimonials Section */}
         <section id="testimonios" className="container mx-auto py-12 md:py-0 px-4">
           <TestimonialsSection testimonials={testimonials} />
+          
+          {/* Botón "Todos los testimonios" */}
+          <div className="mt-8 flex justify-center">
+            <Link
+              href="/testimonios"
+              className="flex items-center font-semibold text-lg px-4 py-2
+                        /* Estilos mobile (por defecto) */
+                        bg-orange-700 text-black rounded-full
+                        /* Estilos desktop */
+                        lg:bg-transparent lg:text-gray-2 hover:text-orange-500 lg:rounded-none transition-colors"
+            >
+              Todos los testimonios
+              {/* Flecha para mobile (SVG) - hidden en desktop */}
+              <img 
+                src="/botones/arrowRigth.svg" 
+                alt="Flecha" 
+                className="h-6 w-6 ml-2 lg:hidden" 
+              />
+              {/* Flecha para desktop (Lucide) - hidden en mobile */}
+              <ChevronRight className="h-6 w-6 ml-2 hidden lg:block" />
+            </Link>
+          </div>
         </section>
         {/* Mentoring CTA Section */}
         <CTASection />
