@@ -57,7 +57,7 @@ export default function FeaturedCourseCard({ course }: FeaturedCourseCardProps) 
         <div className="p-4 pt-2">
           {/* Descripción y botón individual en la misma línea */}
           <div className="flex items-center gap-4">
-            <p className="text-black font-medium flex-1 line-clamp-7">{course.description}</p>
+            <p className="text-black font-medium flex-1 line-clamp-5">{course.description}</p>
 
             {/* Solo el botón individual de cada curso */}
             <Link href={`/cursos/${course.id}`}>
