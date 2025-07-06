@@ -6,7 +6,7 @@ import { Play, FileText, ArrowLeft, ChevronDown, Calendar } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { api } from "@/lib/api"
-import VimeoPlayer from "@/components/VimeoPlayer"
+import VideoPlayer from "@/components/video-player"
 
 interface Content {
   id: number
@@ -198,7 +198,10 @@ export default function CoursePlayerPage() {
 
           {contentType === "video" && (
             <div className="w-full">
-              <VimeoPlayer videoUrl={content.secondaryUrl} title={content.title}/>
+              <VideoPlayer
+                videoUrl={content.secondaryUrl}
+                title={`${content.title} - Recurso adicional`}
+              />
             </div>
           )}
 
@@ -393,10 +396,10 @@ export default function CoursePlayerPage() {
 
                   {/* Video Player Component */}
                   <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <VimeoPlayer
+                    <VideoPlayer
                       videoUrl={activeVideo.urlOrText}
                       title={activeVideo.title}
-                      />
+                    />
                   </div>
 
                   {/* Video Info */}
@@ -439,10 +442,10 @@ export default function CoursePlayerPage() {
         {/* Video Player Mobile */}
         <div className="relative w-full aspect-video bg-black">
           {activeVideo && (
-            <VimeoPlayer
+            <VideoPlayer
               videoUrl={activeVideo.urlOrText}
               title={activeVideo.title}
-              />
+            />
           )}
           {!activeVideo && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -614,7 +617,7 @@ export default function CoursePlayerPage() {
 
                         {contentType === "video" && (
                           <div className="w-full">
-                            <VimeoPlayer
+                            <VideoPlayer
                               videoUrl={firstVideo.secondaryUrl}
                               title={`${firstVideo.title} - Recurso adicional`}
                               />

@@ -357,7 +357,7 @@ export default function MisComprasPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Mis cursos comprados</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {courses.map((course) => (
-                    <div key={course.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+                    <div key={course.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
                       <div className="relative h-48">
                         <Image
                           src={course.image || "/placeholder.svg?height=200&width=300"}
@@ -370,7 +370,7 @@ export default function MisComprasPage() {
                         <div className="text-sm text-gray-600 mb-1">Curso:</div>
                         <h3 className="font-bold text-lg mb-4 line-clamp-2">{course.title}</h3>
                         <Link href={`/mi-aprendizaje/${course.id}`}>
-                          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Continuar →</Button>
+                          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-black rounded-full">Continuar →</Button>
                         </Link>
                       </div>
                     </div>
@@ -390,7 +390,7 @@ export default function MisComprasPage() {
                     const showContinueButton = shouldShowContinueButton(purchase)
                     
                     return (
-                      <div key={`${purchase.product.id}-${purchase.id}`} className="bg-white rounded-lg overflow-hidden shadow-sm">
+                      <div key={`${purchase.product.id}-${purchase.id}`} className="bg-white rounded-xl overflow-hidden shadow-sm">
                         <div className="relative h-48 bg-gray-50 flex items-center justify-center">
                           <Image
                             src={purchase.product.image || "/placeholder.svg?height=200&width=150"}
@@ -409,7 +409,7 @@ export default function MisComprasPage() {
                           
                           {showContinueButton ? (
                             <Link href={`/mis-compras/productos/${purchase.product.category}/${purchase.product.id}`}>
-                              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                              <Button className="w-full rounded-full bg-orange-500 hover:bg-orange-600 text-black">
                                 Continuar →
                               </Button>
                             </Link>
@@ -440,7 +440,7 @@ export default function MisComprasPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Mis eventos participados</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {events.map((event) => (
-                    <div key={event.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+                    <div key={event.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
                       <div className="relative h-48">
                         <Image
                           src={event.image || "/placeholder.svg?height=200&width=300"}
@@ -453,7 +453,7 @@ export default function MisComprasPage() {
                         <div className="text-sm text-gray-600 mb-1">Evento:</div>
                         <h3 className="font-bold text-lg mb-4 line-clamp-2">{event.title}</h3>
                         <Link href={`/eventos/${event.id}`}>
-                          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Continuar →</Button>
+                          <Button className="w-full bg-orange-500 rounded-full hover:bg-orange-600 text-black">Continuar →</Button>
                         </Link>
                       </div>
                     </div>

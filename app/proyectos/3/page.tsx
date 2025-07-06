@@ -25,10 +25,8 @@ export default function OptikidsPage() {
     whatIsTitle: "¿Qué es Optikids?",
     whatIsDescription:
       "Optikids es una escuela financiera especializada en enseñar a niños y adolescentes conceptos fundamentales sobre dinero, ahorro, inversión y emprendimiento de manera práctica y divertida.",
-    firstVideoId: "1091240808",
-    firstVideoHash: "48499695cd",
+    firstVideoId: "https://vimeo.com/1091240808",
     secondVideoId: "",
-    secondVideoHash: "",
     projectsTitle: "¿Qué proyectos tenemos para ti?",
     projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
     project1Title: "OPTI 2024",
@@ -164,38 +162,22 @@ export default function OptikidsPage() {
               {/* Columna izquierda - Video y contador */}
               <div>
                 {/* Video de Vimeo */}
-                <div className="relative mb-8">
+                <div className="relative mb-8 aspect-video">
                   {isEditing ? (
                     <div className="aspect-video bg-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
-                      <div className="w-full space-y-2">
-                        <input
-                          type="text"
-                          placeholder="ID del video de Vimeo (ej: 1091240808)"
-                          value={content.firstVideoId}
-                          onChange={(e) => handleInputChange("firstVideoId", e.target.value)}
-                          className="border rounded px-2 py-1 w-full"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Hash del video (ej: 48499695cd) - Opcional"
-                          value={content.firstVideoHash}
-                          onChange={(e) => handleInputChange("firstVideoHash", e.target.value)}
-                          className="border rounded px-2 py-1 w-full"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        placeholder="URL del video de Vimeo (ej: https://vimeo.com/1091240808)"
+                        value={content.firstVideoId}
+                        onChange={(e) => handleInputChange("firstVideoId", e.target.value)}
+                        className="border rounded px-2 py-1 w-full"
+                      />
                       <p className="text-xs text-gray-500 text-center">
-                        Copia el ID y hash desde el código de inserción de Vimeo
+                        Inserta la URL completa del video de Vimeo
                       </p>
                     </div>
                   ) : (
-                    <VimeoPlayer
-                      videoId={content.firstVideoId}
-                      hash={content.firstVideoHash}
-                      title="Primer video del curso"
-                      className="aspect-video"
-                      autoplay={false}
-                      showTitle={false}
-                    />
+                    <VimeoPlayer videoUrl={content.firstVideoId} />
                   )}
                 </div>
 
@@ -299,36 +281,21 @@ export default function OptikidsPage() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="relative mb-8">
+            <div className="relative mb-8 aspect-video">
               {isEditing ? (
                 <div className="aspect-video bg-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
-                  <div className="w-full space-y-2">
-                    <input
-                      type="text"
-                      placeholder="ID del segundo video de Vimeo"
-                      value={content.secondVideoId}
-                      onChange={(e) => handleInputChange("secondVideoId", e.target.value)}
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Hash del segundo video - Opcional"
-                      value={content.secondVideoHash}
-                      onChange={(e) => handleInputChange("secondVideoHash", e.target.value)}
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="URL del segundo video de Vimeo"
+                    value={content.secondVideoId}
+                    onChange={(e) => handleInputChange("secondVideoId", e.target.value)}
+                    className="border rounded px-2 py-1 w-full"
+                  />
                   <p className="text-xs text-gray-500 text-center">Segundo video de Vimeo</p>
                 </div>
-              ) : (
-                <VimeoPlayer
-                  videoId={content.secondVideoId}
-                  hash={content.secondVideoHash}
-                  title="Segundo video"
-                  className="aspect-video"
-                  showTitle={false}
-                />
-              )}
+              ) : content.secondVideoId ? (
+                <VimeoPlayer videoUrl={content.secondVideoId} />
+              ) : null}
             </div>
           </div>
         </div>
