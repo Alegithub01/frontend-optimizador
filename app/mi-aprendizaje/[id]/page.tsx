@@ -6,7 +6,7 @@ import { Play, FileText, ArrowLeft, ChevronDown, Calendar } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { api } from "@/lib/api"
-import VideoPlayer from "@/components/video-player"
+import VimeoPlayer from "@/components/VimeoPlayer"
 
 interface Content {
   id: number
@@ -198,18 +198,7 @@ export default function CoursePlayerPage() {
 
           {contentType === "video" && (
             <div className="w-full">
-              <VideoPlayer
-                videoUrl={content.secondaryUrl}
-                title={`${content.title} - Recurso adicional`}
-                vimeoConfig={{
-                  controls: true,
-                  responsive: true,
-                  autoplay: false,
-                  byline: false,
-                  portrait: false,
-                  title: false
-                }}
-              />
+              <VimeoPlayer videoUrl={content.secondaryUrl} title={content.title}/>
             </div>
           )}
 
@@ -404,18 +393,10 @@ export default function CoursePlayerPage() {
 
                   {/* Video Player Component */}
                   <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <VideoPlayer
+                    <VimeoPlayer
                       videoUrl={activeVideo.urlOrText}
                       title={activeVideo.title}
-                      vimeoConfig={{
-                        controls: true,
-                        responsive: true,
-                        autoplay: false,
-                        byline: false,
-                        portrait: false,
-                        title: false
-                      }}
-                    />
+                      />
                   </div>
 
                   {/* Video Info */}
@@ -458,18 +439,10 @@ export default function CoursePlayerPage() {
         {/* Video Player Mobile */}
         <div className="relative w-full aspect-video bg-black">
           {activeVideo && (
-            <VideoPlayer
+            <VimeoPlayer
               videoUrl={activeVideo.urlOrText}
               title={activeVideo.title}
-              vimeoConfig={{
-                controls: true,
-                responsive: true,
-                autoplay: false,
-                byline: false,
-                portrait: false,
-                title: false
-              }}
-            />
+              />
           )}
           {!activeVideo && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -641,18 +614,10 @@ export default function CoursePlayerPage() {
 
                         {contentType === "video" && (
                           <div className="w-full">
-                            <VideoPlayer
+                            <VimeoPlayer
                               videoUrl={firstVideo.secondaryUrl}
                               title={`${firstVideo.title} - Recurso adicional`}
-                              vimeoConfig={{
-                                controls: true,
-                                responsive: true,
-                                autoplay: false,
-                                byline: false,
-                                portrait: false,
-                                title: false
-                              }}
-                            />
+                              />
                           </div>
                         )}
 

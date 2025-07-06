@@ -144,7 +144,7 @@ export default function MiAprendizajePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <div key={course.id} className="bg-white rounded-lg shadow-md overflow-hidden border">
+              <div key={course.id} className="bg-white rounded-xl shadow-md overflow-hidden border">
                 <div className="relative h-48">
                   <Image
                     src={course.image || "/placeholder.svg?height=200&width=300"}
@@ -205,7 +205,7 @@ export default function MiAprendizajePage() {
 
                   <Link
                     href={`/mi-aprendizaje/${course.id}`}
-                    className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors text-center block"
+                    className="w-full bg-orange-500 text-black py-2 px-4 rounded-full hover:bg-orange-600 transition-colors text-center block"
                   >
                     Continuar aprendiendo
                   </Link>
