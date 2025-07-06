@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { VimeoPlayer } from './VimeoPlayer';
 
 interface Testimonial {
   id: string;
@@ -75,14 +76,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
             <div className="relative h-[500px]">
               {playingVideo === testimonials[activeIndex].vimeoId ? (
-                <iframe
-                  src={`https://player.vimeo.com/video/${testimonials[activeIndex].vimeoId}?autoplay=1&title=0&byline=0&portrait=0&controls=1`}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title={`Testimonio de ${testimonials[activeIndex].name}`}
-                />
+                <VimeoPlayer videoUrl={playingVideo} />
               ) : (
                 <>
                   <img
@@ -176,14 +170,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
               <div className="relative h-[500px] md:h-[600px] w-[280px] md:w-[350px]">
                 {playingVideo === testimonial.vimeoId ? (
-                  <iframe
-                    src={`https://player.vimeo.com/video/${testimonial.vimeoId}?autoplay=1&title=0&byline=0&portrait=0&controls=1`}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    title={`Testimonio de ${testimonial.name}`}
-                  />
+                  <VimeoPlayer videoUrl={playingVideo}/>
                 ) : (
                   <>
                     <img

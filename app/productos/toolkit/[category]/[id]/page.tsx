@@ -10,6 +10,7 @@ import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
+import { VimeoPlayer } from "@/components/VimeoPlayer"
 
 // Interfaces que coinciden con la estructura de tu backend
 interface ToolkitSection {
@@ -271,26 +272,8 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
         {/* Video Trailer del Producto */}
         <div className="relative w-full aspect-video mb-12 rounded-lg overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
           {product.trailerUrl ? (
-            <iframe
-              src={
-                product.trailerUrl.includes("vimeo.com")
-                  ? `https://player.vimeo.com/video/${product.trailerUrl.split("/").pop()}?autoplay=1&loop=0&muted=1&title=0&byline=0&portrait=0&controls=0`
-                  : product.trailerUrl
-              }
-              className="w-full h-full rounded-lg"
-              frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              title={`Trailer de ${product.name}`}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
-              <div className="text-center text-orange-600">
-                <div className="text-6xl mb-4">🎬</div>
-                <p className="text-lg font-medium">Video próximamente</p>
-              </div>
-            </div>
-          )}
+            <VimeoPlayer videoUrl={product.trailerUrl} title={`Trailer de ${product.name}`} />
+      ) : (<p className="text-gray-500">Este producto aún no tiene video de presentación.</p>)}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

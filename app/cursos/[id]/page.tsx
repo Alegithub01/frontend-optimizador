@@ -10,6 +10,7 @@ import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { VideoService } from "@/services/video-service"
 import { useCurrency } from "@/hooks/use-currency"
+import { VimeoPlayer } from "@/components/VimeoPlayer"
 
 // Interfaces que coinciden con la estructura de tu backend
 interface Content {
@@ -93,11 +94,6 @@ export default function CoursePage({ params }: CoursePageProps) {
   const [courseId, setCourseId] = useState<string>("")
   const [purchasing, setPurchasing] = useState(false)
 
-  // Estados del reproductor de video
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-
   // Desenvolver los parámetros usando React.use()
   useEffect(() => {
     const unwrapParams = async () => {
@@ -154,17 +150,6 @@ export default function CoursePage({ params }: CoursePageProps) {
     } else {
       setActiveSection(sectionId)
     }
-  }
-
-  // Funciones de control de video
-  const togglePlay = () => {
-    const newIsPlaying = VideoService.togglePlay(isPlaying, iframeRef, course?.trailer)
-    setIsPlaying(newIsPlaying)
-  }
-
-  const toggleMute = () => {
-    const newIsMuted = VideoService.toggleMute(isMuted, iframeRef, course?.trailer)
-    setIsMuted(newIsMuted)
   }
 
   // Manejar clic en el botón de compra
@@ -247,80 +232,10 @@ export default function CoursePage({ params }: CoursePageProps) {
         {/* Video/Imagen del trailer */}
         <div className="relative w-full aspect-video mb-12 rounded-3xl overflow-hidden">
           {course.trailer ? (
-            isTrailerVideo ? (
-              <div className="relative w-full h-full">
-                {/* Iframe oculto con todos los controles deshabilitados */}
-                <iframe
-                  ref={iframeRef}
-                  src={VideoService.getEmbedUrl(course.trailer)}
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  allow="autoplay"
-                  style={{ pointerEvents: "none" }}
-                  title="Video trailer"
-                ></iframe>
-
-                {/* Overlay personalizado con controles mínimos */}
-                <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-                  {/* Botón de reproducción personalizado */}
-                  <div
-                    className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                    onClick={togglePlay}
-                  >
-                    {!isPlaying && (
-                      <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center">
-                          <div className="w-0 h-0 border-y-[12px] border-l-[20px] border-l-black ml-1"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Botón de silencio personalizado - abajo a la derecha */}
-                  <div className="absolute bottom-4 right-4 cursor-pointer" onClick={toggleMute}>
-                    <div className="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-                      {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="relative w-full h-full">
-                <Image
-                  src={course.trailer || "/placeholder.svg"}
-                  alt={`Trailer de ${course.title}`}
-                  fill
-                  className="object-cover"
-                />
-                <button
-                  onClick={togglePlay}
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                >
-                  {!isPlaying && (
-                    <div className="w-20 h-20 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center hover:scale-105 transition-transform">
-                      <div className="w-0 h-0 border-y-[12px] border-y-transparent border-l-[20px] border-l-orange-700 ml-1"></div>
-                    </div>
-                  )}
-                </button>
-              </div>
-            )
-          ) : (
-            <div className="relative w-full h-full">
-              <Image
-                src={course.image || "/placeholder.svg?height=400&width=800&query=course video"}
-                alt={course.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-white/30 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-orange-700 border-b-8 border-b-transparent ml-1"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+        <VimeoPlayer videoUrl={course.trailer} title={`Trailer de ${course.title}`} />
+      ) : (
+        <p className="text-gray-500">Este curso aún no tiene video de presentación.</p>
+     )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

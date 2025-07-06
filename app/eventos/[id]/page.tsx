@@ -10,6 +10,7 @@ import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
+import { VimeoPlayer } from "@/components/VimeoPlayer"
 
 interface Event {
   id: string
@@ -224,54 +225,6 @@ export default function EventPage({ params }: EventPageProps) {
     return url
   }
 
-  const togglePlay = () => {
-    if (!iframeRef.current) return
-
-    try {
-      if (isPlaying) {
-        if (event?.trailerUrl?.includes("vimeo")) {
-          iframeRef.current.contentWindow?.postMessage('{"method":"pause"}', "*")
-        } else if (event?.trailerUrl?.includes("youtube")) {
-          iframeRef.current.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*")
-        }
-      } else {
-        if (event?.trailerUrl?.includes("vimeo")) {
-          iframeRef.current.contentWindow?.postMessage('{"method":"play"}', "*")
-        } else if (event?.trailerUrl?.includes("youtube")) {
-          iframeRef.current.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', "*")
-        }
-      }
-
-      setIsPlaying(!isPlaying)
-    } catch (error) {
-      console.error("Error controlling video:", error)
-    }
-  }
-
-  const toggleMute = () => {
-    if (!iframeRef.current) return
-
-    try {
-      if (isMuted) {
-        if (event?.trailerUrl?.includes("vimeo")) {
-          iframeRef.current.contentWindow?.postMessage('{"method":"setVolume","value":"1"}', "*")
-        } else if (event?.trailerUrl?.includes("youtube")) {
-          iframeRef.current.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', "*")
-        }
-      } else {
-        if (event?.trailerUrl?.includes("vimeo")) {
-          iframeRef.current.contentWindow?.postMessage('{"method":"setVolume","value":"0"}', "*")
-        } else if (event?.trailerUrl?.includes("youtube")) {
-          iframeRef.current.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', "*")
-        }
-      }
-
-      setIsMuted(!isMuted)
-    } catch (error) {
-      console.error("Error controlling video volume:", error)
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -314,74 +267,8 @@ export default function EventPage({ params }: EventPageProps) {
         <div className="relative w-full mb-6 rounded-2xl overflow-hidden lg:rounded-3xl">
           <div className="aspect-video bg-black">
             {event.trailerUrl ? (
-              isTrailerVideo ? (
-                <div className="relative w-full h-full">
-                  <iframe
-                    ref={iframeRef}
-                    src={getEmbedUrl(event.trailerUrl)}
-                    className="absolute inset-0 w-full h-full"
-                    frameBorder="0"
-                    allow="autoplay"
-                    style={{ pointerEvents: "none" }}
-                    title="Video trailer"
-                  ></iframe>
-
-                  <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-                    <div
-                      className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-                      onClick={togglePlay}
-                    >
-                      {!isPlaying && (
-                        <div className="w-16 h-16 md:w-24 md:h-24 rounded-full flex items-center justify-center group-hover:from-orange-600 group-hover:to-orange-700 transition-all duration-300 shadow-2xl border-4 border-white/20">
-                          <div className="w-0 h-0 border-t-[8px] md:border-t-[12px] border-t-transparent border-l-[14px] md:border-l-[20px] border-l-white border-b-[8px] md:border-b-[12px] border-b-transparent ml-1"></div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      className="absolute bottom-2 md:bottom-4 right-2 md:right-4 cursor-pointer group"
-                      onClick={toggleMute}
-                    >
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-all duration-300 border border-white/20">
-                        {isMuted ? (
-                          <VolumeX size={16} className="md:w-5 md:h-5" />
-                        ) : (
-                          <Volume2 size={16} className="md:w-5 md:h-5" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={event.trailerUrl || "/placeholder.svg"}
-                    alt={`Trailer de ${event.title}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-2xl border-4 border-white/30 cursor-pointer group">
-                      <div className="w-0 h-0 border-t-[8px] md:border-t-[12px] border-t-transparent border-l-[14px] md:border-l-[20px] border-l-white border-b-[8px] md:border-b-[12px] border-b-transparent ml-1 group-hover:scale-110 transition-transform"></div>
-                    </div>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="relative w-full h-full">
-                <Image
-                  src={event.image || "/placeholder.svg?height=400&width=800&query=event"}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-2xl border-4 border-white/30 cursor-pointer group">
-                    <div className="w-0 h-0 border-t-[8px] md:border-t-[12px] border-t-transparent border-l-[14px] md:border-l-[20px] border-l-white border-b-[8px] md:border-b-[12px] border-b-transparent ml-1 group-hover:scale-110 transition-transform"></div>
-                  </div>
-                </div>
-              </div>
-            )}
+              <VimeoPlayer videoUrl={event.trailerUrl} title={`Trailer de ${event.title}`} />
+            ) : ( <p className="text-gray-500">Este evento aún no tiene video de presentación.</p>)}
           </div>
         </div>
 

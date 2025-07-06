@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
 import Link from "next/link"
-import VimeoPlayer from "@/components/vimeo-player"
+import VimeoPlayer from "@/components/VimeoPlayer"
 import CountdownTimer from "@/components/countdown-timer"
 
 export default function OptikidsPage() {

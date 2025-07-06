@@ -71,11 +71,6 @@ html {
   pointer-events: none !important;
 }
 
-/* Asegurar que el iframe no tenga interacciones */
-iframe[src*="vimeo"],
-iframe[src*="youtube"] {
-  pointer-events: none !important;
-}
 
 /* Estilos para los controles personalizados */
 .custom-video-controls {

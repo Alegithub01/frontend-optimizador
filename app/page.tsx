@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { ArrowRight, ChevronRight } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CategoryCard from "@/components/category-card"
 import FeaturedCourseCard from "@/components/featured-course-card"

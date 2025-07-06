@@ -2,20 +2,29 @@
 
 import React, { useState } from "react";
 import { Play } from "lucide-react";
-import Player from "lottie-react";
+import Lottie from "lottie-react";
 import animacion from "../../public/bibliografia/animaciones/4elementos.json";
 import firmaAnim from "../../public/bibliografia/animaciones/Firma.json";
-import Lottie from "lottie-react";
 
 type VimeoPlayerProps = {
-  videoId: string;
-  title: string;
+  videoUrl: string;
+  title?: string;
 };
 
-const VimeoPlayer = ({ videoId, title }: VimeoPlayerProps) => {
+const VimeoPlayer = ({ videoUrl, title = "Video Vimeo" }: VimeoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Función para extraer el ID de Vimeo desde cualquier URL válida
+  const extractVimeoId = (url: string): string => {
+    const match = url.match(/(?:vimeo\.com\/)?(\d+)/);
+    return match ? match[1] : "";
+  };
+
+  const videoId = extractVimeoId(videoUrl);
+
   const handlePlay = () => setIsPlaying(true);
+
+  if (!videoId) return <p className="text-red-500">Video no disponible</p>;
 
   return (
     <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black">
@@ -59,7 +68,7 @@ const AboutUs = () => {
 
         {/* Vimeo video con botón Play */}
         <div className="w-full px-2">
-          <VimeoPlayer videoId="1093363512" title="Video Historia" />
+          <VimeoPlayer videoUrl="https://vimeo.com/1093363512" title="Video Historia" />
         </div>
       </section>
 
@@ -78,7 +87,7 @@ const AboutUs = () => {
           <div className="flex justify-center order-1 md:order-2">
             {/* Animación Lottie responsiva */}
             <div className="w-full max-w-sm sm:max-w-md">
-              <Player 
+              <Lottie 
                 animationData={animacion} 
                 loop 
                 autoplay 
@@ -90,7 +99,7 @@ const AboutUs = () => {
 
         {/* Segundo Vimeo video con botón Play */}
         <div className="mt-8 w-full px-2">
-          <VimeoPlayer videoId="1093363500" title="Video 4 elementos" />
+          <VimeoPlayer videoUrl="https://vimeo.com/1093363500" title="Video 4 elementos" />
         </div>
       </section>
 
@@ -224,7 +233,6 @@ const AboutUs = () => {
           <Lottie animationData={firmaAnim} loop={true} />
         </div>
       </section>
-
     </div>
   );
 };

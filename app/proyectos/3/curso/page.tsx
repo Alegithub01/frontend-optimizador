@@ -4,7 +4,7 @@ import Image from "next/image"
 import { Calendar, Clock, MapPin, Check } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
-import VimeoPlayer from "@/components/vimeo-player"
+import VimeoPlayer from "@/components/VimeoPlayer"
 
 export default function CursoOptikidsPage() {
   const [isAdmin, setIsAdmin] = useState(false)

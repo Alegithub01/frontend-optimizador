@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Play, Calendar, Clock, Pause, X, ChevronRight } from "lucide-react"
 import { useEvents } from "@/hooks/useEvent"
+import { VimeoPlayer } from "./VimeoPlayer"
 
 interface BackendEvent {
   id: string
@@ -53,18 +54,6 @@ export default function EventsSection() {
   const getFirstSentence = (text: string) => {
     const firstPeriod = text.indexOf(".")
     return firstPeriod !== -1 ? text.substring(0, firstPeriod + 1) : text
-  }
-
-  // Extract Vimeo ID from URL
-  const getVimeoId = (url: string) => {
-    const regExp = /vimeo.com\/(\d+)/
-    const match = url.match(regExp)
-    return match ? match[1] : null
-  }
-
-  // Check if URL is a Vimeo video
-  const isVimeoVideo = (url: string) => {
-    return url && url.includes("vimeo.com")
   }
 
   useEffect(() => {
@@ -247,7 +236,7 @@ export default function EventsSection() {
             <div className="bg-gray-1 rounded-2xl overflow-hidden">
               <div className="relative aspect-video bg-black">
                 {showVideo && mainEvent.trailerUrl ? (
-                  <>
+                  <div className="relative w-full h-full">
                     <button
                       onClick={handleCloseVideo}
                       className="absolute top-4 right-4 z-50 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
@@ -255,35 +244,9 @@ export default function EventsSection() {
                       <X className="h-5 w-5" />
                     </button>
 
-                    {isVimeoVideo(mainEvent.trailerUrl) ? (
-                      <div className="w-full h-full" style={{ padding: "56.25% 0 0 0", position: "relative" }}>
-                        <iframe
-                          src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&title=0&byline=0&portrait=0`}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                          }}
-                          frameBorder="0"
-                          allow="autoplay; fullscreen; picture-in-picture"
-                          allowFullScreen
-                          className="rounded-xl"
-                        />
-                      </div>
-                    ) : (
-                      <video
-                        ref={videoRef}
-                        controls
-                        autoPlay
-                        className="w-full h-full object-cover"
-                        onLoadedData={() => setVideoLoaded(true)}
-                      >
-                        <source src={mainEvent.trailerUrl} type="video/mp4" />
-                      </video>
-                    )}
-                  </>
+                    {/* Aquí se renderiza el reproductor */}
+                    <VimeoPlayer videoUrl={mainEvent.trailerUrl} />
+                  </div>
                 ) : (
                   <>
                     <Image
@@ -445,58 +408,17 @@ export default function EventsSection() {
                   {/* Video/Image Section */}
                   <div className="relative aspect-video rounded-2xl overflow-hidden flex-shrink-0 bg-black">
                     {showVideo && mainEvent.trailerUrl ? (
-                      <>
+                      <div className="relative w-full h-full">
                         <button
                           onClick={handleCloseVideo}
-                          className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full z-10 hover:bg-black/70 transition-colors"
+                          className="absolute top-4 right-4 z-50 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                         >
                           <X className="h-5 w-5" />
                         </button>
 
-                        {isVimeoVideo(mainEvent.trailerUrl) ? (
-                          <div className="w-full h-full" style={{ padding: "56.25% 0 0 0", position: "relative" }}>
-                            <iframe
-                              src={`https://player.vimeo.com/video/${getVimeoId(mainEvent.trailerUrl)}?autoplay=1&title=0&byline=0&portrait=0`}
-                              style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "100%",
-                                height: "100%",
-                              }}
-                              frameBorder="0"
-                              allow="autoplay; fullscreen; picture-in-picture"
-                              allowFullScreen
-                              className="rounded-xl"
-                            />
-                          </div>
-                        ) : (
-                          <div className="relative w-full h-full">
-                            <video
-                              ref={videoRef}
-                              controls
-                              autoPlay
-                              className="w-full h-full rounded-xl object-cover"
-                              onClick={togglePlayPause}
-                              onLoadedData={() => setVideoLoaded(true)}
-                            >
-                              <source src={mainEvent.trailerUrl} type="video/mp4" />
-                            </video>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex justify-center">
-                              <button
-                                onClick={togglePlayPause}
-                                className="bg-white/20 rounded-full p-2 hover:bg-white/30 transition"
-                              >
-                                {isPlaying ? (
-                                  <Pause className="h-6 w-6 text-white" />
-                                ) : (
-                                  <Play className="h-6 w-6 text-white" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </>
+                        {/* Aquí se renderiza el reproductor */}
+                        <VimeoPlayer videoUrl={mainEvent.trailerUrl} />
+                      </div>
                     ) : (
                       <>
                         <Image
