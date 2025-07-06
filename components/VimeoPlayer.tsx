@@ -6,7 +6,7 @@ interface VimeoPlayerProps {
   title?: string
 }
 
-export const VimeoPlayer = ({ videoUrl, title = "Video Vimeo" }: VimeoPlayerProps) => {
+const VimeoPlayer = ({ videoUrl, title = "Video Vimeo" }: VimeoPlayerProps) => {
   const extractVimeoId = (url: string): string => {
     const match = url.match(/(?:vimeo\.com\/)?(\d+)/)
     return match ? match[1] : ""
@@ -29,3 +29,5 @@ export const VimeoPlayer = ({ videoUrl, title = "Video Vimeo" }: VimeoPlayerProp
     </div>
   )
 }
+
+export default VimeoPlayer
