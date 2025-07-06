@@ -10,14 +10,15 @@ import {
   Download,
   FileText,
   Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  RotateCcw,
+  Smartphone,
+  DownloadCloud,
+  Expand,
 } from "lucide-react"
 import Link from "next/link"
 import { api } from "@/lib/api"
 import PDFViewerSecure from "@/components/pdf-viewer-secure"
+import { IconRight } from "react-day-picker"
+import { X } from "lucide-react"
 
 interface ToolkitSection {
   id: number
@@ -70,6 +71,8 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageUrl, setModalImageUrl] = useState("")
+
+  const [showModal, setShowModal] = useState(false)
 
   const openImageModal = (url: string) => {
   setModalImageUrl(url)
@@ -389,28 +392,91 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
         <div className="text-center py-8 border-b">
           <h1 className="text-2xl font-bold text-gray-900">{product?.name}</h1>
           {product?.author && <p className="text-gray-600 mt-2">Por {product.author}</p>}
-
-          {/* Botón OptiKids - Prominente cerca del título */}
-          {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
-            <div className="mt-6">
-              <a
-                href="https://sanatoriumbusiness.com/optikids/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                🎯 Ingresar a OptiKids
-              </a>
-            </div>
-          )}
         </div>
 
         {/* Visor de PDF */}
-        <div className="relative h-[calc(250vh-160px)] flex justify-center items-center pb-12">
-          <div className="w-full max-w-4xl h-full">
-            <PDFViewerSecure src={product?.pdfUrl || ""} title={product?.name} className="w-full h-full" />
+        <div className="flex justify-center py-10">
+          <div className="w-[360px] h-[510px] shadow-xl border rounded-lg overflow-hidden">
+            <PDFViewerSecure
+              src={product?.pdfUrl || ""}
+              title={product?.name}
+              className="w-full h-full"
+            />
           </div>
         </div>
+
+        {/* Botón para ampliar */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => setShowModal(true)}
+          className="mt-6 px-6 py-2 text-gray-2 rounded-full font-semibold hover:bg-orange-700 transition-all text-sm"
+        >
+        <Expand/> 
+        </button>
+      </div>
+        {/* Modal grande */}
+          {showModal && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-70 z-0 flex items-center justify-center p-4"
+              onClick={() => setShowModal(false)} // ← Cierra al hacer clic fuera del modal
+            >
+              <div className="relative w-[580px] h-[740px] bg-white rounded-lg shadow-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()} // ← Evita que se cierre al hacer clic dentro
+              >
+                {/* Botón cerrar */}
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-4 right-4 text-gray-700 hover:text-red-500 z-10"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+
+                {/* PDF ampliado */}
+                <PDFViewerSecure
+                  src={product?.pdfUrl || ""}
+                  title={product?.name}
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+          )}
+
+        {/* Botón OptiKids  */}
+          {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
+          <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
+            <div>
+              <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
+              <p className="text-gray-600 text-sm max-w-xs mx-auto">
+                Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad aumentada
+              </p>
+            </div>
+
+            {/* Botón principal */}
+            <a
+              href="https://sanatoriumbusiness.com/optikids/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full text-sm transition-all duration-200"
+            >
+              Sitio web oficial OPTIKIDS
+              <IconRight className="w-4 h-4" />
+            </a>
+
+            {/* Instrucciones */}
+            <div className="text-gray-500 text-xs space-y-3 mt-2">
+              <div className="flex items-center gap-2 justify-center">
+                <Smartphone className="w-5 h-5 flex-shrink-0" />
+                <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
+              </div>
+              <div className="flex items-center gap-2 justify-center">
+                <DownloadCloud className="w-5 h-5 flex-shrink-0" />
+                <span>
+                  Descarga las apps y escanea las imágenes para vivir la experiencia completa en realidad aumentada.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }

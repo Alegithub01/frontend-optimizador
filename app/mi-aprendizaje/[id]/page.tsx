@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { Play, FileText, ArrowLeft, ChevronDown, Calendar } from "lucide-react"
+import { Play, FileText, ArrowLeft, ChevronDown, Calendar, Smartphone, DownloadCloud } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { api } from "@/lib/api"
 import VideoPlayer from "@/components/video-player"
+import { IconRight } from "react-day-picker"
 
 interface Content {
   id: number
@@ -219,18 +220,41 @@ export default function CoursePlayerPage() {
           )}
 
           {/* Botón Ingresar a OptiKids (solo para Escuela financiera) */}
-          {course?.title.trim() === "Escuela financiera" && (
-            <div className="mt-6 text-center">
-              <a
-                href="https://sanatoriumbusiness.com/optikids/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Ingresar a OptiKids
-              </a>  
-            </div>
-          )}
+                    {course?.title?.trim().toLowerCase() === "escuela financiera" && (
+                    <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
+                      <div>
+                        <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
+                        <p className="text-gray-600 text-sm max-w-xs mx-auto">
+                          Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad aumentada
+                        </p>
+                      </div>
+          
+                      {/* Botón principal */}
+                      <a
+                        href="https://sanatoriumbusiness.com/optikids/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full text-sm transition-all duration-200"
+                      >
+                        Sitio web oficial OPTIKIDS
+                        <IconRight className="w-4 h-4" />
+                      </a>
+          
+                      {/* Instrucciones */}
+                      <div className="text-gray-500 text-xs space-y-3 mt-2">
+                        <div className="flex items-center gap-2 justify-center">
+                          <Smartphone className="w-5 h-5 flex-shrink-0" />
+                          <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
+                        </div>
+                        <div className="flex items-center gap-2 justify-center">
+                          <DownloadCloud className="w-5 h-5 flex-shrink-0" />
+                          <span>
+                            Descarga las apps y escanea las imágenes para vivir la experiencia completa en realidad aumentada.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
         </div>
       </div>
     )
