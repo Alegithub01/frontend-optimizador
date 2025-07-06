@@ -10,7 +10,7 @@ import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { VideoService } from "@/services/video-service"
 import { useCurrency } from "@/hooks/use-currency"
-import { VimeoPlayer } from "@/components/VimeoPlayer"
+import VimeoPlayer from "@/components/VimeoPlayer"
 
 // Interfaces que coinciden con la estructura de tu backend
 interface Content {

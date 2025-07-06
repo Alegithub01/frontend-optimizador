@@ -10,7 +10,7 @@ import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
 import { useCurrency } from "@/hooks/use-currency"
-import { VimeoPlayer } from "@/components/VimeoPlayer"
+import VimeoPlayer from "@/components/VimeoPlayer"
 
 interface Event {
   id: string

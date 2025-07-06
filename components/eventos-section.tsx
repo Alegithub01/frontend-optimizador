@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Play, Calendar, Clock, Pause, X, ChevronRight } from "lucide-react"
 import { useEvents } from "@/hooks/useEvent"
-import { VimeoPlayer } from "./VimeoPlayer"
+import VimeoPlayer from "./VimeoPlayer"
 
 interface BackendEvent {
   id: string

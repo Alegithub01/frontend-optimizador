@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { VimeoPlayer } from './VimeoPlayer';
+import VimeoPlayer from './VimeoPlayer';
 
 interface Testimonial {
   id: string;
