@@ -8,11 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function CheckoutSuccessPage() {
   const router = useRouter()
-  const [itemType, setItemType] = useState<string>("")
+  const [itemType, setItemType] = useState<"curso" | "producto" | "evento" | "">()
   const [itemName, setItemName] = useState<string>("")
+  const [deliveryType, setDeliveryType] = useState<"digital" | "physical" | null>(null)
 
   useEffect(() => {
-    // Determine what type of item was purchased
     const checkoutProduct = localStorage.getItem("checkoutProduct")
     const checkoutCourse = localStorage.getItem("checkoutCourse")
     const checkoutEvent = localStorage.getItem("checkoutEvent")
@@ -21,6 +21,7 @@ export default function CheckoutSuccessPage() {
       const product = JSON.parse(checkoutProduct)
       setItemType("producto")
       setItemName(product.name || "")
+      setDeliveryType(product.deliveryType || "digital") // ← importante
     } else if (checkoutCourse) {
       const course = JSON.parse(checkoutCourse)
       setItemType("curso")
@@ -31,23 +32,64 @@ export default function CheckoutSuccessPage() {
       setItemName(event.name || "")
     }
 
-    // Clear checkout data from localStorage
-    // We keep the data for this session in case user refreshes the page
-    // but will clear it when they navigate away
     const clearCheckoutData = () => {
       localStorage.removeItem("checkoutProduct")
       localStorage.removeItem("checkoutCourse")
       localStorage.removeItem("checkoutEvent")
     }
 
-    // Add event listener to clear data when user navigates away
     window.addEventListener("beforeunload", clearCheckoutData)
-
-    // Return cleanup function
-    return () => {
-      window.removeEventListener("beforeunload", clearCheckoutData)
-    }
+    return () => window.removeEventListener("beforeunload", clearCheckoutData)
   }, [])
+
+  const renderInfoMessage = () => {
+    if (itemType === "producto") {
+      return (
+        <>
+          <li>
+            Puedes revisar tu compra desde{" "}
+            <a href="/mis-compras" className="text-blue-600 underline">
+              Mis Compras
+            </a>.
+          </li>
+          {deliveryType === "physical" && (
+            <li>
+              Si es un producto físico, nuestro equipo te contactará para coordinar el envío. También puedes escribirnos por{" "}
+              <a
+                href="https://wa.me/59177419374"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                WhatsApp
+              </a>.
+            </li>
+          )}
+        </>
+      )
+    }
+
+    if (itemType === "curso") {
+      return (
+        <li>
+          Ya puedes acceder a tu curso desde{" "}
+          <a href="/mi-aprendizaje" className="text-blue-600 underline">
+            tu panel de aprendizaje
+          </a>.
+        </li>
+      )
+    }
+
+    if (itemType === "evento") {
+      return (
+        <li>
+          El día del evento deberás presentar tu comprobante de pago. Si pagaste con tarjeta, lleva también una copia del recibo.
+        </li>
+      )
+    }
+
+    return <li>Gracias por tu compra.</li>
+  }
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-md">
@@ -76,27 +118,20 @@ export default function CheckoutSuccessPage() {
             </p>
 
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <p className="text-blue-700 text-sm">
-                <strong>Información importante:</strong>
+              <p className="text-blue-700 text-sm font-semibold mb-2">
+                Información importante:
               </p>
-              <ul className="text-blue-700 text-sm list-disc pl-5 mt-2 space-y-1">
+              <ul className="text-blue-700 text-sm list-disc pl-5 space-y-1">
                 <li>Hemos enviado un correo electrónico con los detalles de tu compra.</li>
-                {itemType === "producto" && (
-                  <li>
-                    Si compraste un producto físico, nuestro equipo se pondrá en contacto contigo para coordinar la
-                    entrega.
-                  </li>
-                )}
-                {itemType === "curso" && <li>Ya puedes acceder a tu curso desde tu panel de usuario.</li>}
-                {itemType === "evento" && <li>Recibirás información adicional sobre el evento en tu correo.</li>}
+                {renderInfoMessage()}
               </ul>
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button onClick={() => router.push("/dashboard")} className="w-full bg-orange-500 hover:bg-orange-600">
+          {/*<Button onClick={() => router.push("/dashboard")} className="w-full bg-orange-500 hover:bg-orange-600">
             Ir a mi cuenta
-          </Button>
+          </Button>*/}
           <Button variant="outline" onClick={() => router.push("/")} className="w-full">
             Volver al inicio
           </Button>

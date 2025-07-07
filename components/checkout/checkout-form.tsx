@@ -197,7 +197,7 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
       <Card>
         <CardHeader>
           <CardTitle>Información de Cliente</CardTitle>
-          <h1 className="text-red-600">Es improtante que llene sus datos correctamente, ya que si su compra es para algun evento o para envio fisico se le validara su identidad mediante los datos que ponga.</h1>
+          <h1 className="text-red-600">Es improtante que llene sus datos correctamente, ya que si su compra es para algún evento, recojo en oficina o para un envio fisico se le validara su identidad mediante los datos que ponga.</h1>
           <CardDescription>Completa tus datos para procesar el pago</CardDescription>
         </CardHeader>
         <CardContent>
@@ -265,7 +265,7 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     required
-                    placeholder="70123456"
+                    placeholder=""
                     className="rounded-l-none"
                   />
                 </div>
@@ -273,7 +273,7 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
               </div>
             </div>
             <Separator />
-            <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600" size="lg" disabled={isLoading}>
+            <Button type="submit" className="rounded-xl w-full bg-orange-500 hover:bg-orange-600" size="lg" disabled={isLoading}>
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

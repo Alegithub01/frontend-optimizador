@@ -234,9 +234,9 @@ export default function CoursePlayerPage() {
                         href="https://sanatoriumbusiness.com/optikids/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full text-sm transition-all duration-200"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
                       >
-                        Sitio web oficial OPTIKIDS
+                        Ingresar a OPTIKIDS
                         <IconRight className="w-4 h-4" />
                       </a>
           
@@ -676,9 +676,9 @@ export default function CoursePlayerPage() {
                             href="https://sanatoriumbusiness.com/optikids/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full text-sm transition-all duration-200"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
                           >
-                            Sitio web oficial OPTIKIDS
+                            Ingresar a OPTIKIDS
                             <IconRight className="w-4 h-4" />
                           </a>
               

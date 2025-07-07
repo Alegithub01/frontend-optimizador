@@ -26,6 +26,7 @@ interface ToolkitSection {
   videoUrl: string | null
   description: string
   fileUrl: string | null
+  downloadUrl?: string
   createdAt: string
 }
 
@@ -261,29 +262,28 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                 {/* Imagen directa - mantener exactamente como está */}
                 {currentSectionData.fileUrl && (
                   <div className="w-full bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        <img
-                          src={currentSectionData.fileUrl || "/placeholder.svg"}
-                          alt={`Material de ${currentSectionData.title}`}
-                          className="w-24 h-18 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => openImageModal(currentSectionData.fileUrl!)}
-                        />
-
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 mb-1">Material complementario</h4>
-                        <p className="text-sm text-gray-600 mb-2">Recurso adicional para esta sección</p>
-                        <button
-                          onClick={() => window.open(currentSectionData.fileUrl!, "_blank")}
-                          className="text-orange-500 hover:text-orange-600 text-sm font-medium"
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <img
+                        src={currentSectionData.fileUrl}
+                        alt={`Imagen material de ${currentSectionData.title}`}
+                        className="w-full max-w-2xl h-auto rounded-lg shadow-md cursor-zoom-in transition duration-200 hover:scale-105"
+                        onClick={() => openImageModal(currentSectionData.fileUrl!)}
+                      />
+                      {currentSectionData.downloadUrl && (
+                        <a
+                          href={currentSectionData.downloadUrl}
+                          download
+                          className="mt-2 inline-flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-black px-4 py-2 rounded-full text-sm font-medium transition"
                         >
-                          Ver en tamaño completo →
-                        </button>
-                      </div>
+                          <Download className="w-4 h-4" />
+                          Descargar recurso
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}
+
+
               </div>
             </div>
           ) : showPDF && product?.pdfUrl ? (
@@ -352,13 +352,6 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                   Descargar
                 </button>
               )}
-
-              {/* Indicador de sección */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-full text-sm text-gray-600">
-                <span className="font-medium">{currentSectionIndex + 1}</span>
-                <span>/</span>
-                <span>{totalSections}</span>
-              </div>
             </div>
           </div>
         </div>

@@ -152,6 +152,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               ...section,
               videoUrl: cleanUrl(section.videoUrl),
               fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)),
+              downloadUrl: cleanUrl(transformDriveUrl(section.downloadUrl)),
               description: section.description?.trim() || undefined,
             }))
           : undefined
@@ -503,6 +504,25 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                             {section.fileUrl &&
                               section.fileUrl.includes("drive.google.com") &&
                               !section.fileUrl.includes("uc?export=download") && (
+                                <p className="text-xs text-green-600">
+                                  ✔ El enlace de Drive será convertido automáticamente
+                                </p>
+                              )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="flex items-center">
+                              <Link className="h-4 w-4 mr-2" />
+                              URL de Descarga (opcional)
+                            </Label>
+                            <Input
+                              value={section.downloadUrl || ""}
+                              onChange={(e) => handleSectionChange(index, "downloadUrl", e.target.value)}
+                              placeholder="https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
+                            />
+                            {section.downloadUrl &&
+                              section.downloadUrl.includes("drive.google.com") &&
+                              !section.downloadUrl.includes("uc?export=download") && (
                                 <p className="text-xs text-green-600">
                                   ✔ El enlace de Drive será convertido automáticamente
                                 </p>

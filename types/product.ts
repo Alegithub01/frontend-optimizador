@@ -4,6 +4,7 @@ export interface ToolkitSection {
   videoUrl?: string
   description?: string
   fileUrl?: string
+  downloadUrl?: string
   createdAt?: Date
 }
 

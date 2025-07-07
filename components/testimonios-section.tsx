@@ -50,7 +50,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
   return (
     <section className="container mx-auto py-12 md:py-20 px-4">
-      <div className="flex flex-col md:flex-row justify-center items-start md:items-center mb-8 md:mb-12">
+      <div className="flex flex-col items-center justify-center mb-8 md:mb-12 text-center">
         <div className="text-center">
           <h2 className="text-lg font-medium text-orange-500 mb-3">Categoría</h2>
           <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">TESTIMONIOS</h3>

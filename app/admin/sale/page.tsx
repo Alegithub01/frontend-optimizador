@@ -469,7 +469,6 @@ export default function SalesPage() {
               <Store className="h-4 w-4 mr-2" />
               <div>
                 <div className="font-medium">Oficina Central</div>
-                <div className="text-xs">Av. Simón López #1234, Zona Central</div>
               </div>
             </div>
           </div>
