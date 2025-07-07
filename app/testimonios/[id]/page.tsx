@@ -1,116 +1,194 @@
 "use client"
-
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
 import VimeoPlayer from "@/components/VimeoPlayer"
-import { testimonialDetailsData, type TestimonialDetail } from "@/data/testimonial-details"
 import { useParams } from "next/navigation"
 import Link from "next/link"
+
+interface TestimonialDetail {
+  id: string
+  name: string
+  description: string
+  avatarImage: string
+  logoUrl: string
+  quote: string
+  historia: string
+  mainImage: string
+  videoUrl: string
+  additionalImages: string[]
+  elementos: {
+    icon: string
+    text: string
+  }[]
+}
 
 export default function TestimonialDetailPage() {
   const params = useParams()
   const testimonialId = params.id as string
-
   const [isAdmin, setIsAdmin] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [testimonialDetail, setTestimonialDetail] = useState<TestimonialDetail | null>(null)
   const [isPlayingVideo, setIsPlayingVideo] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    console.log("Loading testimonial detail for ID:", testimonialId)
+
     const currentUser = getCurrentUser()
     if (currentUser) {
       setUser(currentUser)
       setIsAdmin(canAccessAdmin(currentUser.role))
     }
 
-    // Load testimonial detail
-    const savedDetails = localStorage.getItem("testimonialDetailsData")
-    const details = savedDetails ? JSON.parse(savedDetails) : testimonialDetailsData
-
-    const detail = details.find((d: TestimonialDetail) => d.id === testimonialId)
-    if (detail) {
-      setTestimonialDetail(detail)
-    }
+    loadTestimonialDetail()
   }, [testimonialId])
 
-  const handleSave = () => {
-    if (!testimonialDetail) return
+  const loadTestimonialDetail = async () => {
+    setLoading(true)
+    setError(null)
 
-    const savedDetails = localStorage.getItem("testimonialDetailsData")
-    const details = savedDetails ? JSON.parse(savedDetails) : testimonialDetailsData
+    try {
+      console.log("Fetching testimonial details...")
+      const response = await fetch("/api/testimonial-details")
 
-    const updatedDetails = details.map((d: TestimonialDetail) => (d.id === testimonialId ? testimonialDetail : d))
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
-    localStorage.setItem("testimonialDetailsData", JSON.stringify(updatedDetails))
-    setIsEditing(false)
-    alert("Testimonio guardado exitosamente!")
+      const details = await response.json()
+      console.log("Received details:", details)
+      console.log("Looking for ID:", testimonialId)
+
+      const detail = details.find((d: TestimonialDetail) => d.id === testimonialId)
+      console.log("Found detail:", detail)
+
+      if (detail) {
+        setTestimonialDetail(detail)
+      } else {
+        setError(`No se encontró el testimonio con ID: ${testimonialId}`)
+      }
+    } catch (error) {
+      console.error("Error loading testimonial detail:", error)
+      setError("Error al cargar el testimonio")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleInputChange = (field: keyof TestimonialDetail, value: string) => {
+  const handleSave = async () => {
     if (!testimonialDetail) return
-    setTestimonialDetail((prev) => (prev ? { ...prev, [field]: value } : null))
+
+    setSaving(true)
+    try {
+      // Obtener todos los detalles actuales
+      const response = await fetch("/api/testimonial-details")
+      const allDetails = await response.json()
+
+      // Actualizar el detalle específico
+      const updatedDetails = allDetails.map((detail: TestimonialDetail) =>
+        detail.id === testimonialDetail.id ? testimonialDetail : detail,
+      )
+
+      // Guardar los cambios
+      const saveResponse = await fetch("/api/testimonial-details", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDetails),
+      })
+
+      const result = await saveResponse.json()
+      if (result.success) {
+        setIsEditing(false)
+        alert("¡Testimonio guardado exitosamente!")
+      } else {
+        alert("Error al guardar: " + (result.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error saving testimonial:", error)
+      alert("Error al guardar. Verifica tu conexión.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleFieldChange = (field: keyof TestimonialDetail, value: string) => {
+    if (!testimonialDetail) return
+    setTestimonialDetail({
+      ...testimonialDetail,
+      [field]: value,
+    })
   }
 
   const handleElementChange = (index: number, field: "icon" | "text", value: string) => {
     if (!testimonialDetail) return
-    setTestimonialDetail((prev) => {
-      if (!prev) return null
-      const newElements = [...prev.elementos]
-      newElements[index] = { ...newElements[index], [field]: value }
-      return { ...prev, elementos: newElements }
+    const updatedElementos = testimonialDetail.elementos.map((elemento, i) =>
+      i === index ? { ...elemento, [field]: value } : elemento,
+    )
+    setTestimonialDetail({
+      ...testimonialDetail,
+      elementos: updatedElementos,
     })
   }
 
   const addElement = () => {
     if (!testimonialDetail) return
-    setTestimonialDetail((prev) => {
-      if (!prev) return null
-      return {
-        ...prev,
-        elementos: [
-          ...prev.elementos,
-          {
-            icon: "/placeholder.svg?height=32&width=32",
-            text: "Nuevo elemento",
-          },
-        ],
-      }
+    setTestimonialDetail({
+      ...testimonialDetail,
+      elementos: [
+        ...testimonialDetail.elementos,
+        { icon: "/placeholder.svg?height=32&width=32", text: "Nuevo elemento" },
+      ],
     })
   }
 
   const removeElement = (index: number) => {
     if (!testimonialDetail) return
-    if (confirm("¿Estás seguro de que quieres eliminar este elemento?")) {
-      setTestimonialDetail((prev) => {
-        if (!prev) return null
-        return {
-          ...prev,
-          elementos: prev.elementos.filter((_, i) => i !== index),
-        }
-      })
-    }
-  }
-
-  const handleImageChange = (index: number, value: string) => {
-    if (!testimonialDetail) return
-    setTestimonialDetail((prev) => {
-      if (!prev) return null
-      const newImages = [...prev.additionalImages]
-      newImages[index] = value
-      return { ...prev, additionalImages: newImages }
+    setTestimonialDetail({
+      ...testimonialDetail,
+      elementos: testimonialDetail.elementos.filter((_, i) => i !== index),
     })
   }
 
-  if (!testimonialDetail) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando testimonio...</p>
+          <p className="text-sm text-gray-400 mt-2">ID: {testimonialId}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !testimonialDetail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Testimonio no encontrado</h1>
-          <Link href="/testimonios" className="text-blue-500 hover:text-blue-600">
-            Volver a testimonios
-          </Link>
+          <p className="text-gray-600 mb-4">{error || "El testimonio que buscas no existe."}</p>
+          <p className="text-sm text-gray-400 mb-6">ID buscado: {testimonialId}</p>
+
+          <div className="space-y-3">
+            <Link
+              href="/testimonios"
+              className="block bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Volver a testimonios
+            </Link>
+            <button
+              onClick={loadTestimonialDetail}
+              className="block w-full bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Intentar de nuevo
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -121,22 +199,24 @@ export default function TestimonialDetailPage() {
       {/* Admin Controls */}
       {isAdmin && (
         <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
             <div className="text-xs text-gray-500">
               {user?.name} ({user?.role?.toUpperCase()})
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+              disabled={saving}
             >
               {isEditing ? "Cancelar" : "Editar"}
             </button>
             {isEditing && (
               <button
                 onClick={handleSave}
-                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                disabled={saving}
               >
-                Guardar
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             )}
           </div>
@@ -159,32 +239,26 @@ export default function TestimonialDetailPage() {
         </Link>
       </div>
 
+      {/* Debug Info (solo para admin) */}
+      {isAdmin && (
+        <div className="container mx-auto px-4 mb-4">
+          <div className="bg-gray-100 p-4 rounded-lg text-sm">
+            <p>
+              <strong>Debug Info:</strong>
+            </p>
+            <p>ID: {testimonialId}</p>
+            <p>Testimonio encontrado: {testimonialDetail ? "Sí" : "No"}</p>
+            <p>Nombre: {testimonialDetail?.name}</p>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="container mx-auto px-4 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          {/* Right Column - Video (aparece primero en móvil) */}
+          {/* Right Column - Video */}
           <div className="space-y-1 lg:order-2">
-            {/* Main Image/Video */}
             <div className="relative aspect-[9/16] max-h-[600px] max-w-[350px] mx-auto rounded-2xl overflow-hidden bg-gray-100">
-              {isEditing && (
-                <div className="absolute top-4 left-4 right-4 z-10 space-y-2">
-                  <input
-                    type="url"
-                    value={testimonialDetail.mainImage}
-                    onChange={(e) => handleInputChange("mainImage", e.target.value)}
-                    className="border rounded px-2 py-1 w-full text-sm bg-white/90"
-                    placeholder="URL de imagen principal"
-                  />
-                  <input
-                    type="url"
-                    value={testimonialDetail.videoUrl}
-                    onChange={(e) => handleInputChange("videoUrl", e.target.value)}
-                    className="border rounded px-2 py-1 w-full text-sm bg-white/90"
-                    placeholder="URL del video de Vimeo"
-                  />
-                </div>
-              )}
-
               {isPlayingVideo ? (
                 <div className="relative w-full h-full">
                   <button
@@ -203,8 +277,6 @@ export default function TestimonialDetailPage() {
                     fill
                     className="object-cover"
                   />
-
-                  {/* Play Button Overlay */}
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <button
                       onClick={() => setIsPlayingVideo(true)}
@@ -218,21 +290,10 @@ export default function TestimonialDetailPage() {
             </div>
           </div>
 
-          {/* Left Column - Contenido (aparece segundo en móvil, primero en desktop) */}
+          {/* Left Column - Content */}
           <div className="space-y-8 lg:order-1">
             {/* Avatar and Info */}
             <div className="text-center">
-              {isEditing && (
-                <div className="mb-2">
-                  <input
-                    type="url"
-                    value={testimonialDetail.avatarImage}
-                    onChange={(e) => handleInputChange("avatarImage", e.target.value)}
-                    className="border rounded px-2 py-1 w-full text-sm mb-2"
-                    placeholder="URL del avatar"
-                  />
-                </div>
-              )}
               <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden">
                 <Image
                   src={testimonialDetail.avatarImage || "/placeholder.svg"}
@@ -242,13 +303,22 @@ export default function TestimonialDetailPage() {
                   className="object-cover w-full h-full"
                 />
               </div>
+              {isEditing && (
+                <input
+                  type="url"
+                  value={testimonialDetail.avatarImage}
+                  onChange={(e) => handleFieldChange("avatarImage", e.target.value)}
+                  className="border rounded px-2 py-1 text-xs w-full mb-2"
+                  placeholder="URL del avatar"
+                />
+              )}
 
               {isEditing ? (
                 <input
                   type="text"
                   value={testimonialDetail.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="text-xl font-bold text-gray-900 mb-2 border rounded px-2 py-1 text-center w-full"
+                  onChange={(e) => handleFieldChange("name", e.target.value)}
+                  className="text-xl font-bold text-gray-900 mb-2 border rounded px-2 py-1 w-full"
                 />
               ) : (
                 <h1 className="text-xl font-bold text-gray-900 mb-2">{testimonialDetail.name}</h1>
@@ -258,8 +328,8 @@ export default function TestimonialDetailPage() {
                 <input
                   type="text"
                   value={testimonialDetail.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  className="text-gray-600 border rounded px-2 py-1 text-center w-full"
+                  onChange={(e) => handleFieldChange("description", e.target.value)}
+                  className="text-gray-600 border rounded px-2 py-1 w-full"
                 />
               ) : (
                 <p className="text-gray-600">{testimonialDetail.description}</p>
@@ -268,32 +338,13 @@ export default function TestimonialDetailPage() {
 
             {/* Logo */}
             <div className="flex justify-center">
-              {isEditing ? (
-                <div className="text-center">
-                  <input
-                    type="url"
-                    value={testimonialDetail.logoUrl}
-                    onChange={(e) => handleInputChange("logoUrl", e.target.value)}
-                    className="border rounded px-2 py-1 w-full text-sm mb-2"
-                    placeholder="URL del logo"
-                  />
-                  <Image
-                    src={testimonialDetail.logoUrl || "/placeholder.svg"}
-                    alt="Logo"
-                    width={60}
-                    height={60}
-                    className="object-contain mx-auto"
-                  />
-                </div>
-              ) : (
-                <Image
-                  src={testimonialDetail.logoUrl || "/placeholder.svg"}
-                  alt="Logo"
-                  width={60}
-                  height={60}
-                  className="object-contain"
-                />
-              )}
+              <Image
+                src={testimonialDetail.logoUrl || "/placeholder.svg"}
+                alt="Logo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
             </div>
 
             {/* Quote */}
@@ -301,8 +352,8 @@ export default function TestimonialDetailPage() {
               {isEditing ? (
                 <textarea
                   value={testimonialDetail.quote}
-                  onChange={(e) => handleInputChange("quote", e.target.value)}
-                  className="text-2xl font-black text-gray-900 text-center border rounded px-4 py-2 w-full h-24 resize-none"
+                  onChange={(e) => handleFieldChange("quote", e.target.value)}
+                  className="text-2xl font-black text-gray-900 border rounded px-4 py-2 w-full h-20 resize-none text-center"
                 />
               ) : (
                 <h2 className="text-2xl font-black text-gray-900">"{testimonialDetail.quote}"</h2>
@@ -315,27 +366,17 @@ export default function TestimonialDetailPage() {
               {isEditing ? (
                 <textarea
                   value={testimonialDetail.historia}
-                  onChange={(e) => handleInputChange("historia", e.target.value)}
-                  className="text-gray-600 leading-relaxed border rounded px-3 py-2 w-full h-32 resize-none"
+                  onChange={(e) => handleFieldChange("historia", e.target.value)}
+                  className="text-gray-600 leading-relaxed border rounded px-4 py-2 w-full h-32 resize-none"
                 />
               ) : (
                 <p className="text-gray-600 leading-relaxed">{testimonialDetail.historia}</p>
               )}
             </div>
 
-            {/* Additional Images - New Layout */}
+            {/* Additional Images */}
             <div className="grid grid-cols-2 gap-4 h-80">
-              {/* Primera imagen - más grande, vertical */}
               <div className="relative">
-                {isEditing && (
-                  <input
-                    type="url"
-                    value={testimonialDetail.additionalImages[0]}
-                    onChange={(e) => handleImageChange(0, e.target.value)}
-                    className="absolute -top-8 left-0 right-0 border rounded px-1 py-1 text-xs bg-white z-10"
-                    placeholder="Imagen principal"
-                  />
-                )}
                 <div className="h-full rounded-lg overflow-hidden">
                   <Image
                     src={testimonialDetail.additionalImages[0] || "/placeholder.svg"}
@@ -345,19 +386,8 @@ export default function TestimonialDetailPage() {
                   />
                 </div>
               </div>
-
-              {/* Dos imágenes más pequeñas a la derecha */}
               <div className="flex flex-col gap-4">
                 <div className="relative flex-1">
-                  {isEditing && (
-                    <input
-                      type="url"
-                      value={testimonialDetail.additionalImages[1]}
-                      onChange={(e) => handleImageChange(1, e.target.value)}
-                      className="absolute -top-8 left-0 right-0 border rounded px-1 py-1 text-xs bg-white z-10"
-                      placeholder="Imagen 2"
-                    />
-                  )}
                   <div className="h-full rounded-lg overflow-hidden">
                     <Image
                       src={testimonialDetail.additionalImages[1] || "/placeholder.svg"}
@@ -367,17 +397,7 @@ export default function TestimonialDetailPage() {
                     />
                   </div>
                 </div>
-
                 <div className="relative flex-1">
-                  {isEditing && (
-                    <input
-                      type="url"
-                      value={testimonialDetail.additionalImages[2]}
-                      onChange={(e) => handleImageChange(2, e.target.value)}
-                      className="absolute -top-8 left-0 right-0 border rounded px-1 py-1 text-xs bg-white z-10"
-                      placeholder="Imagen 3"
-                    />
-                  )}
                   <div className="h-full rounded-lg overflow-hidden">
                     <Image
                       src={testimonialDetail.additionalImages[2] || "/placeholder.svg"}
@@ -390,7 +410,7 @@ export default function TestimonialDetailPage() {
               </div>
             </div>
 
-            {/* Elementos - Completamente editables */}
+            {/* Elementos */}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-gray-900 text-center flex-1">
@@ -407,11 +427,11 @@ export default function TestimonialDetailPage() {
               </div>
               <div className="space-y-4">
                 {testimonialDetail.elementos.map((elemento, index) => (
-                  <div key={index} className="relative flex items-center gap-4 bg-gray-50 rounded-lg p-4">
+                  <div key={index} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4">
                     {isEditing && (
                       <button
                         onClick={() => removeElement(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        className="text-red-500 hover:text-red-700 font-bold"
                       >
                         ×
                       </button>
@@ -431,14 +451,14 @@ export default function TestimonialDetailPage() {
                           type="url"
                           value={elemento.icon}
                           onChange={(e) => handleElementChange(index, "icon", e.target.value)}
-                          className="border rounded px-2 py-1 w-full text-sm"
+                          className="border rounded px-2 py-1 text-xs w-full"
                           placeholder="URL del icono"
                         />
                         <input
                           type="text"
                           value={elemento.text}
                           onChange={(e) => handleElementChange(index, "text", e.target.value)}
-                          className="border rounded px-2 py-1 w-full"
+                          className="text-gray-700 font-medium border rounded px-2 py-1 w-full"
                         />
                       </div>
                     ) : (

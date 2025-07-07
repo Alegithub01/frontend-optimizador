@@ -1,12 +1,11 @@
 "use client"
-
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
 import VimeoPlayer from "@/components/VimeoPlayer"
 import { testimonialsData, type Testimonial } from "@/data/testimonials"
 import Link from "next/link"
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from "lucide-react"
 
 export default function TestimoniosPage() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -14,6 +13,8 @@ export default function TestimoniosPage() {
   const [user, setUser] = useState<any>(null)
   const [testimonials, setTestimonials] = useState<Testimonial[]>(testimonialsData)
   const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -22,16 +23,52 @@ export default function TestimoniosPage() {
       setIsAdmin(canAccessAdmin(currentUser.role))
     }
 
-    const savedTestimonials = localStorage.getItem("testimonialsData")
-    if (savedTestimonials) {
-      setTestimonials(JSON.parse(savedTestimonials))
-    }
+    // Load testimonials from API
+    loadTestimonials()
   }, [])
 
-  const handleSave = () => {
-    localStorage.setItem("testimonialsData", JSON.stringify(testimonials))
-    setIsEditing(false)
-    alert("Testimonios guardados exitosamente!")
+  const loadTestimonials = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/testimonials")
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.length > 0) {
+          setTestimonials(data)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading testimonials:", error)
+      // Keep using the imported data as fallback
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch("/api/testimonials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(testimonials),
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        setIsEditing(false)
+        alert("¡Testimonios guardados exitosamente!")
+      } else {
+        alert("Error al guardar testimonios: " + (result.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error saving testimonials:", error)
+      alert("Error al guardar testimonios. Verifica tu conexión.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleTestimonialChange = (index: number, field: keyof Testimonial, value: string) => {
@@ -40,9 +77,10 @@ export default function TestimoniosPage() {
     )
   }
 
-  const addTestimonial = () => {
+  const addTestimonial = async () => {
+    const newId = Date.now().toString()
     const newTestimonial: Testimonial = {
-      id: Date.now().toString(),
+      id: newId,
       name: "Nuevo Testimonio",
       description: "Descripción del testimonio",
       coverImage: "/placeholder.svg?height=300&width=400",
@@ -50,7 +88,58 @@ export default function TestimoniosPage() {
       avatarImage: "/placeholder.svg?height=40&width=40",
       logoImage: "/placeholder.svg?height=30&width=30",
     }
+
+    // Agregar el testimonio a la lista
     setTestimonials((prev) => [...prev, newTestimonial])
+
+    // También crear el detalle del testimonio automáticamente
+    try {
+      const detailsResponse = await fetch("/api/testimonial-details")
+      let existingDetails = []
+
+      if (detailsResponse.ok) {
+        existingDetails = await detailsResponse.json()
+      }
+
+      const newDetail = {
+        id: newId,
+        name: "Nuevo Testimonio",
+        description: "Descripción del testimonio",
+        avatarImage: "/placeholder.svg?height=96&width=96",
+        logoUrl: "/placeholder.svg?height=60&width=60",
+        quote: "Nueva cita inspiradora",
+        historia: "Historia del nuevo testimonio. Aquí puedes agregar la historia completa de esta persona.",
+        mainImage: "/placeholder.svg?height=400&width=300",
+        videoUrl: "https://vimeo.com/1091240808",
+        additionalImages: [
+          "/placeholder.svg?height=300&width=200",
+          "/placeholder.svg?height=150&width=200",
+          "/placeholder.svg?height=150&width=200",
+        ],
+        elementos: [
+          {
+            icon: "/placeholder.svg?height=32&width=32",
+            text: "Nuevo elemento",
+          },
+        ],
+      }
+
+      const updatedDetails = [...existingDetails, newDetail]
+
+      const saveDetailResponse = await fetch("/api/testimonial-details", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDetails),
+      })
+
+      if (!saveDetailResponse.ok) {
+        console.error("Error saving testimonial detail")
+      }
+    } catch (error) {
+      console.error("Error creating testimonial detail:", error)
+    }
   }
 
   const removeTestimonial = (index: number) => {
@@ -83,6 +172,7 @@ export default function TestimoniosPage() {
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+              disabled={saving}
             >
               {isEditing ? "Cancelar" : "Editar"}
             </button>
@@ -90,19 +180,22 @@ export default function TestimoniosPage() {
               <>
                 <button
                   onClick={handleSave}
-                  className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+                  className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                  disabled={saving}
                 >
-                  Guardar
+                  {saving ? "Guardando..." : "Guardar"}
                 </button>
                 <button
                   onClick={addTestimonial}
                   className="bg-purple-500 text-white px-4 py-2 rounded text-sm hover:bg-purple-600"
+                  disabled={saving}
                 >
                   + Agregar
                 </button>
               </>
             )}
           </div>
+          {loading && <div className="text-xs text-blue-500 mt-2">Cargando datos...</div>}
         </div>
       )}
 
@@ -133,7 +226,6 @@ export default function TestimoniosPage() {
                     ×
                   </button>
                 )}
-
                 {/* Testimonial Card */}
                 <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
                   {/* Video/Image Section */}
@@ -158,7 +250,6 @@ export default function TestimoniosPage() {
                         />
                       )}
                     </div>
-
                     {/* Cover Image or Video */}
                     {playingVideos.has(testimonial.id) ? (
                       <div className="relative w-full h-full">
@@ -168,7 +259,7 @@ export default function TestimoniosPage() {
                         >
                           ✕
                         </button>
-                        <VimeoPlayer videoUrl={testimonial.videoUrl}/>
+                        <VimeoPlayer videoUrl={testimonial.videoUrl} />
                       </div>
                     ) : (
                       <>
@@ -184,14 +275,12 @@ export default function TestimoniosPage() {
                             />
                           </div>
                         )}
-
                         <Image
                           src={testimonial.coverImage || "/placeholder.svg"}
                           alt={`Testimonio de ${testimonial.name}`}
                           fill
                           className="object-cover"
                         />
-
                         {/* Play Button Overlay */}
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                           <button
@@ -201,7 +290,6 @@ export default function TestimoniosPage() {
                             <div className="w-0 h-0 border-l-[12px] border-l-gray-800 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1"></div>
                           </button>
                         </div>
-
                         {/* Video URL Input for Admin */}
                         {isEditing && (
                           <div className="absolute bottom-4 left-4 right-4">
@@ -214,7 +302,6 @@ export default function TestimoniosPage() {
                             />
                           </div>
                         )}
-
                         {/* "Conoce su historia" text */}
                         <Link
                           href={`/testimonios/${testimonial.id}`}
@@ -222,13 +309,12 @@ export default function TestimoniosPage() {
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">Conoce su historia</span>
-                            <ChevronRight/>
+                            <ChevronRight />
                           </div>
                         </Link>
                       </>
                     )}
                   </div>
-
                   {/* Info Section */}
                   <div className="p-6">
                     <div className="flex items-start gap-4">
@@ -265,7 +351,6 @@ export default function TestimoniosPage() {
                           </div>
                         )}
                       </div>
-
                       {/* Name and Description */}
                       <div className="flex-1">
                         {isEditing ? (

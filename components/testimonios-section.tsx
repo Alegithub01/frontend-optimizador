@@ -1,47 +1,56 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Play } from "lucide-react"
 import VimeoPlayer from "./VimeoPlayer"
-import { testimonialsData, type Testimonial } from "@/data/testimonials"
+import type { Testimonial } from "@/data/testimonials"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(testimonialsData)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Cargar testimonios editados desde localStorage si existen
-    const savedTestimonials = localStorage.getItem("testimonialsData")
-    if (savedTestimonials) {
-      try {
-        const parsedTestimonials = JSON.parse(savedTestimonials)
-        setTestimonials(parsedTestimonials)
-      } catch (error) {
-        console.error("Error parsing saved testimonials:", error)
-        setTestimonials(testimonialsData)
-      }
-    }
-
-    // Escuchar cambios en localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "testimonialsData" && e.newValue) {
-        try {
-          const updatedTestimonials = JSON.parse(e.newValue)
-          setTestimonials(updatedTestimonials)
-        } catch (error) {
-          console.error("Error parsing updated testimonials:", error)
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
+    loadTestimonials()
   }, [])
 
+  const loadTestimonials = async () => {
+    try {
+      const response = await fetch("/api/testimonials")
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.length > 0) {
+          setTestimonials(data)
+        } else {
+          // Fallback to imported data
+          const { testimonialsData } = await import("@/data/testimonials")
+          setTestimonials(testimonialsData)
+        }
+      } else {
+        // Fallback to imported data
+        const { testimonialsData } = await import("@/data/testimonials")
+        setTestimonials(testimonialsData)
+      }
+    } catch (error) {
+      console.error("Error loading testimonials:", error)
+      // Fallback to imported data
+      try {
+        const { testimonialsData } = await import("@/data/testimonials")
+        setTestimonials(testimonialsData)
+      } catch (importError) {
+        console.error("Error importing testimonials:", importError)
+        setTestimonials([])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSlideChange = (index: number) => {
+    if (testimonials.length === 0) return
+
     if (index < 0) {
       setActiveIndex(testimonials.length - 1)
     } else if (index >= testimonials.length) {
@@ -54,7 +63,6 @@ export default function TestimonialsSection() {
 
   const handlePlayVideo = (testimonialId: string, videoUrl: string) => {
     if (videoUrl && videoUrl.trim() !== "") {
-      // Solo reproducir este video específico
       setPlayingVideo(testimonialId)
     }
   }
@@ -64,6 +72,8 @@ export default function TestimonialsSection() {
   }
 
   const getVisibleTestimonials = () => {
+    if (testimonials.length === 0) return []
+
     const result = []
     const prevIndex = activeIndex === 0 ? testimonials.length - 1 : activeIndex - 1
     result.push(testimonials[prevIndex])
@@ -71,6 +81,43 @@ export default function TestimonialsSection() {
     const nextIndex = activeIndex === testimonials.length - 1 ? 0 : activeIndex + 1
     result.push(testimonials[nextIndex])
     return result
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className="container mx-auto py-12 md:py-20 px-4">
+        <div className="flex flex-col items-center justify-center mb-8 md:mb-12 text-center">
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-orange-500 mb-3">Categoría</h2>
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">TESTIMONIOS</h3>
+          </div>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </section>
+    )
+  }
+
+  // Empty state
+  if (testimonials.length === 0) {
+    return (
+      <section className="container mx-auto py-12 md:py-20 px-4">
+        <div className="flex flex-col items-center justify-center mb-8 md:mb-12 text-center">
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-orange-500 mb-3">Categoría</h2>
+            <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">TESTIMONIOS</h3>
+          </div>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No hay testimonios disponibles</p>
+          <Link href="/testimonios" className="text-orange-500 hover:text-orange-600">
+            Ver página de testimonios
+          </Link>
+        </div>
+      </section>
+    )
   }
 
   const visibleTestimonials = getVisibleTestimonials()
@@ -98,7 +145,6 @@ export default function TestimonialsSection() {
                 className="object-contain"
               />
             </div>
-
             <div className="relative h-[500px]">
               {playingVideo === testimonials[activeIndex]?.id && testimonials[activeIndex]?.videoUrl ? (
                 <div className="relative w-full h-full">
@@ -132,7 +178,6 @@ export default function TestimonialsSection() {
                   </div>
                 </>
               )}
-
               <div className="absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-xl">
                 <Link href={`/testimonios/${testimonials[activeIndex]?.id || ""}`}>
                   <div className="flex items-center gap-3 hover:bg-gray-50 transition-colors rounded-lg p-2 -m-2">
@@ -159,7 +204,6 @@ export default function TestimonialsSection() {
               </div>
             </div>
           </div>
-
           {/* Mobile Navigation Buttons */}
           <button
             onClick={() => handleSlideChange(activeIndex - 1)}
@@ -187,11 +231,10 @@ export default function TestimonialsSection() {
         >
           <ChevronLeft className="h-6 w-6 text-gray-500" />
         </button>
-
         <div className="flex justify-center items-center gap-4 md:gap-6">
           {visibleTestimonials.map((testimonial, index) => (
             <div
-              key={testimonial?.id || index}
+              key={`${testimonial?.id}-${index}`}
               className={`relative transition-all duration-300 rounded-2xl overflow-hidden ${
                 index === 1 ? "z-10 scale-110 shadow-xl" : "scale-90 opacity-80"
               }`}
@@ -206,7 +249,6 @@ export default function TestimonialsSection() {
                   className="object-contain"
                 />
               </div>
-
               <div className="relative h-[500px] md:h-[600px] w-[280px] md:w-[350px]">
                 {playingVideo === testimonial?.id && testimonial?.videoUrl ? (
                   <div className="relative w-full h-full">
@@ -238,7 +280,6 @@ export default function TestimonialsSection() {
                     </div>
                   </>
                 )}
-
                 <div className="absolute bottom-0 left-0 right-0 bg-white p-3 rounded-t-xl">
                   <Link href={`/testimonios/${testimonial?.id || ""}`}>
                     <div className="flex items-center gap-2 hover:bg-gray-50 transition-colors rounded-lg p-2 -m-2">
@@ -267,7 +308,6 @@ export default function TestimonialsSection() {
             </div>
           ))}
         </div>
-
         <button
           onClick={() => handleSlideChange(activeIndex + 1)}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors -mr-4"
