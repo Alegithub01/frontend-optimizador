@@ -98,8 +98,10 @@ export default function MainNav() {
                   <span className="sr-only">Menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full max-w-xs bg-white text-black border-gray-200">
-                <div className="h-full flex flex-col py-4">
+              <SheetContent
+                side="right"
+                className="w-full max-w-xs bg-white text-black border-gray-200 p-0">
+                <div className="h-full flex flex-col overflow-y-auto">
                   {/* Sección de usuario ARRIBA - Altura fija */}
                   <div className="w-full border-b border-gray-200 pb-4 mb-6 flex-shrink-0">
                     {isAuthenticated ? (

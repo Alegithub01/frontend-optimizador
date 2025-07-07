@@ -73,11 +73,13 @@ export default function UserDropdown({ user, onLogout, customIcon, isMobile = fa
             className="w-full"
           >
             <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-md transition text-black font-medium">
-              {customIcon ? (
-                <Image src={customIcon || "/placeholder.svg"} alt="Mi aprendizaje" width={20} height={20} className="object-contain" />
-              ) : (
-                <Star className="h-5 w-5 text-gray-600" />
-              )}
+              <Image
+                src="/logo-plomo.svg"
+                alt="Logo Optimizador"
+                width={20}
+                height={20}
+                className="object-contain"
+              />
               Mi aprendizaje
             </button>
           </Link>
@@ -145,13 +147,14 @@ export default function UserDropdown({ user, onLogout, customIcon, isMobile = fa
             <Link
               href="/mi-aprendizaje"
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsOpen(false)}
-            >
-              {customIcon ? (
-                <Image src={customIcon || "/placeholder.svg"} alt="Mi aprendizaje" width={16} height={16} className="object-contain" />
-              ) : (
-                <Star className="h-4 w-4 text-gray-500" />
-              )}
+              onClick={() => setIsOpen(false)}>
+              <Image
+                src="/logo-plomo.svg"
+                alt="Mi aprendizaje"
+                width={16}
+                height={16}
+                className="object-contain"
+              />
               Mi aprendizaje
             </Link>
 
