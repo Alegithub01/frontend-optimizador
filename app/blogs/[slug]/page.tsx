@@ -1,62 +1,140 @@
 "use client"
-
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
 import { useParams } from "next/navigation"
+import Link from "next/link"
+
+interface BlogDetail {
+  slug: string
+  date: string
+  author: string
+  title: string
+  heroImage: string
+  subtitle: string
+  mainContent: string
+  secondaryContent: string
+}
 
 export default function BlogPostPage() {
   const params = useParams()
   const slug = params.slug as string
-
   const [isAdmin, setIsAdmin] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [content, setContent] = useState({
-    date: "01-04-2024",
-    author: "por Nochur Crosby",
-    title: "¿Que es marketing en negocios?",
-    heroImage: "/placeholder.svg?height=400&width=800",
-    subtitle: "Subtítulo o subtema",
-    mainContent: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.`,
-    contentImage: "/placeholder.svg?height=300&width=600", // ya no se usa pero lo dejo por si acaso lo necesitás después
-    secondaryContent: `Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
-
-Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-
-Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestae consequatur.`,
-  })
+  const [content, setContent] = useState<BlogDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
-
     if (currentUser) {
       setUser(currentUser)
       setIsAdmin(canAccessAdmin(currentUser.role))
     }
 
-    // Load content specific to this blog post
-    const savedContent = localStorage.getItem(`blogPost_${slug}`)
-    if (savedContent) {
-      setContent(JSON.parse(savedContent))
-    }
+    loadBlogDetail()
   }, [slug])
 
-  const handleSave = () => {
-    localStorage.setItem(`blogPost_${slug}`, JSON.stringify(content))
-    setIsEditing(false)
-    alert("Contenido guardado exitosamente!")
+  const loadBlogDetail = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/blog-details")
+      if (response.ok) {
+        const data = await response.json()
+        const blogDetail = data.find((blog: BlogDetail) => blog.slug === slug)
+        if (blogDetail) {
+          setContent(blogDetail)
+        } else {
+          // Si no existe, crear uno nuevo
+          const newBlogDetail: BlogDetail = {
+            slug: slug,
+            date: new Date().toLocaleDateString("es-ES"),
+            author: "por Nuevo Autor",
+            title: "Nuevo Blog Post",
+            heroImage: "/placeholder.svg?height=400&width=800",
+            subtitle: "Subtítulo del blog",
+            mainContent: "Contenido principal del blog...",
+            secondaryContent: "Contenido secundario del blog...",
+          }
+          setContent(newBlogDetail)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading blog detail:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setContent((prev) => ({
-      ...prev,
+  const handleSave = async () => {
+    if (!content) return
+
+    setSaving(true)
+    try {
+      // Obtener todos los detalles actuales
+      const response = await fetch("/api/blog-details")
+      const allDetails = await response.json()
+
+      // Actualizar o agregar el detalle específico
+      const updatedDetails = allDetails.some((blog: BlogDetail) => blog.slug === content.slug)
+        ? allDetails.map((blog: BlogDetail) => (blog.slug === content.slug ? content : blog))
+        : [...allDetails, content]
+
+      // Guardar los cambios
+      const saveResponse = await fetch("/api/blog-details", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDetails),
+      })
+
+      const result = await saveResponse.json()
+      if (result.success) {
+        setIsEditing(false)
+        alert("¡Blog guardado exitosamente!")
+      } else {
+        alert("Error al guardar: " + (result.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error saving blog:", error)
+      alert("Error al guardar el blog")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleInputChange = (field: keyof BlogDetail, value: string) => {
+    if (!content) return
+    setContent({
+      ...content,
       [field]: value,
-    }))
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Blog no encontrado</h1>
+          <Link
+            href="/blogs"
+            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Volver a Blogs
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -71,15 +149,17 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+              disabled={saving}
             >
               {isEditing ? "Cancelar" : "Editar"}
             </button>
             {isEditing && (
               <button
                 onClick={handleSave}
-                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                disabled={saving}
               >
-                Guardar
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             )}
           </div>
@@ -113,7 +193,6 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
               </>
             )}
           </div>
-
           {isEditing ? (
             <input
               type="text"
@@ -135,7 +214,7 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
                 value={content.heroImage}
                 onChange={(e) => handleInputChange("heroImage", e.target.value)}
                 className="border rounded px-2 py-1 w-full text-sm"
-                placeholder="URL de Cloudinary para imagen principal"
+                placeholder="URL de imagen principal"
               />
             </div>
           )}
@@ -198,12 +277,12 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
 
         {/* Back Button */}
         <div className="mt-12 pt-8 border-t">
-          <a
+          <Link
             href="/blogs"
             className="bg-orange-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-orange-600 transition-colors inline-flex items-center gap-2"
           >
             ← Volver a Blogs
-          </a>
+          </Link>
         </div>
       </article>
     </div>

@@ -1,73 +1,141 @@
 "use client"
-
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getCurrentUser, canAccessAdmin } from "@/lib/auth"
 import Link from "next/link"
 import VimeoPlayer from "@/components/VimeoPlayer"
 import CountdownTimer from "@/components/countdown-timer"
+import { useParams } from "next/navigation"
 
-export default function OptikidsPage() {
+interface ProyectoContent {
+  id: string
+  heroTitle: string
+  heroSubtitle: string
+  heroImage: string
+  courseTitle: string
+  courseDescription: string
+  courseDate: string
+  courseTime: string
+  courseAge: string
+  countdownDate: string
+  whatIsTitle: string
+  whatIsDescription: string
+  firstVideoId: string
+  secondVideoId: string
+  projectsTitle: string
+  projectsDescription: string
+  project1Title: string
+  project1Description: string
+  project1Image: string
+  project1WhatsApp: string
+  project2Title: string
+  project2Description: string
+  project2Image: string
+  project2WhatsApp: string
+  project3Title: string
+  project3Description: string
+  project3Image: string
+  project3WhatsApp: string
+}
+
+export default function ProyectoPage() {
+  const params = useParams()
+  const proyectoId = params.id as string
   const [isAdmin, setIsAdmin] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [content, setContent] = useState({
-    heroTitle: "Optikids",
-    heroSubtitle: "Escuela financiera",
-    heroImage: "/icons/opti.png",
-    courseTitle: "Curso: OPTIKIDS Escuela financiera para niños (5-9 años)",
-    courseDescription:
-      "Nuestros cursos presenciales ofrecen una experiencia interactiva donde los niños aprenden conceptos financieros a través de juegos, actividades prácticas y dinámicas grupales.",
-    courseDate: "Sábado, 10 de mayo 2024",
-    courseTime: "10:00 am - 16:00 pm",
-    courseAge: "Edad: 7 a 9 años",
-    countdownDate: "2024-05-10T10:00:00",
-    whatIsTitle: "¿Qué es Optikids?",
-    whatIsDescription:
-      "Optikids es una escuela financiera especializada en enseñar a niños y adolescentes conceptos fundamentales sobre dinero, ahorro, inversión y emprendimiento de manera práctica y divertida.",
-    firstVideoId: "https://vimeo.com/1091240808",
-    secondVideoId: "",
-    projectsTitle: "¿Qué proyectos tenemos para ti?",
-    projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
-    project1Title: "OPTI 2024",
-    project1Description: "Programa básico de educación financiera para principiantes",
-    project1Image: "/placeholder.svg?height=200&width=300",
-    project1WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%202024",
-    project2Title: "OPTIKIDS ESCUELA FINANCIERA",
-    project2Description: "Programa completo de educación financiera para niños y adolescentes",
-    project2Image: "/images/optikids-detail.png",
-    project2WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20OPTIKIDS%20Escuela%20Financiera",
-    project3Title: "OPTI KIDS",
-    project3Description: "Programa avanzado de emprendimiento y liderazgo financiero",
-    project3Image: "/placeholder.svg?height=200&width=300",
-    project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
-  })
+  const [content, setContent] = useState<ProyectoContent | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
-
     if (currentUser) {
       setUser(currentUser)
       setIsAdmin(canAccessAdmin(currentUser.role))
     }
 
-    const savedContent = localStorage.getItem("optikidsContent")
-    if (savedContent) {
-      setContent(JSON.parse(savedContent))
-    }
-  }, [])
+    loadContent()
+  }, [proyectoId])
 
-  const handleSave = () => {
-    localStorage.setItem("optikidsContent", JSON.stringify(content))
-    setIsEditing(false)
-    alert("Contenido guardado exitosamente!")
+  const loadContent = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/proyectos-content")
+      if (response.ok) {
+        const data = await response.json()
+        const projectContent = data.find((p: ProyectoContent) => p.id === proyectoId)
+        if (projectContent) {
+          setContent(projectContent)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading content:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setContent((prev) => ({
-      ...prev,
+  const handleSave = async () => {
+    if (!content) return
+
+    setSaving(true)
+    try {
+      const response = await fetch("/api/proyectos-content")
+      const allContent = await response.json()
+
+      const updatedContent = allContent.map((p: ProyectoContent) => (p.id === content.id ? content : p))
+
+      const saveResponse = await fetch("/api/proyectos-content", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedContent),
+      })
+
+      const result = await saveResponse.json()
+      if (result.success) {
+        setIsEditing(false)
+        alert("¡Contenido guardado exitosamente!")
+      } else {
+        alert("Error al guardar: " + (result.error || "Error desconocido"))
+      }
+    } catch (error) {
+      console.error("Error saving content:", error)
+      alert("Error al guardar el contenido")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleInputChange = (field: keyof ProyectoContent, value: string) => {
+    if (!content) return
+    setContent({
+      ...content,
       [field]: value,
-    }))
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Proyecto no encontrado</h1>
+          <Link href="/" className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+            Volver al inicio
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -82,20 +150,38 @@ export default function OptikidsPage() {
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600"
+              disabled={saving}
             >
               {isEditing ? "Cancelar" : "Editar"}
             </button>
             {isEditing && (
               <button
                 onClick={handleSave}
-                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600"
+                className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                disabled={saving}
               >
-                Guardar
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             )}
           </div>
         </div>
       )}
+
+      {/* Back Button */}
+      <div className="container mx-auto px-4 pt-8">
+        <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-8">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M19 12H5M12 19L5 12L12 5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Volver al inicio
+        </Link>
+      </div>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-50 to-green-50 py-16 md:py-24">
@@ -112,7 +198,6 @@ export default function OptikidsPage() {
               ) : (
                 <p className="text-black font-medium mb-2">{content.heroSubtitle}</p>
               )}
-
               {isEditing ? (
                 <input
                   type="text"
@@ -123,7 +208,6 @@ export default function OptikidsPage() {
               ) : (
                 <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6">{content.heroTitle}</h1>
               )}
-
               <button className="bg-orange-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-600 transition-colors">
                 Conocenos
               </button>
@@ -137,13 +221,13 @@ export default function OptikidsPage() {
                       value={content.heroImage}
                       onChange={(e) => handleInputChange("heroImage", e.target.value)}
                       className="border rounded px-2 py-1 w-full text-sm"
-                      placeholder="URL de Cloudinary para imagen hero"
+                      placeholder="URL de imagen hero"
                     />
                   </div>
                 )}
                 <Image
                   src={content.heroImage || "/placeholder.svg"}
-                  alt="Personaje Optikids"
+                  alt={`Personaje ${content.heroTitle}`}
                   width={400}
                   height={400}
                   className="object-contain"
@@ -167,20 +251,17 @@ export default function OptikidsPage() {
                     <div className="aspect-video bg-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
                       <input
                         type="text"
-                        placeholder="URL del video de Vimeo (ej: https://vimeo.com/1091240808)"
+                        placeholder="URL del video de Vimeo"
                         value={content.firstVideoId}
                         onChange={(e) => handleInputChange("firstVideoId", e.target.value)}
                         className="border rounded px-2 py-1 w-full"
                       />
-                      <p className="text-xs text-gray-500 text-center">
-                        Inserta la URL completa del video de Vimeo
-                      </p>
+                      <p className="text-xs text-gray-500 text-center">Inserta la URL completa del video de Vimeo</p>
                     </div>
                   ) : (
                     <VimeoPlayer videoUrl={content.firstVideoId} />
                   )}
                 </div>
-
                 {/* Contador funcional debajo del video */}
                 <div className="mb-4">
                   {isEditing && (
@@ -190,7 +271,7 @@ export default function OptikidsPage() {
                       </label>
                       <input
                         type="datetime-local"
-                        value={content.countdownDate.slice(0, 16)} // Formato para datetime-local
+                        value={content.countdownDate.slice(0, 16)}
                         onChange={(e) => handleInputChange("countdownDate", e.target.value + ":00")}
                         className="border rounded px-2 py-1 w-full"
                       />
@@ -199,7 +280,6 @@ export default function OptikidsPage() {
                   <CountdownTimer targetDate={content.countdownDate} />
                 </div>
               </div>
-
               {/* Columna derecha - Información del curso */}
               <div className="bg-white rounded-2xl p-8">
                 {isEditing ? (
@@ -212,7 +292,6 @@ export default function OptikidsPage() {
                 ) : (
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">{content.courseTitle}</h3>
                 )}
-
                 {isEditing ? (
                   <textarea
                     value={content.courseDescription}
@@ -222,7 +301,6 @@ export default function OptikidsPage() {
                 ) : (
                   <p className="text-gray-600 mb-6">{content.courseDescription}</p>
                 )}
-
                 <div className="space-y-3 mb-6 text-sm text-gray-600">
                   <div className="flex items-center gap-3">
                     <Image src="/icons/reloj.png" alt="Calendario" width={16} height={16} className="object-contain" />
@@ -264,9 +342,8 @@ export default function OptikidsPage() {
                     )}
                   </div>
                 </div>
-
                 <Link
-                  href="/proyectos/3/curso"
+                  href={`/proyectos/${proyectoId}/curso`}
                   className="bg-orange-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-600 transition-colors inline-block text-center"
                 >
                   Ver más
@@ -301,7 +378,7 @@ export default function OptikidsPage() {
         </div>
       </section>
 
-      {/* ¿Qué es Optikids? Section */}
+      {/* ¿Qué es? Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -315,7 +392,6 @@ export default function OptikidsPage() {
             ) : (
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">{content.whatIsTitle}</h2>
             )}
-
             {isEditing ? (
               <textarea
                 value={content.whatIsDescription}
@@ -326,7 +402,6 @@ export default function OptikidsPage() {
               <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">{content.whatIsDescription}</p>
             )}
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -385,7 +460,6 @@ export default function OptikidsPage() {
             ) : (
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">{content.projectsTitle}</h2>
             )}
-
             {isEditing ? (
               <textarea
                 value={content.projectsDescription}
@@ -396,7 +470,6 @@ export default function OptikidsPage() {
               <p className="text-gray-600 max-w-2xl mx-auto">{content.projectsDescription}</p>
             )}
           </div>
-
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Proyecto 1 */}
             <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl overflow-hidden relative">
@@ -408,7 +481,7 @@ export default function OptikidsPage() {
                       value={content.project1Image}
                       onChange={(e) => handleInputChange("project1Image", e.target.value)}
                       className="border rounded px-2 py-1 w-full text-xs bg-white/90"
-                      placeholder="URL Cloudinary Proyecto 1"
+                      placeholder="URL Proyecto 1"
                     />
                   </div>
                 )}
@@ -429,12 +502,8 @@ export default function OptikidsPage() {
                     className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-gray-800"
                   />
                 ) : (
-                  <>
-                    <div className="text-2xl font-black mb-2">OPTI</div>
-                    <div className="text-2xl font-black mb-4">2024</div>
-                  </>
+                  <div className="text-2xl font-black mb-4">{content.project1Title}</div>
                 )}
-
                 {isEditing ? (
                   <textarea
                     value={content.project1Description}
@@ -444,7 +513,6 @@ export default function OptikidsPage() {
                 ) : (
                   <p className="mb-6 opacity-80">{content.project1Description}</p>
                 )}
-
                 {isEditing && (
                   <input
                     type="url"
@@ -454,7 +522,6 @@ export default function OptikidsPage() {
                     placeholder="URL de WhatsApp"
                   />
                 )}
-
                 <a
                   href={content.project1WhatsApp}
                   target="_blank"
@@ -466,7 +533,7 @@ export default function OptikidsPage() {
               </div>
             </div>
 
-            {/* Proyecto 2 - OPTIKIDS ESCUELA FINANCIERA */}
+            {/* Proyecto 2 */}
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl overflow-hidden relative">
               <div className="relative h-48">
                 {isEditing && (
@@ -476,7 +543,7 @@ export default function OptikidsPage() {
                       value={content.project2Image}
                       onChange={(e) => handleInputChange("project2Image", e.target.value)}
                       className="border rounded px-2 py-1 w-full text-xs bg-white/90"
-                      placeholder="URL Cloudinary Proyecto 2"
+                      placeholder="URL Proyecto 2"
                     />
                   </div>
                 )}
@@ -497,12 +564,8 @@ export default function OptikidsPage() {
                     className="text-xl font-black mb-4 border rounded px-2 py-1 w-full bg-blue-700"
                   />
                 ) : (
-                  <>
-                    <div className="text-xl font-black mb-2">OPTIKIDS</div>
-                    <div className="text-xl font-black mb-4">ESCUELA FINANCIERA</div>
-                  </>
+                  <div className="text-xl font-black mb-4">{content.project2Title}</div>
                 )}
-
                 {isEditing ? (
                   <textarea
                     value={content.project2Description}
@@ -512,7 +575,6 @@ export default function OptikidsPage() {
                 ) : (
                   <p className="mb-6 opacity-80">{content.project2Description}</p>
                 )}
-
                 {isEditing && (
                   <input
                     type="url"
@@ -522,7 +584,6 @@ export default function OptikidsPage() {
                     placeholder="URL de WhatsApp"
                   />
                 )}
-
                 <a
                   href={content.project2WhatsApp}
                   target="_blank"
@@ -544,7 +605,7 @@ export default function OptikidsPage() {
                       value={content.project3Image}
                       onChange={(e) => handleInputChange("project3Image", e.target.value)}
                       className="border rounded px-2 py-1 w-full text-xs bg-white/90"
-                      placeholder="URL Cloudinary Proyecto 3"
+                      placeholder="URL Proyecto 3"
                     />
                   </div>
                 )}
@@ -565,12 +626,8 @@ export default function OptikidsPage() {
                     className="text-2xl font-black mb-4 border rounded px-2 py-1 w-full bg-purple-700"
                   />
                 ) : (
-                  <>
-                    <div className="text-2xl font-black mb-2">OPTI</div>
-                    <div className="text-2xl font-black mb-4">KIDS</div>
-                  </>
+                  <div className="text-2xl font-black mb-4">{content.project3Title}</div>
                 )}
-
                 {isEditing ? (
                   <textarea
                     value={content.project3Description}
@@ -580,7 +637,6 @@ export default function OptikidsPage() {
                 ) : (
                   <p className="mb-6 opacity-80">{content.project3Description}</p>
                 )}
-
                 {isEditing && (
                   <input
                     type="url"
@@ -590,7 +646,6 @@ export default function OptikidsPage() {
                     placeholder="URL de WhatsApp"
                   />
                 )}
-
                 <a
                   href={content.project3WhatsApp}
                   target="_blank"

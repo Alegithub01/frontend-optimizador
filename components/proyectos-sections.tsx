@@ -1,6 +1,8 @@
+"use client"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { useState, useEffect } from "react"
 
 interface Proyecto {
   id: string
@@ -10,11 +12,42 @@ interface Proyecto {
   featured?: boolean
 }
 
-interface ProyectosSectionProps {
-  proyectos: Proyecto[]
-}
+export default function ProyectosSection() {
+  const [proyectos, setProyectos] = useState<Proyecto[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default function ProyectosSection({ proyectos }: ProyectosSectionProps) {
+  useEffect(() => {
+    loadProyectos()
+  }, [])
+
+  const loadProyectos = async () => {
+    try {
+      const response = await fetch("/api/proyectos")
+      if (response.ok) {
+        const data = await response.json()
+        setProyectos(data)
+      }
+    } catch (error) {
+      console.error("Error loading proyectos:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="container mx-auto py-12 md:py-16 px-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-lg font-medium text-orange-700">Categoría</h2>
+          <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">PROYECTOS</h3>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      </section>
+    )
+  }
+
   const proyectoDestacado = proyectos.find((proyecto) => proyecto.featured)
   const proyectosRegulares = proyectos.filter((proyecto) => !proyecto.featured)
 
@@ -29,7 +62,6 @@ export default function ProyectosSection({ proyectos }: ProyectosSectionProps) {
       <div className="block md:hidden space-y-8">
         {/* Proyecto destacado primero en móvil */}
         {proyectoDestacado && <ProyectoCard proyecto={proyectoDestacado} featured />}
-
         {/* Resto de proyectos en columna con espacio y tamaño fijo */}
         <div className="space-y-8">
           {proyectosRegulares.map((proyecto) => (
