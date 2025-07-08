@@ -417,7 +417,7 @@ if (!hasAccess) {
                               }}
                               className="flex items-center justify-between w-full text-left text-xs text-gray-600 hover:text-gray-800 transition-colors"
                             >
-                              <span>Texto de referencia {section.title}</span>
+                              <span>{section.title}</span>
                               <ChevronDown
                                 className={`h-3 w-3 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
                               />
