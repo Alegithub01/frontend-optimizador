@@ -636,7 +636,7 @@ if (!hasAccess) {
                     <div>
                       <div className="flex items-center gap-1 mb-1">
                         <Calendar className="h-3 w-3 text-gray-500" />
-                        <span className="text-xs font-medium text-gray-600">Día {section.id}</span>
+                        <span className="text-xs font-medium text-gray-600">{section.title}</span>
                       </div>
                       <h3 className="text-sm font-medium text-gray-800">{firstVideo.title}</h3>
                     </div>
