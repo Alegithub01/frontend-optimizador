@@ -596,7 +596,7 @@ if (!hasAccess) {
                         onClick={() => toggleSection(section.id)}
                         className="flex items-center justify-between w-full p-3 text-left text-sm text-gray-600"
                       >
-                        <span>Texto de referencia{section.title}</span>
+                        <span>{section.title}</span>
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
                         />
