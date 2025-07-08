@@ -197,7 +197,7 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
       <Card>
         <CardHeader>
           <CardTitle>Información de Cliente</CardTitle>
-          <h1 className="text-red-600">Es improtante que llene sus datos correctamente, ya que si su compra es para algún evento, recojo en oficina o para un envio fisico se le validara su identidad mediante los datos que ponga.</h1>
+          <h1 className="text-red-600">Es importante que llene sus datos correctamente, ya que si su compra es para algún evento, recojo en oficina o para un envio fisico se le validara su identidad mediante los datos que ponga.</h1>
           <CardDescription>Completa tus datos para procesar el pago</CardDescription>
         </CardHeader>
         <CardContent>

@@ -178,31 +178,37 @@ export default function Home() {
             <h2 className="text-lg font-medium text-orange-700 mb-4">Categoría</h2>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-black">PRODUCTOS</h3>
           </div>
- 
+
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 mb-8">
             {productCategories.map((category, index) => (
               <div
-                key={category.id}
-                className={`
-                  ${productCategories.length % 2 !== 0 && index === productCategories.length - 1
-                    ? "col-span-2 justify-self-center w-full max-w-[280px] md:col-span-1 md:justify-self-auto md:max-w-full"
-                    : ""}
-                `}
-              >
-                <ProductCategoryCard category={category} />
-              </div>
+  key={category.id}
+  className={`
+    ${productCategories.length % 3 !== 0 && index === productCategories.length - 1
+      ? "md:col-span-3 md:flex md:justify-center"
+      : ""}
+    ${productCategories.length % 2 !== 0 && index === productCategories.length - 1
+      ? "sm:col-span-2 sm:flex sm:justify-center"
+      : ""}
+  `}
+>
+  <div className="w-full max-w-[280px]">
+    <ProductCategoryCard category={category} />
+  </div>
+</div>
+
             ))}
           </div>
 
           <div className="flex justify-center">
-          <Link
-            href="/productos"
-            className="hidden lg:flex items-center text-gray-2 font-semibold hover:text-orange-500 transition-colors text-lg px-4 py-2"
-          >
-            Todos los productos
-            <ChevronRight className="h-6 w-6 ml-2" />
-          </Link>
-        </div>
+            <Link
+              href="/productos"
+              className="hidden lg:flex items-center text-gray-2 font-semibold hover:text-orange-500 transition-colors text-lg px-4 py-2"
+            >
+              Todos los productos
+              <ChevronRight className="h-6 w-6 ml-2" />
+            </Link>
+          </div>
         </section>
 
         {/* Testimonials Section */}

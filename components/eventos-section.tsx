@@ -304,7 +304,7 @@ export default function EventsSection() {
               <div className="p-6 pt-4">
                 <div className="mb-4">
                   <h4 className="font-bold text-xl text-white mb-2">{mainEvent.title}</h4>
-                  <p className="text-sm text-gray-300 mb-3">{mainEvent.description}</p>
+                  <p className="text-sm text-gray-300 mb-3 line-clamp-6">{mainEvent.description}</p>
                 </div>
 
                 <Link
@@ -381,11 +381,9 @@ export default function EventsSection() {
                     <div className="text-xl font-black text-black">{event.date.year}</div>
                   </div>
                   <div className="flex flex-col justify-between flex-1">
-                    <div>
+                    <div className="space-y-8">
                       <h4 className="font-extrabold text-xl text-black">{event.title}</h4>
-                      <p className="text-sm text-black mt-1 mb-4 line-clamp-2">{event.description}</p>
-                    </div>
-                    <div>
+                      <p className="text-sm text-black line-clamp-2">{event.description}</p>
                       <Link
                         href={`/eventos/${event.id}`}
                         className="inline-flex items-center bg-orange-700 text-black px-4 py-2 rounded-full text-sm hover:bg-orange-600 transition-colors"

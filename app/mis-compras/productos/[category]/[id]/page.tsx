@@ -91,8 +91,9 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
         // Ordenar secciones por ID para asegurar el orden correcto
         if (productData.sections) {
-          productData.sections.sort((a, b) => a.id - b.id)
-        }
+  productData.sections.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+}
+
 
         setProduct(productData)
       } catch (error) {
