@@ -37,35 +37,28 @@ export default function TestimonialDetailPage() {
 
   useEffect(() => {
     console.log("Loading testimonial detail for ID:", testimonialId)
-
     const currentUser = getCurrentUser()
     if (currentUser) {
       setUser(currentUser)
       setIsAdmin(canAccessAdmin(currentUser.role))
     }
-
     loadTestimonialDetail()
   }, [testimonialId])
 
   const loadTestimonialDetail = async () => {
     setLoading(true)
     setError(null)
-
     try {
       console.log("Fetching testimonial details...")
       const response = await fetch("/api/testimonial-details")
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-
       const details = await response.json()
       console.log("Received details:", details)
       console.log("Looking for ID:", testimonialId)
-
       const detail = details.find((d: TestimonialDetail) => d.id === testimonialId)
       console.log("Found detail:", detail)
-
       if (detail) {
         setTestimonialDetail(detail)
       } else {
@@ -81,18 +74,15 @@ export default function TestimonialDetailPage() {
 
   const handleSave = async () => {
     if (!testimonialDetail) return
-
     setSaving(true)
     try {
       // Obtener todos los detalles actuales
       const response = await fetch("/api/testimonial-details")
       const allDetails = await response.json()
-
       // Actualizar el detalle específico
       const updatedDetails = allDetails.map((detail: TestimonialDetail) =>
         detail.id === testimonialDetail.id ? testimonialDetail : detail,
       )
-
       // Guardar los cambios
       const saveResponse = await fetch("/api/testimonial-details", {
         method: "POST",
@@ -101,7 +91,6 @@ export default function TestimonialDetailPage() {
         },
         body: JSON.stringify(updatedDetails),
       })
-
       const result = await saveResponse.json()
       if (result.success) {
         setIsEditing(false)
@@ -122,6 +111,16 @@ export default function TestimonialDetailPage() {
     setTestimonialDetail({
       ...testimonialDetail,
       [field]: value,
+    })
+  }
+
+  const handleAdditionalImageChange = (index: number, value: string) => {
+    if (!testimonialDetail) return
+    const updatedImages = [...testimonialDetail.additionalImages]
+    updatedImages[index] = value
+    setTestimonialDetail({
+      ...testimonialDetail,
+      additionalImages: updatedImages,
     })
   }
 
@@ -174,7 +173,6 @@ export default function TestimonialDetailPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Testimonio no encontrado</h1>
           <p className="text-gray-600 mb-4">{error || "El testimonio que buscas no existe."}</p>
           <p className="text-sm text-gray-400 mb-6">ID buscado: {testimonialId}</p>
-
           <div className="space-y-3">
             <Link
               href="/testimonios"
@@ -258,6 +256,34 @@ export default function TestimonialDetailPage() {
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Right Column - Video */}
           <div className="space-y-1 lg:order-2">
+            {/* Video URL Editor */}
+            {isEditing && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">URL del Video:</label>
+                <input
+                  type="url"
+                  value={testimonialDetail.videoUrl}
+                  onChange={(e) => handleFieldChange("videoUrl", e.target.value)}
+                  className="border rounded px-3 py-2 text-sm w-full"
+                  placeholder="URL del video de Vimeo"
+                />
+              </div>
+            )}
+
+            {/* Main Image Editor */}
+            {isEditing && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Imagen Principal:</label>
+                <input
+                  type="url"
+                  value={testimonialDetail.mainImage}
+                  onChange={(e) => handleFieldChange("mainImage", e.target.value)}
+                  className="border rounded px-3 py-2 text-sm w-full"
+                  placeholder="URL de la imagen principal"
+                />
+              </div>
+            )}
+
             <div className="relative aspect-[9/16] max-h-[600px] max-w-[350px] mx-auto rounded-2xl overflow-hidden bg-gray-100">
               {isPlayingVideo ? (
                 <div className="relative w-full h-full">
@@ -304,15 +330,17 @@ export default function TestimonialDetailPage() {
                 />
               </div>
               {isEditing && (
-                <input
-                  type="url"
-                  value={testimonialDetail.avatarImage}
-                  onChange={(e) => handleFieldChange("avatarImage", e.target.value)}
-                  className="border rounded px-2 py-1 text-xs w-full mb-2"
-                  placeholder="URL del avatar"
-                />
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Avatar:</label>
+                  <input
+                    type="url"
+                    value={testimonialDetail.avatarImage}
+                    onChange={(e) => handleFieldChange("avatarImage", e.target.value)}
+                    className="border rounded px-2 py-1 text-xs w-full"
+                    placeholder="URL del avatar"
+                  />
+                </div>
               )}
-
               {isEditing ? (
                 <input
                   type="text"
@@ -323,7 +351,6 @@ export default function TestimonialDetailPage() {
               ) : (
                 <h1 className="text-xl font-bold text-gray-900 mb-2">{testimonialDetail.name}</h1>
               )}
-
               {isEditing ? (
                 <input
                   type="text"
@@ -338,6 +365,18 @@ export default function TestimonialDetailPage() {
 
             {/* Logo */}
             <div className="flex justify-center">
+              {isEditing && (
+                <div className="w-full max-w-xs mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 text-center">Logo:</label>
+                  <input
+                    type="url"
+                    value={testimonialDetail.logoUrl}
+                    onChange={(e) => handleFieldChange("logoUrl", e.target.value)}
+                    className="border rounded px-2 py-1 text-xs w-full"
+                    placeholder="URL del logo"
+                  />
+                </div>
+              )}
               <Image
                 src={testimonialDetail.logoUrl || "/placeholder.svg"}
                 alt="Logo"
@@ -375,36 +414,67 @@ export default function TestimonialDetailPage() {
             </div>
 
             {/* Additional Images */}
-            <div className="grid grid-cols-2 gap-4 h-80">
-              <div className="relative">
-                <div className="h-full rounded-lg overflow-hidden">
-                  <Image
-                    src={testimonialDetail.additionalImages[0] || "/placeholder.svg"}
-                    alt="Imagen principal"
-                    fill
-                    className="object-cover"
-                  />
+            <div>
+              {isEditing && (
+                <div className="mb-4 space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">Imágenes Adicionales:</h4>
+                  <div className="space-y-2">
+                    <input
+                      type="url"
+                      value={testimonialDetail.additionalImages[0] || ""}
+                      onChange={(e) => handleAdditionalImageChange(0, e.target.value)}
+                      className="border rounded px-2 py-1 text-xs w-full"
+                      placeholder="URL de la imagen 1 (principal)"
+                    />
+                    <input
+                      type="url"
+                      value={testimonialDetail.additionalImages[1] || ""}
+                      onChange={(e) => handleAdditionalImageChange(1, e.target.value)}
+                      className="border rounded px-2 py-1 text-xs w-full"
+                      placeholder="URL de la imagen 2 (superior derecha)"
+                    />
+                    <input
+                      type="url"
+                      value={testimonialDetail.additionalImages[2] || ""}
+                      onChange={(e) => handleAdditionalImageChange(2, e.target.value)}
+                      className="border rounded px-2 py-1 text-xs w-full"
+                      placeholder="URL de la imagen 3 (inferior derecha)"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-4">
-                <div className="relative flex-1">
+              )}
+
+              <div className="grid grid-cols-2 gap-4 h-80">
+                <div className="relative">
                   <div className="h-full rounded-lg overflow-hidden">
                     <Image
-                      src={testimonialDetail.additionalImages[1] || "/placeholder.svg"}
-                      alt="Imagen 2"
+                      src={testimonialDetail.additionalImages[0] || "/placeholder.svg"}
+                      alt="Imagen principal"
                       fill
                       className="object-cover"
                     />
                   </div>
                 </div>
-                <div className="relative flex-1">
-                  <div className="h-full rounded-lg overflow-hidden">
-                    <Image
-                      src={testimonialDetail.additionalImages[2] || "/placeholder.svg"}
-                      alt="Imagen 3"
-                      fill
-                      className="object-cover"
-                    />
+                <div className="flex flex-col gap-4">
+                  <div className="relative flex-1">
+                    <div className="h-full rounded-lg overflow-hidden">
+                      <Image
+                        src={testimonialDetail.additionalImages[1] || "/placeholder.svg"}
+                        alt="Imagen 2"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative flex-1">
+                    <div className="h-full rounded-lg overflow-hidden">
+                      <Image
+                        src={testimonialDetail.additionalImages[2] || "/placeholder.svg"}
+                        alt="Imagen 3"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
