@@ -23,6 +23,12 @@ export default function ProductsPage() {
       image: "/blanco.png",
       href: "/productos/toolkit",
     },
+    {
+      id: 4,
+      title: "E-kit",
+      image: "/ekit.png",
+      href: "/productos/e-kit",
+    },
   ]
 
   return (

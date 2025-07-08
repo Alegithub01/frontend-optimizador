@@ -58,7 +58,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0) // Cambiado a índice en lugar de ID
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
   const [showPDF, setShowPDF] = useState(false)
 
   // Estados para el video player personalizado
@@ -72,14 +72,12 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageUrl, setModalImageUrl] = useState("")
-
   const [showModal, setShowModal] = useState(false)
 
   const openImageModal = (url: string) => {
-  setModalImageUrl(url)
-  setShowImageModal(true)
-}
-
+    setModalImageUrl(url)
+    setShowImageModal(true)
+  }
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -183,9 +181,12 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
     const currentSectionData = getCurrentSectionData()
     const isLastSection = currentSectionIndex === totalSections - 1
 
+    // Determinar la etiqueta según la categoría
+    const categoryLabel = product?.category === "e-kit" ? "E-Kit" : "Toolkit"
+
     return (
       <div className="flex-1 bg-white">
-        {/* Header del toolkit */}
+        {/* Header del toolkit/e-kit */}
         <div className="border-b bg-gray-50">
           <div className="container mx-auto px-4 py-6">
             {/* Barra de progreso */}
@@ -216,7 +217,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
             </div>
 
             <div className="text-center">
-              <div className="text-orange-500 text-sm font-medium">Toolkit</div>
+              <div className="text-orange-500 text-sm font-medium">{categoryLabel}</div>
               <h1 className="text-2xl font-bold text-gray-900">{product?.name}</h1>
               {currentSectionData && <p className="text-gray-600 mt-2">{currentSectionData.title}</p>}
 
@@ -258,32 +259,57 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                     />
                   </div>
                 </div>
-                   
-                {/* Imagen directa - mantener exactamente como está */}
+
+                {/* Imagen directa - solo si existe fileUrl */}
                 {currentSectionData.fileUrl && (
                   <div className="w-full bg-white rounded-xl p-4 shadow-lg border border-gray-100">
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                       <img
-                        src={currentSectionData.fileUrl}
+                        src={currentSectionData.fileUrl || "/placeholder.svg"}
                         alt={`Imagen material de ${currentSectionData.title}`}
                         className="w-full max-w-2xl h-auto rounded-lg shadow-md cursor-zoom-in transition duration-200 hover:scale-105"
                         onClick={() => openImageModal(currentSectionData.fileUrl!)}
                       />
-                      {currentSectionData.downloadUrl && (
-                        <a
-                          href={currentSectionData.downloadUrl}
-                          download
-                          className="mt-2 inline-flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-black px-4 py-2 rounded-full text-sm font-medium transition"
-                        >
-                          <Download className="w-4 h-4" />
-                          Descargar recurso
-                        </a>
-                      )}
                     </div>
                   </div>
                 )}
 
+                {/* Botón de descarga - solo si existe downloadUrl y NO hay imagen */}
+                {currentSectionData.downloadUrl && !currentSectionData.fileUrl && (
+                  <div className="w-full bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="text-gray-600 mb-4">
+                        <FileText className="h-16 w-16 mx-auto mb-2 text-gray-400" />
+                        <p className="text-lg font-medium">Material descargable disponible</p>
+                        <p className="text-sm text-gray-500">Descarga el archivo de esta sección</p>
+                      </div>
+                      <a
+                        href={currentSectionData.downloadUrl}
+                        download
+                        className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full text-base font-medium transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <Download className="w-5 h-5" />
+                        Descargar archivo
+                      </a>
+                    </div>
+                  </div>
+                )}
 
+                {/* Botón de descarga adicional - si hay imagen Y downloadUrl */}
+                {currentSectionData.downloadUrl && currentSectionData.fileUrl && (
+                  <div className="w-full bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+                    <div className="flex justify-center">
+                      <a
+                        href={currentSectionData.downloadUrl}
+                        download
+                        className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                        Descargar recurso
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : showPDF && product?.pdfUrl ? (
@@ -299,11 +325,11 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
             </div>
           )}
 
-          {/* Botones de navegación */}
+          {/* Botones de navegación - centrados a la altura del video */}
           <button
             onClick={goToPrevSection}
             disabled={currentSectionIndex === 0}
-            className={`absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
+            className={`absolute left-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
               currentSectionIndex === 0
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
@@ -315,7 +341,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
           <button
             onClick={goToNextSection}
             disabled={currentSectionIndex === (product?.sections?.length || 1) - 1}
-            className={`absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
+            className={`absolute right-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
               currentSectionIndex === (product?.sections?.length || 1) - 1
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
@@ -377,8 +403,6 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   }
 
   const renderBookContent = () => {
-    const pdfUrl = product?.pdfUrl || "https://drive.google.com/file/d/1234567890/preview"
-
     return (
       <div className="flex-1 bg-white">
         {/* Header del libro */}
@@ -390,57 +414,52 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
         {/* Visor de PDF */}
         <div className="flex justify-center py-10">
           <div className="w-[360px] h-[510px] shadow-xl border rounded-lg overflow-hidden">
-            <PDFViewerSecure
-              src={product?.pdfUrl || ""}
-              title={product?.name}
-              className="w-full h-full"
-            />
+            <PDFViewerSecure src={product?.pdfUrl || ""} title={product?.name} className="w-full h-full" />
           </div>
         </div>
 
         {/* Botón para ampliar */}
-      <div className="flex justify-center">
-        <button
-          onClick={() => setShowModal(true)}
-          className="mt-6 px-6 py-2 text-gray-2 rounded-full font-semibold hover:bg-orange-700 transition-all text-sm"
-        >
-        <Expand/> 
-        </button>
-      </div>
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowModal(true)}
+            className="mt-6 px-6 py-2 text-gray-700 rounded-full font-semibold hover:bg-orange-100 transition-all text-sm"
+          >
+            <Expand />
+          </button>
+        </div>
+
         {/* Modal grande */}
-          {showModal && (
+        {showModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowModal(false)}
+          >
             <div
-              className="fixed inset-0 bg-black bg-opacity-70 z-0 flex items-center justify-center p-4"
-              onClick={() => setShowModal(false)} // ← Cierra al hacer clic fuera del modal
+              className="relative w-[580px] h-[740px] bg-white rounded-lg shadow-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative w-[580px] h-[740px] bg-white rounded-lg shadow-xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()} // ← Evita que se cierre al hacer clic dentro
+              {/* Botón cerrar */}
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-4 right-4 text-gray-700 hover:text-red-500 z-10"
               >
-                {/* Botón cerrar */}
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="absolute top-4 right-4 text-gray-700 hover:text-red-500 z-10"
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
+                <X className="w-6 h-6" />
+              </button>
 
-                {/* PDF ampliado */}
-                <PDFViewerSecure
-                  src={product?.pdfUrl || ""}
-                  title={product?.name}
-                  className="w-full h-full"
-                />
-              </div>
+              {/* PDF ampliado */}
+              <PDFViewerSecure src={product?.pdfUrl || ""} title={product?.name} className="w-full h-full" />
             </div>
-          )}
+          </div>
+        )}
 
-        {/* Botón OptiKids  */}
-          {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
+        {/* Botón OptiKids */}
+        {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
           <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
             <div>
               <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
               <p className="text-gray-600 text-sm max-w-xs mx-auto">
-                Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad aumentada
+                Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad
+                aumentada
               </p>
             </div>
 
@@ -493,6 +512,25 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
     )
   }
 
+  // Función para obtener el nombre de la categoría para mostrar
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case "toolkit":
+        return "Toolkit"
+      case "e-kit":
+        return "E-Kit"
+      case "libro":
+        return "Libro"
+      case "revista":
+        return "Revista"
+      default:
+        return "Producto"
+    }
+  }
+
+  // Determinar si debe usar la interfaz de toolkit (para toolkit y e-kit)
+  const shouldUseToolkitInterface = product.category === "toolkit" || product.category === "e-kit"
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -503,35 +541,38 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                {product.category === "toolkit" ? "Toolkit" : product.category === "libro" ? "Libro" : "Revista"}
-              </h1>
+              <h1 className="text-lg font-semibold text-gray-900">{getCategoryDisplayName(product.category)}</h1>
               <p className="text-sm text-gray-600">{product.name}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {product.category === "toolkit" ? renderToolkitContent() : renderBookContent()}
+      {/* Renderizar contenido según la categoría */}
+      {shouldUseToolkitInterface ? renderToolkitContent() : renderBookContent()}
 
+      {/* Modal de imagen */}
       {showImageModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center" onClick={() => setShowImageModal(false)}>
-        <div className="relative max-w-4xl w-full mx-4">
-          <img
-            src={modalImageUrl}
-            alt="Vista previa"
-            className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-lg"
-            onClick={(e) => e.stopPropagation()} // evita cerrar al hacer clic en la imagen
-          />
-          <button
-            onClick={() => setShowImageModal(false)}
-            className="absolute top-2 right-2 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 shadow"
-          >
-            ✕
-          </button>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-4xl w-full mx-4">
+            <img
+              src={modalImageUrl || "/placeholder.svg"}
+              alt="Vista previa"
+              className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-2 right-2 bg-white text-gray-800 rounded-full p-2 hover:bg-gray-100 shadow"
+            >
+              ✕
+            </button>
+          </div>
         </div>
-      </div>
-    )}    
+      )}
     </div>
   )
 }

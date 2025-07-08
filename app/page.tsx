@@ -54,69 +54,11 @@ export default function Home() {
       image: "/blanco.png",
       href: "/productos/toolkit",
     },
-  ]
-
-  const testimonials = [
-    {
-      id: "1",
-      name: "Kelly Queen",
-      title: "Emprendedora",
-      country: "boliviana",
-      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/KELLY1_loco2c.jpg",
-      iconColor: "#20c997",
-      vimeoId: "1089335881"
-    },
-    {
-      id: "2",
-      name: "Luz Marquina",
-      title: "Emprendedora",
-      country: "boliviana",
-      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUZ1_vex832.jpg",
-      iconColor: "#ffffff",
-      vimeoId: "1089335914"
-    },
-    {
-      id: "3",
-      name: "Luka Marquina",
-      title: "Emprendedora",
-      country: "boliviana",
-      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUKA3_rc38lj.jpg",
-      iconColor: "#0d6efd",
-      vimeoId: "1089335939"
-    },
-  ]
-
-  const proyectos = [
-    {
-      id: "1",
-      title: "",
-      image: "/proyecto-1.jpg",
-      link: "/proyectos/1",
-    },
-    {
-      id: "2",
-      title: "",
-      image: "/proyecto-2.jpg",
-      link: "/proyectos/2",
-    },
-    {
-      id: "3",
-      title: "",
-      image: "https://res.cloudinary.com/dyuzrs87l/image/upload/v1749226552/PersonajeOptikidsTutores_d1lnmh.png",
-      link: "/proyectos/3",
-      featured: true,
-    },
-    {
-      id: "4",
-      title: "",
-      image: "/proyecto-4.png",
-      link: "/proyectos/4",
-    },
-    {
-      id: "5",
-      title: "",
-      image: "/proyecto-5.jpg",
-      link: "/proyectos/5",
+     {
+      id: 4,
+      title: "E-kit",
+      image: "/ekit.png",
+      href: "/productos/e-kit",
     },
   ]
 
@@ -265,7 +207,7 @@ export default function Home() {
 
         {/* Testimonials Section */}
         <section id="testimonios" className="container mx-auto py-12 md:py-0 px-4">
-          <TestimonialsSection testimonials={testimonials} />
+          <TestimonialsSection/>
           
           {/* Botón "Todos los testimonios" */}
           <div className="mt-8 flex justify-center">
@@ -292,7 +234,7 @@ export default function Home() {
         {/* Mentoring CTA Section */}
         <CTASection />
 
-        <ProyectosSection proyectos={proyectos} />
+        <ProyectosSection/>
       </div>
     </div>
   )

@@ -18,13 +18,12 @@ export interface Product {
   extraImageUrl?: string
   extraImageUrlDos?: string
   gifUrl?: string
-  category: "libro" | "revista" | "toolkit"
+  category: "libro" | "revista" | "toolkit" | "e-kit"
   subCategory?: "energia" | "alimentacion" | "meditacion" | "negocio"
   description: string
   pdfUrl?: string // Para libros y revistas
-  sections?: ToolkitSection[] // Para toolkits
+  sections?: ToolkitSection[] // Para toolkits y e-kit
   createdAt?: Date
   updatedAt?: Date
   trailerUrl?: string
-
 }

@@ -53,7 +53,7 @@ interface Purchase {
 }
 
 type FilterType = "all" | "courses" | "products" | "events"
-type ProductSubcategory = "all" | "libro" | "revista" | "toolkit"
+type ProductSubcategory = "all" | "libro" | "revista" | "toolkit" | "e-kit"
 
 export default function MisComprasPage() {
   const { user, isAuthenticated } = useAuthContext()
@@ -95,9 +95,9 @@ export default function MisComprasPage() {
         try {
           const userProducts = await api.get<Purchase[]>(`/sales/user/${user.id}/products`)
           const validProductPurchases = userProducts.filter(
-            (purchase) => purchase.status === "paid" && purchase.product !== null
+            (purchase) => purchase.status === "paid" && purchase.product !== null,
           )
-          
+
           setProductPurchases(validProductPurchases)
           console.log("📦 Compras de productos (individuales):", validProductPurchases)
         } catch (error) {
@@ -138,6 +138,7 @@ export default function MisComprasPage() {
       if (productSubcategory === "libro") return category === "libro"
       if (productSubcategory === "revista") return category === "revista"
       if (productSubcategory === "toolkit") return category === "toolkit"
+      if (productSubcategory === "e-kit") return category === "e-kit"
       return true
     })
   }
@@ -145,32 +146,32 @@ export default function MisComprasPage() {
   // Determinar si una compra debe mostrar botón "Continuar"
   const shouldShowContinueButton = (purchase: Purchase): boolean => {
     if (!purchase.product) return false
-    
+
     const category = purchase.product.category?.toLowerCase()
     const deliveryType = purchase.deliveryType
-    
+
     console.log(`🔍 Producto: ${purchase.product.name}, Categoría: ${category}, DeliveryType: ${deliveryType}`)
-    
-    // Para toolkits: siempre digital (siempre botón)
-    if (category === "toolkit") {
+
+    // Para toolkits y e-kits: siempre digital (siempre botón)
+    if (category === "toolkit" || category === "e-kit") {
       return true
     }
-    
+
     // Para libros y revistas: solo si deliveryType es "digital"
     if (category === "libro" || category === "revista") {
       return deliveryType === "digital"
     }
-    
+
     // Para otros productos: solo si deliveryType es "digital"
     return deliveryType === "digital"
   }
 
   const getProductTypeLabel = (purchase: Purchase) => {
     if (!purchase.product) return "Producto:"
-    
+
     const category = purchase.product.category?.toLowerCase()
     const deliveryType = purchase.deliveryType
-    
+
     if (category === "libro") {
       return deliveryType === "digital" ? "Libro digital:" : "Libro físico:"
     }
@@ -178,6 +179,7 @@ export default function MisComprasPage() {
       return deliveryType === "digital" ? "Revista digital:" : "Revista física:"
     }
     if (category === "toolkit") return "Toolkit:"
+    if (category === "e-kit") return "E-Kit:"
     return "Producto:"
   }
 
@@ -332,6 +334,16 @@ export default function MisComprasPage() {
               >
                 Toolkits
               </button>
+              <button
+                onClick={() => setProductSubcategory("e-kit")}
+                className={`px-4 py-1 text-sm rounded-full transition-colors ${
+                  productSubcategory === "e-kit"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                E-Kits
+              </button>
             </div>
           )}
         </div>
@@ -370,7 +382,9 @@ export default function MisComprasPage() {
                         <div className="text-sm text-gray-600 mb-1">Curso:</div>
                         <h3 className="font-bold text-lg mb-4 line-clamp-2">{course.title}</h3>
                         <Link href={`/mi-aprendizaje/${course.id}`}>
-                          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-black rounded-full">Continuar →</Button>
+                          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-black rounded-full">
+                            Continuar →
+                          </Button>
                         </Link>
                       </div>
                     </div>
@@ -386,11 +400,14 @@ export default function MisComprasPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {getFilteredProductPurchases().map((purchase) => {
                     if (!purchase.product) return null
-                    
+
                     const showContinueButton = shouldShowContinueButton(purchase)
-                    
+
                     return (
-                      <div key={`${purchase.product.id}-${purchase.id}`} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                      <div
+                        key={`${purchase.product.id}-${purchase.id}`}
+                        className="bg-white rounded-xl overflow-hidden shadow-sm"
+                      >
                         <div className="relative h-48 bg-gray-50 flex items-center justify-center">
                           <Image
                             src={purchase.product.image || "/placeholder.svg?height=200&width=150"}
@@ -406,7 +423,7 @@ export default function MisComprasPage() {
                             {getDeliveryBadge(purchase.deliveryType)}
                           </div>
                           <h3 className="font-bold text-lg mb-4 line-clamp-2">{purchase.product.name}</h3>
-                          
+
                           {showContinueButton ? (
                             <Link href={`/mis-compras/productos/${purchase.product.category}/${purchase.product.id}`}>
                               <Button className="w-full rounded-full bg-orange-500 hover:bg-orange-600 text-black">
@@ -453,7 +470,9 @@ export default function MisComprasPage() {
                         <div className="text-sm text-gray-600 mb-1">Evento:</div>
                         <h3 className="font-bold text-lg mb-4 line-clamp-2">{event.title}</h3>
                         <Link href={`/eventos/${event.id}`}>
-                          <Button className="w-full bg-orange-500 rounded-full hover:bg-orange-600 text-black">Continuar →</Button>
+                          <Button className="w-full bg-orange-500 rounded-full hover:bg-orange-600 text-black">
+                            Continuar →
+                          </Button>
                         </Link>
                       </div>
                     </div>

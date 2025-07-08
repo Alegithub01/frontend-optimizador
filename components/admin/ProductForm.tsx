@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link, ImageIcon, Film } from "lucide-react"
+import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link, ImageIcon, Film, Baby, Package } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface ProductFormProps {
@@ -23,6 +23,7 @@ const CATEGORIES = [
   { value: "libro", label: "Libro" },
   { value: "revista", label: "Revista" },
   { value: "toolkit", label: "Toolkit" },
+  { value: "e-kit", label: "E-Kit" },
 ] as const
 
 const TOOLKIT_SUBCATEGORIES = [
@@ -36,7 +37,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-
   const [formData, setFormData] = useState<Partial<Product>>({
     name: product?.name || "",
     author: product?.author || "",
@@ -57,17 +57,14 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   // Función para transformar URLs de Google Drive
   const transformDriveUrl = (url: string | undefined): string | undefined => {
     if (!url) return undefined
-
     // Si ya es un enlace de descarga directa, no hacer nada
     if (url.includes("uc?export=download")) return url
-
     // Extraer el ID del archivo de diferentes formatos de URL de Drive
     const patterns = [
       /drive\.google\.com\/file\/d\/([^/]+)/,
       /drive\.google\.com\/open\?id=([^&]+)/,
       /drive\.google\.com\/uc\?id=([^&]+)/,
     ]
-
     let fileId = null
     for (const pattern of patterns) {
       const match = url.match(pattern)
@@ -76,11 +73,9 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         break
       }
     }
-
     if (fileId) {
       return `https://drive.google.com/uc?export=download&id=${fileId}`
     }
-
     return url
   }
 
@@ -89,7 +84,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     if (field === "pdfUrl" && typeof value === "string") {
       value = transformDriveUrl(value)
     }
-
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -101,7 +95,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
       ...prev,
       category,
       subCategory: undefined,
-      sections: category === "toolkit" ? prev.sections : [],
+      sections: category === "toolkit" || category === "e-kit" ? prev.sections : [],
     }))
   }
 
@@ -109,7 +103,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     const newSections = [...(formData.sections || [])]
     newSections[index] = {
       ...newSections[index],
-      [field]: field === "fileUrl" ? transformDriveUrl(value) : value,
+      [field]: field === "fileUrl" || field === "downloadUrl" ? transformDriveUrl(value) : value,
     }
     setFormData((prev) => ({
       ...prev,
@@ -123,6 +117,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
       videoUrl: "",
       description: "",
       fileUrl: "",
+      downloadUrl: "",
     }
     setFormData((prev) => ({
       ...prev,
@@ -140,28 +135,32 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
     try {
       const cleanUrl = (url: string | undefined): string | undefined => {
         if (!url || url.trim() === "") return undefined
         return url.trim()
       }
 
+      // Limpiar y preparar las secciones
       const cleanedSections =
-        formData.category === "toolkit" && formData.sections
-          ? formData.sections.map((section) => ({
-              ...section,
-              videoUrl: cleanUrl(section.videoUrl),
-              fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)),
-              downloadUrl: cleanUrl(transformDriveUrl(section.downloadUrl)),
-              description: section.description?.trim() || undefined,
-            }))
+        (formData.category === "toolkit" || formData.category === "e-kit") && formData.sections
+          ? formData.sections
+              .filter((section) => section.title.trim() !== "") // Solo incluir secciones con título
+              .map((section) => ({
+                title: section.title.trim(),
+                videoUrl: cleanUrl(section.videoUrl),
+                fileUrl: cleanUrl(transformDriveUrl(section.fileUrl)),
+                downloadUrl: cleanUrl(transformDriveUrl(section.downloadUrl)),
+                description: section.description?.trim() || undefined,
+              }))
           : undefined
 
       const dataToSend = {
         name: formData.name?.trim(),
         author: formData.author?.trim(),
-        price: formData.price,
-        stock: formData.stock,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
         image: formData.image?.trim(),
         extraImageUrl: cleanUrl(formData.extraImageUrl),
         extraImageUrlDos: cleanUrl(formData.extraImageUrlDos),
@@ -176,6 +175,9 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             : undefined,
         sections: cleanedSections,
       }
+
+      // Log para debugging
+      console.log("Datos a enviar:", JSON.stringify(dataToSend, null, 2))
 
       if (isEditing && product?.id) {
         await api.patch(`/product/${product.id}`, dataToSend)
@@ -203,8 +205,29 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     }
   }
 
-  const isToolkit = formData.category === "toolkit"
+  const isToolkitOrEkids = formData.category === "toolkit" || formData.category === "e-kit"
   const isBookOrMagazine = formData.category === "libro" || formData.category === "revista"
+
+  const getCategoryIcon = () => {
+    switch (formData.category) {
+      case "e-kit":
+        return <Baby className="h-5 w-5 mr-2" />
+      case "toolkit":
+        return <Package className="h-5 w-5 mr-2" />
+      default:
+        return <FileText className="h-5 w-5 mr-2" />
+    }
+  }
+
+  const getSectionTitle = () => {
+    return formData.category === "e-kit" ? "Contenido de E-Kit" : "Contenido del Toolkit"
+  }
+
+  const getSectionDescription = () => {
+    return formData.category === "e-kit"
+      ? "Agrega secciones con videos, archivos y descripciones para tu contenido e-kit"
+      : "Agrega secciones con videos, archivos y descripciones para tu toolkit"
+  }
 
   return (
     <div className="space-y-6">
@@ -250,7 +273,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price">Precio</Label>
@@ -291,13 +313,13 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 </Select>
               </div>
             </div>
-
-            {isToolkit && (
+            {isToolkitOrEkids && (
               <div className="space-y-2">
-                <Label htmlFor="subCategory">Subcategoría</Label>
+                <Label htmlFor="subCategory">Subcategoría *</Label>
                 <Select
                   value={formData.subCategory || ""}
                   onValueChange={(value) => handleInputChange("subCategory", value as Product["subCategory"])}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una subcategoría" />
@@ -312,7 +334,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 </Select>
               </div>
             )}
-
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
               <Textarea
@@ -375,7 +396,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="gifUrl" className="flex items-center">
@@ -402,7 +422,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 />
               </div>
             </div>
-
             {isBookOrMagazine && (
               <div className="space-y-2">
                 <Label htmlFor="pdfUrl" className="flex items-center">
@@ -427,15 +446,16 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           </CardContent>
         </Card>
 
-        {isToolkit && (
+        {isToolkitOrEkids && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Contenido del Toolkit</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Agrega secciones con videos, archivos y descripciones para tu toolkit
-                  </p>
+                  <CardTitle className="flex items-center">
+                    {getCategoryIcon()}
+                    {getSectionTitle()}
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">{getSectionDescription()}</p>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={addSection}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -463,12 +483,11 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-
                       <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <Label className="flex items-center">
                             <FileText className="h-4 w-4 mr-2" />
-                            Título de la Sección
+                            Título de la Sección *
                           </Label>
                           <Input
                             value={section.title}
@@ -477,7 +496,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                             required
                           />
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="flex items-center">
@@ -490,7 +508,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                               placeholder="https://example.com/video.mp4"
                             />
                           </div>
-
                           <div className="space-y-2">
                             <Label className="flex items-center">
                               <Link className="h-4 w-4 mr-2" />
@@ -509,7 +526,8 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                                 </p>
                               )}
                           </div>
-
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="flex items-center">
                               <Link className="h-4 w-4 mr-2" />
@@ -528,16 +546,15 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                                 </p>
                               )}
                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Descripción</Label>
-                          <Textarea
-                            value={section.description || ""}
-                            onChange={(e) => handleSectionChange(index, "description", e.target.value)}
-                            placeholder="Describe el contenido de esta sección..."
-                            rows={3}
-                          />
+                          <div className="space-y-2">
+                            <Label>Descripción</Label>
+                            <Textarea
+                              value={section.description || ""}
+                              onChange={(e) => handleSectionChange(index, "description", e.target.value)}
+                              placeholder="Describe el contenido de esta sección..."
+                              rows={3}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -547,7 +564,11 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <Plus className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                   <p className="font-medium text-lg mb-2">No hay secciones agregadas</p>
-                  <p className="text-sm mb-4">Los toolkits necesitan contenido organizado en secciones</p>
+                  <p className="text-sm mb-4">
+                    {formData.category === "e-kit"
+                      ? "Los productos e-kit necesitan contenido organizado en secciones"
+                      : "Los toolkits necesitan contenido organizado en secciones"}
+                  </p>
                   <Button type="button" variant="outline" onClick={addSection}>
                     <Plus className="h-4 w-4 mr-2" />
                     Agregar Primera Sección

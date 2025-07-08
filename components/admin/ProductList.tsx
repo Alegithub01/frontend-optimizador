@@ -1,14 +1,14 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Product } from '@/types/product';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import type { Product } from "@/types/product"
+import { api } from "@/lib/api"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,78 +19,124 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Search, Plus, Package } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/alert-dialog"
+import { Edit, Trash2, Search, Plus, Package, Baby, BookOpen, FileText } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export function ProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const { toast } = useToast()
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts()
+  }, [])
 
   useEffect(() => {
-    filterProducts();
-  }, [products, searchTerm]);
+    filterProducts()
+  }, [products, searchTerm])
 
   const fetchProducts = async () => {
     try {
-      const data = await api.get<Product[]>('/product');
-      setProducts(data);
+      const data = await api.get<Product[]>("/product")
+      setProducts(data)
     } catch (error) {
       toast({
         title: "Error",
         description: "No se pudieron cargar los productos.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const filterProducts = () => {
     if (!searchTerm) {
-      setFilteredProducts(products);
-      return;
+      setFilteredProducts(products)
+      return
     }
-
-    const filtered = products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.subCategory.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  };
+    const filtered = products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.subCategory && product.subCategory.toLowerCase().includes(searchTerm.toLowerCase())),
+    )
+    setFilteredProducts(filtered)
+  }
 
   const deleteProduct = async (id: string) => {
     try {
-      await api.delete(`/product/${id}`);
-      setProducts(products.filter(p => p.id !== id));
+      await api.delete(`/product/${id}`)
+      setProducts(products.filter((p) => p.id !== id))
       toast({
         title: "Producto eliminado",
         description: "El producto se ha eliminado correctamente.",
-      });
+      })
     } catch (error) {
       toast({
         title: "Error",
         description: "No se pudo eliminar el producto.",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "e-kit":
+        return <Baby className="h-4 w-4" />
+      case "toolkit":
+        return <Package className="h-4 w-4" />
+      case "libro":
+        return <BookOpen className="h-4 w-4" />
+      case "revista":
+        return <FileText className="h-4 w-4" />
+      default:
+        return <Package className="h-4 w-4" />
+    }
+  }
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "e-kit":
+        return "E-Kids"
+      case "toolkit":
+        return "Toolkit"
+      case "libro":
+        return "Libro"
+      case "revista":
+        return "Revista"
+      default:
+        return category
+    }
+  }
+
+  const getSubCategoryLabel = (subCategory?: string) => {
+    if (!subCategory) return ""
+    switch (subCategory) {
+      case "energia":
+        return "Energía"
+      case "alimentacion":
+        return "Alimentación"
+      case "meditacion":
+        return "Meditación"
+      case "negocio":
+        return "Negocio"
+      default:
+        return subCategory
+    }
+  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
-    );
+    )
   }
 
   return (
@@ -129,13 +175,10 @@ export function ProductList() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? 'No se encontraron productos' : 'No hay productos'}
+              {searchTerm ? "No se encontraron productos" : "No hay productos"}
             </h3>
             <p className="text-gray-600 text-center mb-4">
-              {searchTerm 
-                ? 'Intenta con otros términos de búsqueda'
-                : 'Comienza creando tu primer producto'
-              }
+              {searchTerm ? "Intenta con otros términos de búsqueda" : "Comienza creando tu primer producto"}
             </p>
             {!searchTerm && (
               <Link href="/admin/products/new">
@@ -153,7 +196,7 @@ export function ProductList() {
             <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video relative">
                 <Image
-                  src={product.image}
+                  src={product.image || "/placeholder.svg"}
                   alt={product.name}
                   fill
                   className="object-cover"
@@ -163,31 +206,34 @@ export function ProductList() {
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">
-                      {product.name}
-                    </h3>
+                    <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{product.name}</h3>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Por {product.author}</span>
-                    <span className="font-medium text-green-600">
-                    ${Number(product.price)?.toFixed(2) ?? '0.00'}
-                    </span>
+                    <span className="font-medium text-green-600">${Number(product.price)?.toFixed(2) ?? "0.00"}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
-                      <Badge variant="secondary">{product.category}</Badge>
-                      <Badge variant="outline">{product.subCategory}</Badge>
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        {getCategoryIcon(product.category)}
+                        {getCategoryLabel(product.category)}
+                      </Badge>
+                      {product.subCategory && (
+                        <Badge variant="outline">{getSubCategoryLabel(product.subCategory)}</Badge>
+                      )}
                     </div>
-                    <span className="text-sm text-gray-600">
-                      Stock: {product.stock}
-                    </span>
+                    <span className="text-sm text-gray-600">Stock: {product.stock}</span>
                   </div>
 
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {product.description}
-                  </p>
+                  <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+
+                  {(product.category === "toolkit" || product.category === "e-kit") && product.sections && (
+                    <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      {product.sections.length} sección{product.sections.length !== 1 ? "es" : ""}
+                    </div>
+                  )}
 
                   <div className="flex justify-between pt-2">
                     <Link href={`/admin/products/${product.id}`}>
@@ -196,10 +242,10 @@ export function ProductList() {
                         Editar
                       </Button>
                     </Link>
-                    
+
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 bg-transparent">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Eliminar
                         </Button>
@@ -208,7 +254,8 @@ export function ProductList() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta acción no se puede deshacer. El producto "{product.name}" será eliminado permanentemente.
+                            Esta acción no se puede deshacer. El producto "{product.name}" será eliminado
+                            permanentemente.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -230,5 +277,5 @@ export function ProductList() {
         </div>
       )}
     </div>
-  );
+  )
 }
