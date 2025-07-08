@@ -18,7 +18,7 @@ export default function CTASection() {
               casualidad, es una decisión.
             </p>
             <Link
-              href="/"
+              href="https://docs.google.com/forms/d/e/1FAIpQLSc8YFMvraWhAu1TQ4Q_r4RhOEHsB-IoMfaP9MWRn8hDYaX2Ag/viewform?usp=sharing&ouid=102517721890925250841"
               className="inline-flex items-center bg-orange-700 hover:bg-orange-500 text-black font-medium py-3 px-6 rounded-full transition-colors"
             >
               Quiero crecer
