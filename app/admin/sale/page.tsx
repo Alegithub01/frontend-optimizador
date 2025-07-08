@@ -257,113 +257,154 @@ export default function SalesPage() {
   };
 
   const exportToExcel = async () => {
-    setExporting(true);
-    try {
-      const exportData = filteredSales.map((sale, index) => {
-        const isQR = isQRPayment(sale);
-        const saleDate = new Date(sale.createdAt);
+  setExporting(true);
+  try {
+    const exportData = filteredSales.map((sale, index) => {
+      const isQR = isQRPayment(sale);
+      const saleDate = new Date(sale.createdAt);
+      
+      return {
+        // INFORMACIÓN BÁSICA
+        'N°': index + 1,
+        'ID Venta': sale.id,
+        'Fecha': saleDate.toLocaleDateString('es-ES'),
+        'Hora': saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        'Fecha y Hora Completa': saleDate.toLocaleString('es-ES'),
         
-        return {
-          // INFORMACIÓN BÁSICA
-          'N°': index + 1,
-          'ID Venta': sale.id,
-          'Fecha': saleDate.toLocaleDateString('es-ES'),
-          'Hora': saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          'Fecha y Hora Completa': saleDate.toLocaleString('es-ES'),
-          
-          // INFORMACIÓN DEL CLIENTE
-          'Nombre Cliente': sale.user.name,
-          'Email Cliente': sale.user.email,
-          'Nombre Completo Facturación': sale.fullName || sale.user.name,
-          'Teléfono': sale.phone || 'No proporcionado',
-          
-          // INFORMACIÓN DEL PRODUCTO/SERVICIO
-          'Tipo de Venta': sale.type === 'course' ? 'Curso' : sale.type === 'product' ? 'Producto' : 'Evento',
-          'Producto/Servicio': sale.course?.name || sale.product?.name || sale.event?.name || '',
-          'Categoría': sale.product?.category || 'N/A',
-          'Subcategoría': sale.product?.subCategory || 'N/A',
-          
-          // INFORMACIÓN DE PAGO
-          'Método de Pago': isQR ? 'QR - Bolivianos (BOB)' : 'Tarjeta - Dólares (USD)',
-          'Monto Total': `${isQR ? 'Bs' : '$'} ${Number(sale.amount).toFixed(2)}`,
-          'Monto en BOB': isQR ? `Bs ${Number(sale.amount).toFixed(2)}` : '',
-          'Monto en USD': !isQR ? `$${Number(sale.amount).toFixed(2)}` : '',
-          'Estado de Pago': sale.status === 'paid' ? 'PAGADO' : sale.status === 'pending' ? 'PENDIENTE' : 'FALLIDO',
-          'Referencia QR': sale.qrReference || 'N/A',
-          'ID Stripe': sale.stripePaymentIntentId || 'N/A',
-          
-          // INFORMACIÓN DE ENVÍO
-          'Tipo de Entrega': sale.deliveryType === 'physical' ? 'ENVÍO FÍSICO' : 'ENTREGA DIGITAL',
-          'Requiere Envío FedEx': sale.deliveryType === 'physical' ? 'SÍ' : 'NO',
-          'País': sale.country || '',
-          'Departamento/Estado': sale.departamento || '',
-          'Dirección Completa': sale.address || '',
-          'Dirección FedEx': sale.deliveryType === 'physical' ? 
-            [sale.departamento, sale.address, sale.country].filter(Boolean).join(', ') : 'No aplica',
-          
-          // INFORMACIÓN ADICIONAL
-          'Observaciones': sale.deliveryType === 'physical' ? 'Coordinar envío con FedEx' : 'Entrega automática digital',
-        };
-      });
+        // INFORMACIÓN DEL CLIENTE
+        'Nombre Cliente': sale.user.name,
+        'Email Cliente': sale.user.email,
+        'Nombre Completo Facturación': sale.fullName || sale.user.name,
+        'Teléfono': sale.phone || 'No proporcionado',
+        
+        // INFORMACIÓN DEL PRODUCTO/SERVICIO
+        'Tipo de Venta': sale.type === 'course' ? 'Curso' : sale.type === 'product' ? 'Producto' : 'Evento',
+        'Producto/Servicio': sale.course?.name || sale.product?.name || sale.event?.name || '',
+        'Categoría': sale.product?.category || 'N/A',
+        'Subcategoría': sale.product?.subCategory || 'N/A',
+        
+        // INFORMACIÓN DE PAGO
+        'Método de Pago': isQR ? 'QR - Bolivianos (BOB)' : 'Tarjeta - Dólares (USD)',
+        'Monto Total': Number(sale.amount).toFixed(2),
+        'Moneda': isQR ? 'BOB' : 'USD',
+        'Estado de Pago': sale.status === 'paid' ? 'PAGADO' : sale.status === 'pending' ? 'PENDIENTE' : 'FALLIDO',
+        'Referencia QR': sale.qrReference || 'N/A',
+        'ID Stripe': sale.stripePaymentIntentId || 'N/A',
+        
+        // INFORMACIÓN DE ENVÍO
+        'Tipo de Entrega': sale.deliveryType === 'physical' ? 'ENVÍO FÍSICO' : 'ENTREGA DIGITAL',
+        'Requiere Envío FedEx': sale.deliveryType === 'physical' ? 'SÍ' : 'NO',
+        'País': sale.country || '',
+        'Departamento/Estado': sale.departamento || '',
+        'Dirección Completa': sale.address || '',
+        'Dirección FedEx': sale.deliveryType === 'physical' ? 
+          [sale.departamento, sale.address, sale.country].filter(Boolean).join(', ') : 'No aplica',
+        
+        // INFORMACIÓN ADICIONAL
+        'Observaciones': sale.deliveryType === 'physical' ? 'Coordinar envío con FedEx' : 'Entrega automática digital',
+      };
+    });
 
-      if (exportData.length === 0) {
-        toast({
-          title: "Sin datos",
-          description: "No hay ventas para exportar con los filtros aplicados.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const headers = Object.keys(exportData[0]);
-      const csvContent = [
-        `"REPORTE DE VENTAS - ${activeTab === 'all' ? 'TODAS LAS VENTAS' : activeTab === 'qr' ? 'PAGOS QR (BOB)' : 'PAGOS TARJETA (USD)'}"`,
-        `"Generado el: ${new Date().toLocaleString('es-ES')}"`,
-        `"Período: ${getDateFilterLabel()}"`,
-        `"Total de ventas: ${filteredSales.length}"`,
-        `"Envíos físicos: ${filteredSales.filter(sale => sale.deliveryType === 'physical').length}"`,
-        `"Entregas digitales: ${filteredSales.filter(sale => sale.deliveryType === 'digital').length}"`,
-        '',
-        headers.map(header => `"${header}"`).join(','),
-        ...exportData.map(row => 
-          headers.map(header => `"${row[header as keyof typeof row] || ''}"`).join(',')
-        )
-      ].join('\n');
-
-      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      
-      let fileName = `REPORTE_VENTAS_${activeTab.toUpperCase()}`;
-      if (dateFilter !== 'all') {
-        fileName += `_${dateFilter.toUpperCase()}`;
-        if (dateFilter === 'custom' && startDate && endDate) {
-          fileName += `_${startDate}_${endDate}`;
-        }
-      }
-      fileName += `_${new Date().toISOString().split('T')[0]}.csv`;
-      
-      link.setAttribute('download', fileName);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
+    if (exportData.length === 0) {
       toast({
-        title: "✅ Exportación exitosa",
-        description: `Se exportaron ${filteredSales.length} ventas. ${filteredSales.filter(sale => sale.deliveryType === 'physical').length} requieren envío físico.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error en exportación",
-        description: "No se pudo exportar los datos.",
+        title: "Sin datos",
+        description: "No hay ventas para exportar con los filtros aplicados.",
         variant: "destructive",
       });
-    } finally {
-      setExporting(false);
+      return;
     }
-  };
+
+    // Importar la biblioteca dinámicamente para reducir el bundle size
+    const XLSX = await import('xlsx');
+
+    // Crear un libro de trabajo
+    const wb = XLSX.utils.book_new();
+    
+    // Crear hojas de cálculo
+    const wsData = [
+      // Encabezados del reporte
+      ["REPORTE DE VENTAS", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [`Generado el: ${new Date().toLocaleString('es-ES')}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [`Período: ${getDateFilterLabel()}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [`Total de ventas: ${filteredSales.length}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [`Envíos físicos: ${filteredSales.filter(sale => sale.deliveryType === 'physical').length}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [`Entregas digitales: ${filteredSales.filter(sale => sale.deliveryType === 'digital').length}`, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+      [], // Fila vacía
+      Object.keys(exportData[0]), // Encabezados de columnas
+      ...exportData.map(row => Object.values(row)) // Datos
+    ];
+
+    // Convertir a hoja de cálculo
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Añadir estilo a los encabezados
+    if (!ws['!cols']) ws['!cols'] = [];
+    const headerRow = 7; // La fila 8 (0-indexed) contiene los encabezados
+    
+    // Ajustar el ancho de las columnas automáticamente
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1');
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const header = XLSX.utils.encode_col(C) + (headerRow + 1);
+      if (ws[header]) {
+        ws[header].s = {
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          fill: { fgColor: { rgb: "4F46E5" } }, // Color indigo-600
+          alignment: { horizontal: "center" }
+        };
+      }
+      
+      // Establecer ancho de columna basado en el contenido
+      ws['!cols'][C] = { wch: 15 }; // Ancho mínimo de 15 caracteres
+    }
+    
+    // Combinar celdas para el título
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 21 } }, // Título principal
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 21 } }, // Fecha generación
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 21 } }, // Período
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 21 } }, // Total ventas
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 21 } }, // Envíos físicos
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 21 } }  // Entregas digitales
+    ];
+    
+    // Estilo para las celdas combinadas
+    [0, 1, 2, 3, 4, 5].forEach(row => {
+      const cell = XLSX.utils.encode_cell({ r: row, c: 0 });
+      ws[cell].s = {
+        font: { bold: true, sz: row === 0 ? 16 : 12 },
+        alignment: { horizontal: "center" }
+      };
+    });
+
+    // Añadir la hoja al libro
+    XLSX.utils.book_append_sheet(wb, ws, "Ventas");
+
+    // Generar el archivo Excel
+    let fileName = `REPORTE_VENTAS_${activeTab.toUpperCase()}`;
+    if (dateFilter !== 'all') {
+      fileName += `_${dateFilter.toUpperCase()}`;
+      if (dateFilter === 'custom' && startDate && endDate) {
+        fileName += `_${startDate}_${endDate}`;
+      }
+    }
+    fileName += `_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    XLSX.writeFile(wb, fileName);
+
+    toast({
+      title: "✅ Exportación exitosa",
+      description: `Se exportaron ${filteredSales.length} ventas. ${filteredSales.filter(sale => sale.deliveryType === 'physical').length} requieren envío físico.`,
+    });
+  } catch (error) {
+    toast({
+      title: "Error en exportación",
+      description: "No se pudo exportar los datos.",
+      variant: "destructive",
+    });
+  } finally {
+    setExporting(false);
+  }
+};
 
   const getStatusBadge = (status: SaleStatus) => {
     switch (status) {
