@@ -19,6 +19,8 @@ import { api } from "@/lib/api"
 import PDFViewerSecure from "@/components/pdf-viewer-secure"
 import { IconRight } from "react-day-picker"
 import { X } from "lucide-react"
+import { useAccessToProduct } from "@/hooks/useAccessToProduct"
+
 
 interface ToolkitSection {
   id: number
@@ -69,6 +71,8 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   const iframeRef = React.useRef<HTMLIFrameElement>(null)
 
   const { category, id } = params
+
+  const { hasAccess, loading: accessLoading, error: accessError } = useAccessToProduct(id)
 
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageUrl, setModalImageUrl] = useState("")
@@ -530,6 +534,30 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
   // Determinar si debe usar la interfaz de toolkit (para toolkit y e-kit)
   const shouldUseToolkitInterface = product.category === "toolkit" || product.category === "e-kit"
+
+  if (accessLoading || loading) {
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <p className="text-xl">Cargando contenido...</p>
+    </div>
+  )
+}
+
+if (!hasAccess) {
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center text-center px-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Acceso restringido</h1>
+        <p className="text-gray-600">
+          No tienes acceso a este producto. Asegúrate de haber realizado la compra o inicia sesión con una cuenta válida.
+        </p>
+        <Link href="/mis-compras" className="mt-4 inline-block text-orange-500 hover:underline">
+          Volver a mis compras
+        </Link>
+      </div>
+    </div>
+  )
+}
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

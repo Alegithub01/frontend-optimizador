@@ -8,6 +8,8 @@ import Image from "next/image"
 import { api } from "@/lib/api"
 import VideoPlayer from "@/components/video-player"
 import { IconRight } from "react-day-picker"
+import { useAccessToCourse } from "@/hooks/useAccessToCourse"
+
 
 interface Content {
   id: number
@@ -37,7 +39,9 @@ interface Course {
 
 export default function CoursePlayerPage() {
   const params = useParams()
-  const courseId = params.id as string
+  const courseId = Number(params.id)
+const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCourse(courseId)
+
 
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
@@ -270,6 +274,34 @@ export default function CoursePlayerPage() {
       </div>
     )
   }
+if (accessLoading || loading) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-t-orange-500 border-orange-200 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-xl text-gray-600">Cargando curso...</p>
+      </div>
+    </div>
+  )
+}
+
+if (!hasAccess) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-red-500 text-xl mb-4">
+          No tienes acceso a este curso.
+        </div>
+        <Link
+          href="/cursos"
+          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+        >
+          Volver a cursos
+        </Link>
+      </div>
+    </div>
+  )
+}
 
   if (error || !course) {
     return (
