@@ -32,6 +32,7 @@ import {
   Phone,
   Building2,
   Navigation,
+  ArrowUpDown,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -65,6 +66,8 @@ export default function SalesPage() {
   const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
   const [lastUpdated, setLastUpdated] = useState<string>("")
+  const [sortField, setSortField] = useState<keyof Sale>("createdAt")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const { toast } = useToast()
 
   // Función para expandir nombres de departamentos
@@ -208,6 +211,8 @@ export default function SalesPage() {
     dateFilter,
     startDate,
     endDate,
+    sortField,
+    sortDirection,
   ])
 
   const fetchSales = async () => {
@@ -231,6 +236,32 @@ export default function SalesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Función para ordenar las ventas
+  const sortSales = (salesToSort: Sale[]): Sale[] => {
+    return [...salesToSort].sort((a, b) => {
+      let aValue = a[sortField]
+      let bValue = b[sortField]
+      
+      // Manejo especial para fechas
+      if (sortField === "createdAt") {
+        aValue = new Date(aValue as string).getTime()
+        bValue = new Date(bValue as string).getTime()
+      }
+      
+      // Manejo especial para montos
+      if (sortField === "amount") {
+        aValue = Number(aValue)
+        bValue = Number(bValue)
+      }
+      
+      if (aValue === undefined || bValue === undefined) return 0
+      
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
   }
 
   // Función para determinar si es pago QR
@@ -363,6 +394,9 @@ export default function SalesPage() {
       filtered = filtered.filter(filterByDate)
     }
 
+    // Ordenar los resultados
+    filtered = sortSales(filtered)
+
     setFilteredSales(filtered)
   }
 
@@ -381,6 +415,24 @@ export default function SalesPage() {
         variant: "destructive",
       })
     }
+  }
+
+  const handleSort = (field: keyof Sale) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
+
+  const getSortIcon = (field: keyof Sale) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />
+    return sortDirection === "asc" ? (
+      <ArrowUpDown className="h-3 w-3 ml-1 rotate-180" />
+    ) : (
+      <ArrowUpDown className="h-3 w-3 ml-1" />
+    )
   }
 
   const exportToExcel = async () => {
@@ -1238,14 +1290,54 @@ export default function SalesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[80px]">ID</TableHead>
-                      <TableHead className="w-[120px]">Fecha</TableHead>
-                      <TableHead className="min-w-[180px]">Cliente</TableHead>
+                      <TableHead className="w-[80px]">
+                        <button
+                          onClick={() => handleSort("id")}
+                          className="flex items-center hover:text-primary"
+                        >
+                          ID
+                          {getSortIcon("id")}
+                        </button>
+                      </TableHead>
+                      <TableHead className="w-[120px]">
+                        <button
+                          onClick={() => handleSort("createdAt")}
+                          className="flex items-center hover:text-primary"
+                        >
+                          Fecha
+                          {getSortIcon("createdAt")}
+                        </button>
+                      </TableHead>
+                      <TableHead className="min-w-[180px]">
+                        <button
+                          onClick={() => handleSort("fullName")}
+                          className="flex items-center hover:text-primary"
+                        >
+                          Cliente
+                          {getSortIcon("fullName")}
+                        </button>
+                      </TableHead>
                       <TableHead className="min-w-[200px]">Producto/Servicio</TableHead>
                       <TableHead className="w-[100px]">Tipo</TableHead>
                       <TableHead className="w-[120px]">Método Pago</TableHead>
-                      <TableHead className="w-[100px]">Monto</TableHead>
-                      <TableHead className="w-[120px]">Estado</TableHead>
+                      <TableHead className="w-[100px]">
+                        <button
+                          onClick={() => handleSort("amount")}
+                          className="flex items-center hover:text-primary"
+                        >
+                          Monto
+                          {getSortIcon("amount")}
+                        </button>
+                      </TableHead>
+                      <TableHead className="w-[120px]">
+                        <button
+                          onClick={() => handleSort("status")}
+                          className="flex items-center hover:text-primary"
+                        >
+                          Estado
+                          {getSortIcon("status")}
+                        </button>
+                      </TableHead>
                       <TableHead className="min-w-[250px]">Información de Envío</TableHead>
                       <TableHead className="w-[120px]">Acciones</TableHead>
                     </TableRow>
