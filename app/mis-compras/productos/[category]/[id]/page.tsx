@@ -315,7 +315,8 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                       </div>
                       <a
                         href={currentSectionData.downloadUrl}
-                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full text-base font-medium transition-all shadow-lg hover:shadow-xl"
                       >
                         <Download className="w-5 h-5" />

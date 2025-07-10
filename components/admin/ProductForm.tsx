@@ -65,7 +65,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   if (url.includes("docs.google.com/spreadsheets")) {
     const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (match?.[1]) {
-      return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsm`;
+      return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsx`;
     }
   }
 
