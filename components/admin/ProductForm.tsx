@@ -56,28 +56,52 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
 
   // Función para transformar URLs de Google Drive
   const transformDriveUrl = (url: string | undefined): string | undefined => {
-    if (!url) return undefined
-    // Si ya es un enlace de descarga directa, no hacer nada
-    if (url.includes("uc?export=download")) return url
-    // Extraer el ID del archivo de diferentes formatos de URL de Drive
-    const patterns = [
-      /drive\.google\.com\/file\/d\/([^/]+)/,
-      /drive\.google\.com\/open\?id=([^&]+)/,
-      /drive\.google\.com\/uc\?id=([^&]+)/,
-    ]
-    let fileId = null
-    for (const pattern of patterns) {
-      const match = url.match(pattern)
-      if (match && match[1]) {
-        fileId = match[1]
-        break
-      }
+  if (!url) return undefined;
+
+  // Ya es un enlace de descarga directa
+  if (url.includes("uc?export=download")) return url;
+
+  // Google Sheets → .xlsx
+  if (url.includes("docs.google.com/spreadsheets")) {
+    const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (match?.[1]) {
+      return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsx`;
     }
-    if (fileId) {
-      return `https://drive.google.com/uc?export=download&id=${fileId}`
-    }
-    return url
   }
+
+  // Google Docs → .docx
+  if (url.includes("docs.google.com/document")) {
+    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
+    if (match?.[1]) {
+      return `https://docs.google.com/document/d/${match[1]}/export?format=docx`;
+    }
+  }
+
+  // Google Slides → .pptx
+  if (url.includes("docs.google.com/presentation")) {
+    const match = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/);
+    if (match?.[1]) {
+      return `https://docs.google.com/presentation/d/${match[1]}/export/pptx`;
+    }
+  }
+
+  // Archivos públicos de Drive (PDF, Word, etc.)
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([^/]+)/,
+    /drive\.google\.com\/open\?id=([^&]+)/,
+    /drive\.google\.com\/uc\?id=([^&]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match?.[1]) {
+      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+    }
+  }
+
+  // Si no se reconoce, devolver la URL tal cual
+  return url;
+};
+
 
   const handleInputChange = (field: keyof Product, value: any) => {
     // Transformar automáticamente URLs de Drive para el campo pdfUrl

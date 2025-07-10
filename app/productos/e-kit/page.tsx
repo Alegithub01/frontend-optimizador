@@ -60,7 +60,7 @@ export default function EKidsPage() {
               {/* Imagen del e-kid */}
               <div className="relative mb-6 w-64 h-48">
                 <Image
-                  src={`/toolkits/${ekid.id}.png`}
+                  src={`/ekits/${ekid.id}.png`}
                   alt={ekid.name}
                   width={256}
                   height={192}

@@ -21,7 +21,6 @@ import { IconRight } from "react-day-picker"
 import { X } from "lucide-react"
 import { useAccessToProduct } from "@/hooks/useAccessToProduct"
 
-
 interface ToolkitSection {
   id: number
   title: string
@@ -91,9 +90,8 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
         // Ordenar secciones por ID para asegurar el orden correcto
         if (productData.sections) {
-  productData.sections.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-}
-
+          productData.sections.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        }
 
         setProduct(productData)
       } catch (error) {
@@ -265,6 +263,33 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
                   </div>
                 </div>
 
+                {/* Botones de navegación móvil - debajo del video */}
+                <div className="flex md:hidden justify-center gap-4 mt-4">
+                  <button
+                    onClick={goToPrevSection}
+                    disabled={currentSectionIndex === 0}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${
+                      currentSectionIndex === 0
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-white text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl"
+                    }`}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+
+                  <button
+                    onClick={goToNextSection}
+                    disabled={currentSectionIndex === (product?.sections?.length || 1) - 1}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${
+                      currentSectionIndex === (product?.sections?.length || 1) - 1
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-white text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl"
+                    }`}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+
                 {/* Imagen directa - solo si existe fileUrl */}
                 {currentSectionData.fileUrl && (
                   <div className="w-full bg-white rounded-xl p-4 shadow-lg border border-gray-100">
@@ -330,11 +355,11 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
             </div>
           )}
 
-          {/* Botones de navegación - centrados a la altura del video */}
+          {/* Botones de navegación - centrados a la altura del video - SOLO DESKTOP */}
           <button
             onClick={goToPrevSection}
             disabled={currentSectionIndex === 0}
-            className={`absolute left-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
+            className={`hidden md:block absolute left-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
               currentSectionIndex === 0
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
@@ -346,7 +371,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
           <button
             onClick={goToNextSection}
             disabled={currentSectionIndex === (product?.sections?.length || 1) - 1}
-            className={`absolute right-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
+            className={`hidden md:block absolute right-4 top-[35%] transform -translate-y-1/2 rounded-full p-3 transition-all z-20 ${
               currentSectionIndex === (product?.sections?.length || 1) - 1
                 ? "bg-gray-200/80 text-gray-400 cursor-not-allowed"
                 : "bg-white/90 hover:bg-white text-gray-700 hover:shadow-xl shadow-lg backdrop-blur-sm"
@@ -537,28 +562,29 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
   const shouldUseToolkitInterface = product.category === "toolkit" || product.category === "e-kit"
 
   if (accessLoading || loading) {
-  return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <p className="text-xl">Cargando contenido...</p>
-    </div>
-  )
-}
-
-if (!hasAccess) {
-  return (
-    <div className="min-h-screen bg-white flex items-center justify-center text-center px-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Acceso restringido</h1>
-        <p className="text-gray-600">
-          No tienes acceso a este producto. Asegúrate de haber realizado la compra o inicia sesión con una cuenta válida.
-        </p>
-        <Link href="/mis-compras" className="mt-4 inline-block text-orange-500 hover:underline">
-          Volver a mis compras
-        </Link>
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-xl">Cargando contenido...</p>
       </div>
-    </div>
-  )
-}
+    )
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center text-center px-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Acceso restringido</h1>
+          <p className="text-gray-600">
+            No tienes acceso a este producto. Asegúrate de haber realizado la compra o inicia sesión con una cuenta
+            válida.
+          </p>
+          <Link href="/mis-compras" className="mt-4 inline-block text-orange-500 hover:underline">
+            Volver a mis compras
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
