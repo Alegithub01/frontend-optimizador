@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { readJsonFile, writeJsonFile } from "@/lib/file-storage"
 
-// Variable para almacenar los datos en memoria
-let storedProyectos = [
+// Datos por defecto
+const defaultProyectosData = [
   {
     id: "1",
     title: "OPTI 2024",
@@ -41,26 +42,23 @@ let storedProyectos = [
 
 export async function GET() {
   try {
-    console.log("API: Getting proyectos")
-    return NextResponse.json(storedProyectos)
+    const proyectosData = await readJsonFile("proyectos.json", defaultProyectosData)
+    console.log("✅ API proyectos: SUCCESS")
+    return NextResponse.json(proyectosData)
   } catch (error) {
-    console.error("API Error:", error)
-    return NextResponse.json(storedProyectos)
+    console.error("❌ API proyectos ERROR:", error)
+    return NextResponse.json({ error: "Failed to load proyectos" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const proyectos = await request.json()
-    console.log("API: Saving proyectos:", proyectos.length)
-
-    // Guardar los datos en la variable
-    storedProyectos = proyectos
-
+    const newData = await request.json()
+    console.log("✅ API proyectos: Saving", newData.length, "proyectos")
+    await writeJsonFile("proyectos.json", newData)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("API Error saving:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
+    console.error("❌ API proyectos POST ERROR:", error)
+    return NextResponse.json({ success: false, error: "Failed to save proyectos" }, { status: 500 })
   }
 }

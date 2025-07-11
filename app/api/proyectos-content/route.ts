@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { readJsonFile, writeJsonFile } from "@/lib/file-storage"
 
-// Datos para las páginas principales de proyectos (como OptikidsPage)
-let storedProyectosContent = [
+// Datos por defecto (solo el primero como ejemplo, el resto está en el JSON)
+const defaultProyectosContentData = [
   {
     id: "1",
     heroTitle: "OPTI 2024",
@@ -34,157 +35,27 @@ let storedProyectosContent = [
     project3Image: "/placeholder.svg?height=200&width=300",
     project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
   },
-  {
-    id: "2",
-    heroTitle: "OPTIKIDS",
-    heroSubtitle: "Escuela financiera",
-    heroImage: "/placeholder.svg?height=400&width=400",
-    courseTitle: "Curso: OPTIKIDS Escuela financiera para niños (5-9 años)",
-    courseDescription:
-      "Nuestros cursos presenciales ofrecen una experiencia interactiva donde los niños aprenden conceptos financieros a través de juegos, actividades prácticas y dinámicas grupales.",
-    courseDate: "Sábado, 10 de mayo 2024",
-    courseTime: "10:00 am - 16:00 pm",
-    courseAge: "Edad: 7 a 9 años",
-    countdownDate: "2024-05-10T10:00:00",
-    whatIsTitle: "¿Qué es Optikids?",
-    whatIsDescription:
-      "Optikids es una escuela financiera especializada en enseñar a niños y adolescentes conceptos fundamentales sobre dinero, ahorro, inversión y emprendimiento de manera práctica y divertida.",
-    firstVideoId: "https://vimeo.com/1091240808",
-    secondVideoId: "",
-    projectsTitle: "¿Qué proyectos tenemos para ti?",
-    projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
-    project1Title: "OPTI 2024",
-    project1Description: "Programa básico de educación financiera para principiantes",
-    project1Image: "/placeholder.svg?height=200&width=300",
-    project1WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%202024",
-    project2Title: "OPTIKIDS ESCUELA FINANCIERA",
-    project2Description: "Programa completo de educación financiera para niños y adolescentes",
-    project2Image: "/placeholder.svg?height=200&width=300",
-    project2WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20OPTIKIDS%20Escuela%20Financiera",
-    project3Title: "OPTI KIDS",
-    project3Description: "Programa avanzado de emprendimiento y liderazgo financiero",
-    project3Image: "/placeholder.svg?height=200&width=300",
-    project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
-  },
-  {
-    id: "3",
-    heroTitle: "OPTI KIDS",
-    heroSubtitle: "Emprendimiento y liderazgo",
-    heroImage: "/placeholder.svg?height=400&width=400",
-    courseTitle: "Curso: OPTI KIDS - Emprendimiento para jóvenes (10-15 años)",
-    courseDescription:
-      "Programa avanzado donde los jóvenes desarrollan habilidades de liderazgo y emprendimiento a través de proyectos reales y mentorías especializadas.",
-    courseDate: "Domingo, 20 de mayo 2024",
-    courseTime: "09:00 am - 18:00 pm",
-    courseAge: "Edad: 10 a 15 años",
-    countdownDate: "2024-05-20T09:00:00",
-    whatIsTitle: "¿Qué es OPTI KIDS?",
-    whatIsDescription:
-      "OPTI KIDS es un programa avanzado de emprendimiento y liderazgo financiero diseñado para jóvenes que quieren desarrollar habilidades empresariales y crear sus propios proyectos.",
-    firstVideoId: "https://vimeo.com/1091240808",
-    secondVideoId: "",
-    projectsTitle: "¿Qué proyectos tenemos para ti?",
-    projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
-    project1Title: "OPTI 2024",
-    project1Description: "Programa básico de educación financiera para principiantes",
-    project1Image: "/placeholder.svg?height=200&width=300",
-    project1WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%202024",
-    project2Title: "OPTIKIDS ESCUELA FINANCIERA",
-    project2Description: "Programa completo de educación financiera para niños y adolescentes",
-    project2Image: "/placeholder.svg?height=200&width=300",
-    project2WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20OPTIKIDS%20Escuela%20Financiera",
-    project3Title: "OPTI KIDS",
-    project3Description: "Programa avanzado de emprendimiento y liderazgo financiero",
-    project3Image: "/placeholder.svg?height=200&width=300",
-    project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
-  },
-  {
-    id: "4",
-    heroTitle: "OPTI AVANZADO",
-    heroSubtitle: "Programa especializado",
-    heroImage: "/placeholder.svg?height=400&width=400",
-    courseTitle: "Curso: OPTI AVANZADO - Estrategias financieras (16+ años)",
-    courseDescription:
-      "Programa especializado para jóvenes emprendedores que buscan profundizar en estrategias de inversión, análisis financiero y desarrollo de negocios.",
-    courseDate: "Viernes, 25 de junio 2024",
-    courseTime: "14:00 pm - 20:00 pm",
-    courseAge: "Edad: 16+ años",
-    countdownDate: "2024-06-25T14:00:00",
-    whatIsTitle: "¿Qué es OPTI AVANZADO?",
-    whatIsDescription:
-      "OPTI AVANZADO es un programa especializado para jóvenes emprendedores que buscan profundizar en estrategias de inversión, análisis financiero y desarrollo de negocios.",
-    firstVideoId: "https://vimeo.com/1091240808",
-    secondVideoId: "",
-    projectsTitle: "¿Qué proyectos tenemos para ti?",
-    projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
-    project1Title: "OPTI 2024",
-    project1Description: "Programa básico de educación financiera para principiantes",
-    project1Image: "/placeholder.svg?height=200&width=300",
-    project1WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%202024",
-    project2Title: "OPTIKIDS ESCUELA FINANCIERA",
-    project2Description: "Programa completo de educación financiera para niños y adolescentes",
-    project2Image: "/placeholder.svg?height=200&width=300",
-    project2WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20OPTIKIDS%20Escuela%20Financiera",
-    project3Title: "OPTI KIDS",
-    project3Description: "Programa avanzado de emprendimiento y liderazgo financiero",
-    project3Image: "/placeholder.svg?height=200&width=300",
-    project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
-  },
-  {
-    id: "5",
-    heroTitle: "OPTI PREMIUM",
-    heroSubtitle: "Programa exclusivo",
-    heroImage: "/placeholder.svg?height=400&width=400",
-    courseTitle: "Curso: OPTI PREMIUM - Mentoría personalizada (18+ años)",
-    courseDescription:
-      "Programa exclusivo con mentoría personalizada, casos de estudio reales y acceso a una red de contactos empresariales para el desarrollo profesional.",
-    courseDate: "Sábado, 30 de julio 2024",
-    courseTime: "08:00 am - 18:00 pm",
-    courseAge: "Edad: 18+ años",
-    countdownDate: "2024-07-30T08:00:00",
-    whatIsTitle: "¿Qué es OPTI PREMIUM?",
-    whatIsDescription:
-      "OPTI PREMIUM es un programa exclusivo con mentoría personalizada, casos de estudio reales y acceso a una red de contactos empresariales para el desarrollo profesional.",
-    firstVideoId: "https://vimeo.com/1091240808",
-    secondVideoId: "",
-    projectsTitle: "¿Qué proyectos tenemos para ti?",
-    projectsDescription: "Descubre nuestros diferentes programas diseñados para cada etapa del aprendizaje financiero",
-    project1Title: "OPTI 2024",
-    project1Description: "Programa básico de educación financiera para principiantes",
-    project1Image: "/placeholder.svg?height=200&width=300",
-    project1WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%202024",
-    project2Title: "OPTIKIDS ESCUELA FINANCIERA",
-    project2Description: "Programa completo de educación financiera para niños y adolescentes",
-    project2Image: "/placeholder.svg?height=200&width=300",
-    project2WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20OPTIKIDS%20Escuela%20Financiera",
-    project3Title: "OPTI KIDS",
-    project3Description: "Programa avanzado de emprendimiento y liderazgo financiero",
-    project3Image: "/placeholder.svg?height=200&width=300",
-    project3WhatsApp: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20programa%20OPTI%20KIDS",
-  },
 ]
 
 export async function GET() {
   try {
-    console.log("API: Getting proyectos content")
-    return NextResponse.json(storedProyectosContent)
+    const proyectosContentData = await readJsonFile("proyectos-content.json", defaultProyectosContentData)
+    console.log("✅ API proyectos-content: SUCCESS")
+    return NextResponse.json(proyectosContentData)
   } catch (error) {
-    console.error("API Error:", error)
-    return NextResponse.json(storedProyectosContent)
+    console.error("❌ API proyectos-content ERROR:", error)
+    return NextResponse.json({ error: "Failed to load proyectos content" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const content = await request.json()
-    console.log("API: Saving proyectos content:", content.length)
-
-    storedProyectosContent = content
-
+    const newData = await request.json()
+    console.log("✅ API proyectos-content: Saving", newData.length, "proyectos content")
+    await writeJsonFile("proyectos-content.json", newData)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("API Error saving:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
+    console.error("❌ API proyectos-content POST ERROR:", error)
+    return NextResponse.json({ success: false, error: "Failed to save proyectos content" }, { status: 500 })
   }
 }

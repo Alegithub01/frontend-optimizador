@@ -1,117 +1,56 @@
 import { NextResponse } from "next/server"
+import { readJsonFile, writeJsonFile } from "@/lib/file-storage"
 
-// Variable para almacenar los datos (se puede editar)
-let cursosData = [
+// Datos por defecto
+const defaultCursosContentData = [
   {
     id: "1",
-    heroTitle: "OPTI 2024 - Educación Financiera",
-    heroDescription: "Programa básico de educación financiera para principiantes",
+    heroTitle: "OPTI 2024 - Educación Financiera Básica",
+    heroDescription:
+      "Aprende los conceptos fundamentales de educación financiera de manera práctica y divertida. Este curso está diseñado para principiantes que quieren tomar control de sus finanzas personales.",
     videoId: "1091240808",
-    courseDate: "SÁBADO 15 DE ABRIL, 2024",
-    courseTime: "09:00 AM - 05:00 PM",
-    courseAges: "Edades: 16+ años",
-    courseLocation: "Centro de Capacitación OPTI",
-    whatsappUrl: "https://wa.me/1234567890",
-    learningTitle: "¿Qué aprenderás en OPTI 2024?",
-    learningItems: ["Conceptos básicos", "Estrategias de ahorro", "Planificación financiera"],
-    icon1Title: "Educación",
-    icon2Title: "Práctica",
-    icon3Title: "Resultados",
-    icon1Image: "/placeholder.svg?height=80&width=80",
-    icon2Image: "/placeholder.svg?height=80&width=80",
-    icon3Image: "/placeholder.svg?height=80&width=80",
-  },
-  {
-    id: "2",
-    heroTitle: "OPTIKIDS Escuela Financiera",
-    heroDescription: "Programa completo de educación financiera para niños",
-    videoId: "1091240808",
-    courseDate: "SÁBADO 10 DE MAYO, 2024",
-    courseTime: "10:00 AM - 04:00 PM",
-    courseAges: "Edades: 7 a 9 años",
-    courseLocation: "Escuela Financiera OPTIKIDS",
-    whatsappUrl: "https://wa.me/1234567890",
-    learningTitle: "¿Qué aprenderás en OPTIKIDS?",
-    learningItems: ["Dinero básico", "Juegos financieros", "Emprendimiento para niños"],
-    icon1Title: "Diversión",
-    icon2Title: "Aprendizaje",
-    icon3Title: "Crecimiento",
-    icon1Image: "/placeholder.svg?height=80&width=80",
-    icon2Image: "/placeholder.svg?height=80&width=80",
-    icon3Image: "/placeholder.svg?height=80&width=80",
-  },
-  {
-    id: "3",
-    heroTitle: "OPTI KIDS - Emprendimiento",
-    heroDescription: "Programa avanzado de emprendimiento y liderazgo financiero",
-    videoId: "1091240808",
-    courseDate: "DOMINGO 20 DE MAYO, 2024",
-    courseTime: "09:00 AM - 06:00 PM",
-    courseAges: "Edades: 10 a 15 años",
-    courseLocation: "Campus OPTI KIDS",
-    whatsappUrl: "https://wa.me/1234567890",
-    learningTitle: "¿Qué aprenderás en OPTI KIDS?",
-    learningItems: ["Liderazgo", "Ideas de negocio", "Presentaciones", "Trabajo en equipo"],
-    icon1Title: "Liderazgo",
-    icon2Title: "Innovación",
-    icon3Title: "Éxito",
-    icon1Image: "/placeholder.svg?height=80&width=80",
-    icon2Image: "/placeholder.svg?height=80&width=80",
-    icon3Image: "/placeholder.svg?height=80&width=80",
-  },
-  {
-    id: "4",
-    heroTitle: "OPTI AVANZADO - Estrategias",
-    heroDescription: "Programa especializado para jóvenes emprendedores",
-    videoId: "1091240808",
-    courseDate: "VIERNES 25 DE JUNIO, 2024",
-    courseTime: "02:00 PM - 08:00 PM",
-    courseAges: "Edades: 16+ años",
-    courseLocation: "Centro Avanzado OPTI",
-    whatsappUrl: "https://wa.me/1234567890",
-    learningTitle: "¿Qué aprenderás en OPTI AVANZADO?",
-    learningItems: ["Análisis financiero", "Estrategias de inversión", "Marketing digital"],
-    icon1Title: "Estrategia",
-    icon2Title: "Análisis",
-    icon3Title: "Networking",
-    icon1Image: "/placeholder.svg?height=80&width=80",
-    icon2Image: "/placeholder.svg?height=80&width=80",
-    icon3Image: "/placeholder.svg?height=80&width=80",
-  },
-  {
-    id: "5",
-    heroTitle: "OPTI PREMIUM - Mentoría",
-    heroDescription: "Programa exclusivo con mentoría personalizada",
-    videoId: "1091240808",
-    courseDate: "SÁBADO 30 DE JULIO, 2024",
-    courseTime: "08:00 AM - 06:00 PM",
-    courseAges: "Edades: 18+ años",
-    courseLocation: "Campus Premium OPTI",
-    whatsappUrl: "https://wa.me/1234567890",
-    learningTitle: "¿Qué aprenderás en OPTI PREMIUM?",
-    learningItems: ["Mentoría 1:1", "Casos empresariales", "Red de contactos"],
-    icon1Title: "Mentoría",
+    courseDate: "Sábado, 15 de abril 2024",
+    courseTime: "09:00 am - 17:00 pm",
+    courseAges: "Edad: 16+ años",
+    courseLocation: "Centro de Capacitación OPTI\nAv. Principal 123, La Paz\nSala de conferencias A-1",
+    whatsappUrl: "https://wa.me/1234567890?text=Hola,%20me%20interesa%20el%20curso%20OPTI%202024",
+    learningTitle: "Lo que aprenderás en este curso:",
+    learningItems: [
+      "Conceptos básicos de educación financiera",
+      "Cómo crear un presupuesto personal efectivo",
+      "Estrategias de ahorro e inversión",
+      "Planificación financiera a corto y largo plazo",
+      "Herramientas para el control de gastos",
+      "Introducción al mundo de las inversiones",
+    ],
+    icon1Title: "Aprendizaje Práctico",
     icon2Title: "Certificación",
-    icon3Title: "Exclusividad",
-    icon1Image: "/placeholder.svg?height=80&width=80",
-    icon2Image: "/placeholder.svg?height=80&width=80",
-    icon3Image: "/placeholder.svg?height=80&width=80",
+    icon3Title: "Networking",
+    icon1Image: "/placeholder.svg?height=40&width=40",
+    icon2Image: "/placeholder.svg?height=40&width=40",
+    icon3Image: "/placeholder.svg?height=40&width=40",
   },
 ]
 
 export async function GET() {
-  console.log("🧪 TEST API: Devolviendo", cursosData.length, "cursos")
-  return NextResponse.json(cursosData)
+  try {
+    const cursosContentData = await readJsonFile("cursos-content.json", defaultCursosContentData)
+    console.log("✅ API test-cursos: SUCCESS")
+    return NextResponse.json(cursosContentData)
+  } catch (error) {
+    console.error("❌ API test-cursos ERROR:", error)
+    return NextResponse.json({ error: "Failed to load cursos content" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
   try {
     const newData = await request.json()
-    console.log("🧪 TEST API: Guardando cambios")
-    cursosData = newData
+    console.log("✅ API test-cursos: Saving", newData.length, "cursos content")
+    await writeJsonFile("cursos-content.json", newData)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("🧪 TEST API: Error guardando:", error)
-    return NextResponse.json({ success: false, error: "Error al guardar" }, { status: 500 })
+    console.error("❌ API test-cursos POST ERROR:", error)
+    return NextResponse.json({ success: false, error: "Failed to save cursos content" }, { status: 500 })
   }
 }

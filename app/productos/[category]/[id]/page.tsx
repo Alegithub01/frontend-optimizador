@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -108,6 +107,9 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
 
+  // Nuevo estado para controlar qué imagen se muestra en el área principal
+  const [mainImageIndex, setMainImageIndex] = useState(0)
+
   // Estados para información de envío
   const [selectedDepartment, setSelectedDepartment] = useState("")
   const [needsHomeDelivery, setNeedsHomeDelivery] = useState(false)
@@ -123,24 +125,62 @@ export default function ProductDetailPage({ params }: { params: { category: stri
       const videoId = url.split("/").pop()?.split("?")[0]
       return `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`
     }
-
     if (url.includes("youtube.com/watch")) {
       const videoId = url.split("v=")[1]?.split("&")[0]
       return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
     }
-
     if (url.includes("youtu.be/")) {
       const videoId = url.split("/").pop()?.split("?")[0]
       return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`
     }
-
     return url
   }
 
-  // Crear array de slides para el carrusel
+  // Crear array de imágenes para la galería
+  const getGalleryImages = () => {
+    if (!product) return []
+    const images = []
+
+    // Imagen principal (GIF)
+    images.push({
+      src: product.gifUrl || product.image,
+      alt: product.name,
+      type: "image",
+    })
+
+    // Primera imagen extra
+    if (product.extraImageUrl) {
+      images.push({
+        src: product.extraImageUrl,
+        alt: `${product.name} imagen 1`,
+        type: "image",
+      })
+    }
+
+    // Segunda imagen extra
+    if (product.extraImageUrlDos) {
+      images.push({
+        src: product.extraImageUrlDos,
+        alt: `${product.name} imagen 2`,
+        type: "image",
+      })
+    }
+
+    // Video trailer - AGREGAR AQUÍ
+    if (product.trailerUrl) {
+      images.push({
+        src: product.trailerUrl,
+        alt: `Video trailer de ${product.name}`,
+        type: "video",
+      })
+    }
+
+    return images
+  }
+
+  // Crear array de slides para el carrusel móvil
   const getCarouselSlides = () => {
     if (!product) return []
-
     const slides = []
 
     // Slide 1: GIF principal
@@ -184,6 +224,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
     return slides
   }
 
+  const galleryImages = getGalleryImages()
   const slides = getCarouselSlides()
 
   const nextSlide = () => {
@@ -200,14 +241,17 @@ export default function ProductDetailPage({ params }: { params: { category: stri
     }
   }
 
+  // Función para manejar el click en las miniaturas
+  const handleThumbnailClick = (index: number) => {
+    setMainImageIndex(index)
+  }
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
-
         // Obtener el producto específico por ID
         const data = await api.get<Product>(`/product/${params.id}`)
-
         // Añadir datos adicionales si no vienen del backend
         const enhancedProduct = {
           ...data,
@@ -221,7 +265,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
 
             Incluye casos de estudio reales, ejemplos prácticos y una metodología probada que ha ayudado a miles de personas a alcanzar sus objetivos.`,
         }
-
         setProduct(enhancedProduct)
       } catch (error) {
         console.error("Error al cargar el producto:", error)
@@ -234,6 +277,10 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           originalPrice: 40,
           discount: 50,
           image: "/placeholder.svg?height=400&width=300",
+          extraImageUrl: "/placeholder.svg?height=400&width=300",
+          extraImageUrlDos: "/placeholder.svg?height=400&width=300",
+          gifUrl: "/placeholder.svg?height=400&width=300",
+          trailerUrl: "https://vimeo.com/123456789",
           stock: 15,
           category: params.category as "libro" | "revista",
           description:
@@ -290,7 +337,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         })
         return false
       }
-
       // Validación especial para Cochabamba
       if (
         selectedDepartment === "CBBA" &&
@@ -305,7 +351,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         })
         return false
       }
-
       // Validación para otros departamentos
       if (selectedDepartment !== "CBBA" && needsHomeDelivery && !shippingAddress.trim()) {
         toast({
@@ -316,7 +361,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         return false
       }
     }
-
     return true
   }
 
@@ -452,51 +496,88 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
           {/* Galería de imágenes */}
           <div className="space-y-4">
-            {/* Vista Desktop - Layout original */}
+            {/* Vista Desktop - Layout mejorado con funcionalidad clickeable */}
             <div className="hidden md:block">
-              {/* Imagen principal - GIF */}
+              {/* Imagen principal - Muestra la imagen/video seleccionado */}
               <div className="relative h-96 bg-gray-50 rounded-lg overflow-hidden mb-4">
-                <Image src={product.gifUrl || product.image} alt={product.name} fill className="object-contain p-4" />
+                {galleryImages[mainImageIndex]?.type === "video" ? (
+                  // Mostrar preview del video en el área principal
+                  <div
+                    className="relative w-full h-full bg-gray-900 cursor-pointer"
+                    onClick={() => setShowVideoModal(true)}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[18px] border-l-white border-b-[12px] border-b-transparent ml-1"></div>
+                      </div>
+                    </div>
+                    <span className="absolute bottom-4 left-4 text-white text-lg font-medium">Video Trailer</span>
+                    <span className="absolute top-4 right-4 text-white text-sm bg-black/30 px-2 py-1 rounded">
+                      Click para reproducir
+                    </span>
+                  </div>
+                ) : (
+                  // Mostrar imagen normal
+                  <Image
+                    src={galleryImages[mainImageIndex]?.src || product.image}
+                    alt={galleryImages[mainImageIndex]?.alt || product.name}
+                    fill
+                    className="object-contain p-4"
+                  />
+                )}
               </div>
 
-              {/* Miniaturas - 3 elementos */}
+              {/* Miniaturas - Solo mostrar las que NO están seleccionadas actualmente */}
               <div className="grid grid-cols-3 gap-2">
-                {/* Primera imagen extra */}
-                <div className="relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer">
-                  <Image
-                    src={product.extraImageUrl || product.image}
-                    alt={`${product.name} imagen 1`}
-                    fill
-                    className="object-contain p-1"
-                  />
-                </div>
+                {galleryImages.map((item, index) => {
+                  // No mostrar la miniatura si es la que está seleccionada actualmente
+                  if (index === mainImageIndex) return null
 
-                {/* Segunda imagen extra */}
-                <div className="relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer">
-                  <Image
-                    src={product.extraImageUrlDos || product.image}
-                    alt={`${product.name} imagen 2`}
-                    fill
-                    className="object-contain p-1"
-                  />
-                </div>
-
-                {/* Video trailer */}
-                <div
-                  className="relative h-20 bg-gray-900 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer"
-                  onClick={() => product.trailerUrl && setShowVideoModal(true)}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                  return (
+                    <div
+                      key={index}
+                      className="relative h-20 bg-gray-50 rounded-lg overflow-hidden border-2 border-transparent hover:border-gray-300 cursor-pointer transition-all"
+                      onClick={() => {
+                        // Si es video, abrir modal directamente
+                        if (item.type === "video") {
+                          setShowVideoModal(true)
+                        } else {
+                          // Si es imagen, cambiar a área principal
+                          handleThumbnailClick(index)
+                        }
+                      }}
+                    >
+                      {item.type === "video" ? (
+                        // Miniatura de video
+                        <div className="relative w-full h-full bg-gray-900">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                            </div>
+                          </div>
+                          <span className="absolute bottom-1 left-1 text-white text-xs font-medium">Video</span>
+                        </div>
+                      ) : (
+                        // Miniatura de imagen
+                        <Image
+                          src={item.src || "/placeholder.svg"}
+                          alt={item.alt}
+                          fill
+                          className="object-contain p-1"
+                        />
+                      )}
                     </div>
-                  </div>
-                  <span className="absolute bottom-1 left-1 text-white text-xs font-medium">Video</span>
-                </div>
+                  )
+                })}
+
+                {/* Rellenar espacios vacíos si hay menos de 3 elementos para mostrar */}
+                {Array.from({ length: Math.max(0, 3 - (galleryImages.length - 1)) }).map((_, emptyIndex) => (
+                  <div key={`empty-${emptyIndex}`} className="h-20 bg-gray-100 rounded-lg opacity-50"></div>
+                ))}
               </div>
             </div>
 
-            {/* Vista Mobile - Carrusel */}
+            {/* Vista Mobile - Carrusel (sin cambios) */}
             <div className="md:hidden">
               <div className="relative">
                 {/* Carrusel principal */}
@@ -522,7 +603,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                       )}
                     </>
                   )}
-
                   {/* Botones de navegación */}
                   {slides.length > 1 && (
                     <>
@@ -541,7 +621,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     </>
                   )}
                 </div>
-
                 {/* Indicadores de puntos */}
                 {slides.length > 1 && (
                   <div className="flex justify-center mt-4 space-x-2">
@@ -598,7 +677,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     </label>
                   ))}
                 </div>
-
                 {/* Información adicional sobre el formato */}
                 <div className="mt-2 text-xs md:text-sm text-black text-center">
                   {selectedFormat === "digital" ? (
@@ -730,7 +808,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                         <span className="text-xs md:text-sm">Necesito envío a domicilio o provincia</span>
                       </label>
                     </div>
-
                     {cochabambaDeliveryMethod === "office" && (
                       <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
                         <p>
@@ -825,14 +902,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   </>
                 )}
               </div>
-
               {/* Mostrar ahorros si hay descuento */}
               {product.discount && originalPrice && !currencyLoading && (
                 <div className="text-green-600 text-sm font-medium mb-2">
                   Ahorras: {formatPrice(originalPrice - finalPrice)}
                 </div>
               )}
-
               {/* Mostrar precio en USD como referencia si no es USD */}
               {!currencyLoading && currency.code !== "USD" && (
                 <div className="text-gray-600 text-xs md:text-sm mt-2 p-2 bg-white rounded">
@@ -848,21 +923,18 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   )}
                 </div>
               )}
-
               {/* Información específica para Bolivia */}
               {currency.code === "BOB" && (
                 <div className="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
                   🇧🇴 Cambio oficial del BCB aplicado
                 </div>
               )}
-
               {/* Indicador de moneda */}
               {!currencyLoading && currency.code !== "USD" && (
                 <div className="text-xs text-gray-500 mt-2 text-center">
                   Precios mostrados en {currency.code} • Tasa actualizada
                 </div>
               )}
-
               {/* Información adicional de costos de envío */}
               {selectedFormat === "fisico" &&
                 selectedDeptInfo &&

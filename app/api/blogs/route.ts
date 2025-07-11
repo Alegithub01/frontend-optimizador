@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { readJsonFile, writeJsonFile } from "@/lib/file-storage"
 
-// Variable para almacenar los blogs
-let blogsData = [
+// Datos por defecto
+const defaultBlogsData = [
   {
     id: "1",
     date: "01-04-2024",
@@ -36,6 +37,7 @@ let blogsData = [
 
 export async function GET() {
   try {
+    const blogsData = await readJsonFile("blogs.json", defaultBlogsData)
     console.log("✅ API blogs: SUCCESS")
     return NextResponse.json(blogsData)
   } catch (error) {
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
   try {
     const newData = await request.json()
     console.log("✅ API blogs: Saving", newData.length, "blogs")
-    blogsData = newData
+    await writeJsonFile("blogs.json", newData)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("❌ API blogs POST ERROR:", error)

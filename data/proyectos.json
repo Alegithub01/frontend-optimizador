@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "title": "OPTI 2024",
+    "image": "/placeholder.svg?height=300&width=400",
+    "link": "/proyectos/1",
+    "featured": false
+  },
+  {
+    "id": "2",
+    "title": "OPTIKIDS ESCUELA FINANCIERA",
+    "image": "/placeholder.svg?height=400&width=300",
+    "link": "/proyectos/2",
+    "featured": true
+  },
+  {
+    "id": "3",
+    "title": "OPTI KIDS",
+    "image": "/placeholder.svg?height=300&width=400",
+    "link": "/proyectos/3",
+    "featured": false
+  },
+  {
+    "id": "4",
+    "title": "OPTI AVANZADO",
+    "image": "/placeholder.svg?height=300&width=400",
+    "link": "/proyectos/4",
+    "featured": false
+  },
+  {
+    "id": "5",
+    "title": "OPTI PREMIUM",
+    "image": "/placeholder.svg?height=300&width=400",
+    "link": "/proyectos/5",
+    "featured": false
+  }
+]

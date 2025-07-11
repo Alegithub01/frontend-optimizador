@@ -1,0 +1,29 @@
+[
+  {
+    "id": "1",
+    "name": "Luke Marquina 25585",
+    "description": "Fundadora y empresaria boliviana",
+    "coverImage": "/placeholder.svg?height=300&width=400",
+    "videoUrl": "https://vimeo.com/1091240808",
+    "avatarImage": "/placeholder.svg?height=48&width=48",
+    "logoImage": "/placeholder.svg?height=30&width=30"
+  },
+  {
+    "id": "2",
+    "name": "María González",
+    "description": "Emprendedora exitosa",
+    "coverImage": "/placeholder.svg?height=300&width=400",
+    "videoUrl": "https://vimeo.com/1091240808",
+    "avatarImage": "/placeholder.svg?height=48&width=48",
+    "logoImage": "/placeholder.svg?height=30&width=30"
+  },
+  {
+    "id": "3",
+    "name": "Carlos Rodríguez 65165",
+    "description": "Inversor y mentor",
+    "coverImage": "/placeholder.svg?height=300&width=400",
+    "videoUrl": "https://vimeo.com/1091240808",
+    "avatarImage": "/placeholder.svg?height=48&width=48",
+    "logoImage": "/placeholder.svg?height=30&width=30"
+  }
+]

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { readJsonFile, writeJsonFile } from "@/lib/file-storage"
 
-// Variable para almacenar los datos en memoria (en producción usarías una base de datos)
-let storedDetails = [
+// Datos por defecto
+const defaultTestimonialDetailsData = [
   {
     id: "1",
     name: "Luke Marquina",
@@ -95,11 +96,12 @@ let storedDetails = [
 
 export async function GET() {
   try {
+    const testimonialDetailsData = await readJsonFile("testimonial-details.json", defaultTestimonialDetailsData)
     console.log("API: Getting testimonial details")
-    return NextResponse.json(storedDetails)
+    return NextResponse.json(testimonialDetailsData)
   } catch (error) {
     console.error("API Error:", error)
-    return NextResponse.json(storedDetails)
+    return NextResponse.json(defaultTestimonialDetailsData)
   }
 }
 
@@ -107,10 +109,7 @@ export async function POST(request: Request) {
   try {
     const details = await request.json()
     console.log("API: Saving testimonial details:", details.length)
-
-    // Guardar los datos en la variable (en producción sería en base de datos)
-    storedDetails = details
-
+    await writeJsonFile("testimonial-details.json", details)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("API Error saving:", error)
