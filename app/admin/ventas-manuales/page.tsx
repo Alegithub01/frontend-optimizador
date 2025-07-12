@@ -469,7 +469,7 @@ export default function VentasManuales() {
                         <div>
                           <h3 className="font-medium">{course.title}</h3>
                           {course.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{course.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{course.description}</p>
                           )}
                         </div>
                         <Badge variant="secondary">Curso</Badge>
@@ -497,7 +497,7 @@ export default function VentasManuales() {
                         <div>
                           <h3 className="font-medium">{product.name}</h3>
                           {product.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
                           )}
                         </div>
                         <Badge variant="outline">Producto</Badge>
