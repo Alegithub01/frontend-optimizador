@@ -468,9 +468,7 @@ export default function VentasManuales() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-medium">{course.nombre}</h3>
-                          {course.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{course.description}</p>
-                          )}
+                  
                         </div>
                         <Badge variant="secondary">Curso</Badge>
                       </div>
