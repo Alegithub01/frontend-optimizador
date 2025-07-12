@@ -15,14 +15,14 @@ import { useToast } from "@/hooks/use-toast"
 
 interface Course {
   id: number
-  nombre: string
+  title: string
   description?: string
   price?: number
 }
 
 interface Product {
   id: string
-  title: string
+  name: string
   description?: string
   price?: number
 }
@@ -463,11 +463,11 @@ export default function VentasManuales() {
                           ? "border-orange-500 bg-orange-50"
                           : "border-border"
                       }`}
-                      onClick={() => handleItemSelect("course", course.id, course.nombre)}
+                      onClick={() => handleItemSelect("course", course.id, course.title)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-medium">{course.nombre}</h3>
+                          <h3 className="font-medium">{course.title}</h3>
                           {course.description && (
                             <p className="text-sm text-muted-foreground mt-1">{course.description}</p>
                           )}
@@ -491,11 +491,11 @@ export default function VentasManuales() {
                           ? "border-orange-500 bg-orange-50"
                           : "border-border"
                       }`}
-                      onClick={() => handleItemSelect("product", product.id, product.title)}
+                      onClick={() => handleItemSelect("product", product.id, product.name)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-medium">{product.title}</h3>
+                          <h3 className="font-medium">{product.name}</h3>
                           {product.description && (
                             <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
                           )}
