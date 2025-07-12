@@ -28,8 +28,12 @@ export interface User {
 
 export interface Course {
   id: number;
-  name: string;
+  title: string;  // Cambiado de 'name' a 'title'
+  description?: string;  // Añadido porque aparece en los logs
   price: number;
+  image?: string;
+  trailer?: string;
+  discount?: string;
 }
 
 export interface Product {
@@ -42,9 +46,17 @@ export interface Product {
 
 export interface Event {
   id: number;
-  name: string;
+  title: string;  // Cambiado de 'name' a 'title'
+  description?: string;
   price: number;
-  date: string;
+  date?: string;
+  dateTime?: string;  // Añadido porque aparece en los logs
+  endTime?: string;
+  location?: string;
+  image?: string;
+  logo?: string;
+  capacity?: number;
+  // Añade otras propiedades que aparecen en los logs
 }
 
 export interface Sale {

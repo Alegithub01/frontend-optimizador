@@ -356,9 +356,9 @@ export default function SalesPage() {
           sale.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.qrReference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.course?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sale.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sale.event?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sale.event?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           expandDepartmentName(sale.departamento)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sale.country?.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -459,7 +459,7 @@ export default function SalesPage() {
 
           // INFORMACIÓN DEL PRODUCTO/SERVICIO
           "Tipo de Venta": sale.type === "course" ? "Curso" : sale.type === "product" ? "Producto" : "Evento",
-          "Producto/Servicio": sale.course?.name || sale.product?.name || sale.event?.name || "",
+          "Producto/Servicio": sale.course?.title || sale.product?.name || sale.event?.title || "",
           Categoría: sale.product?.category || "N/A",
           Subcategoría: sale.product?.subCategory || "N/A",
 
@@ -957,6 +957,14 @@ export default function SalesPage() {
       orange: "text-orange-700 bg-orange-50 border-orange-200",
     }
 
+    {filteredSales.map(sale => (
+  console.log(`Venta ${sale.id}:`, {
+    course: sale.course,
+    product: sale.product, 
+    event: sale.event
+  })
+))}
+
     return (
       <div
         className={`text-sm max-w-xs p-3 rounded-lg border ${colorClasses[shippingInfo.color as keyof typeof colorClasses]}`}
@@ -1366,7 +1374,7 @@ export default function SalesPage() {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {sale.course?.name || sale.product?.name || sale.event?.name}
+                            {sale.course?.title || sale.product?.name || sale.event?.title}
                           </div>
                           {sale.qrReference && (
                             <div className="text-sm text-gray-600 truncate max-w-[180px]">QR: {sale.qrReference}</div>

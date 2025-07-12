@@ -33,6 +33,7 @@ const getNavigationForRole = (role: string) => {
   const baseNavigation = [
     { name: 'Dashboard', href: '/admin', icon: Home, roles: ['admin'] },
     { name: 'Ventas', href: '/admin/sale', icon: DollarSign, roles: ['admin', 'atc'] },
+    { name: 'Ventas Manuales', href: '/admin/ventas-manuales', icon: ShoppingCart, roles: ['admin','atc'] },
   ];
 
   const sharedNavigation = [
@@ -45,7 +46,6 @@ const getNavigationForRole = (role: string) => {
     { name: 'Nuevo Producto', href: '/admin/products/new', icon: Plus, roles: ['admin'] },
     { name: 'Estadísticas', href: '/admin/stats', icon: BarChart3, roles: ['admin'] },
     { name: 'Usuarios', href: '/admin/users', icon: Users, roles: ['admin'] },
-    { name: 'Pedidos', href: '/admin/order', icon: ShoppingCart, roles: ['admin'] },
     { name: 'Configuración', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];
 

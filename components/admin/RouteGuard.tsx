@@ -37,6 +37,8 @@ export function RouteGuard({ children, requiredRoles = ['admin'] }: RouteGuardPr
         hasAccess = canAccessSales(currentUser.role);
         } else if(pathname.startsWith('/admin/eventos')){
         hasAccess = canAccessEvents(currentUser.role);
+        } else if(pathname.startsWith('/admin/ventas-manuales')){
+        hasAccess = canAccessEvents(currentUser.role);
         } else if (pathname.startsWith('/admin')) {
         hasAccess = canAccessAdmin(currentUser.role);
         } else {

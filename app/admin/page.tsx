@@ -57,12 +57,12 @@ const adminFeatures = [
     stats: 'reportes'
   },
   {
-    title: 'Pedidos',
-    description: 'Gestión de pedidos y seguimiento de entregas',
+    title: 'Ventas Manuales',
+    description: 'Gestión de ventas manuales',
     icon: ShoppingCart,
-    href: '/admin/order',
+    href: '/admin/ventas-manuales',
     color: 'bg-indigo-500',
-    stats: 'pedidos'
+    stats: 'ventas-manuales'
   },
   {
     title: 'Configuración',
