@@ -204,9 +204,6 @@ export default function TestimoniosPage() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6">Testimonios</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Conoce las historias de éxito de nuestros estudiantes y familias
-            </p>
           </div>
         </div>
       </section>
