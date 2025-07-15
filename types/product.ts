@@ -13,6 +13,7 @@ export interface Product {
   name: string
   author: string
   price: number
+  physicalPrice?: number
   stock: number
   image: string
   extraImageUrl?: string

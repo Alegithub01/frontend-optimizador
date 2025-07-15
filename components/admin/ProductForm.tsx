@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Product, ToolkitSection } from "@/types/product"
+import type { Product, ToolkitSection } from "@/types/product" // Assuming types/product.ts exists and defines Product and ToolkitSection
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,6 +41,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     name: product?.name || "",
     author: product?.author || "",
     price: product?.price || 0,
+    physicalPrice: product?.physicalPrice || 0, // <--- AÑADIDO: Inicializar physicalPrice
     image: product?.image || "",
     extraImageUrl: product?.extraImageUrl || "",
     extraImageUrlDos: product?.extraImageUrlDos || "",
@@ -56,52 +57,45 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
 
   // Función para transformar URLs de Google Drive
   const transformDriveUrl = (url: string | undefined): string | undefined => {
-  if (!url) return undefined;
-
-  // Ya es un enlace de descarga directa
-  if (url.includes("uc?export=download")) return url;
-
-  // Google Sheets → .xlsx
-  if (url.includes("docs.google.com/spreadsheets")) {
-    const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-    if (match?.[1]) {
-      return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsx`;
+    if (!url) return undefined
+    // Ya es un enlace de descarga directa
+    if (url.includes("uc?export=download")) return url
+    // Google Sheets → .xlsx
+    if (url.includes("docs.google.com/spreadsheets")) {
+      const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+      if (match?.[1]) {
+        return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsx`
+      }
     }
-  }
-
-  // Google Docs → .docx
-  if (url.includes("docs.google.com/document")) {
-    const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
-    if (match?.[1]) {
-      return `https://docs.google.com/document/d/${match[1]}/export?format=docx`;
+    // Google Docs → .docx
+    if (url.includes("docs.google.com/document")) {
+      const match = url.match(/\/document\/d\/([a-zA-Z0-9-_]+)/)
+      if (match?.[1]) {
+        return `https://docs.google.com/document/d/${match[1]}/export?format=docx`
+      }
     }
-  }
-
-  // Google Slides → .pptx
-  if (url.includes("docs.google.com/presentation")) {
-    const match = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/);
-    if (match?.[1]) {
-      return `https://docs.google.com/presentation/d/${match[1]}/export/pptx`;
+    // Google Slides → .pptx
+    if (url.includes("docs.google.com/presentation")) {
+      const match = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)
+      if (match?.[1]) {
+        return `https://docs.google.com/presentation/d/${match[1]}/export/pptx`
+      }
     }
-  }
-
-  // Archivos públicos de Drive (PDF, Word, etc.)
-  const patterns = [
-    /drive\.google\.com\/file\/d\/([^/]+)/,
-    /drive\.google\.com\/open\?id=([^&]+)/,
-    /drive\.google\.com\/uc\?id=([^&]+)/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match?.[1]) {
-      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+    // Archivos públicos de Drive (PDF, Word, etc.)
+    const patterns = [
+      /drive\.google\.com\/file\/d\/([^/]+)/,
+      /drive\.google\.com\/open\?id=([^&]+)/,
+      /drive\.google\.com\/uc\?id=([^&]+)/,
+    ]
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match?.[1]) {
+        return `https://drive.google.com/uc?export=download&id=${match[1]}`
+      }
     }
+    // Si no se reconoce, devolver la URL tal cual
+    return url
   }
-
-  // Si no se reconoce, devolver la URL tal cual
-  return url;
-};
-
 
   const handleInputChange = (field: keyof Product, value: any) => {
     // Transformar automáticamente URLs de Drive para el campo pdfUrl
@@ -118,8 +112,10 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     setFormData((prev) => ({
       ...prev,
       category,
-      subCategory: undefined,
-      sections: category === "toolkit" || category === "e-kit" ? prev.sections : [],
+      subCategory: undefined, // Reset subCategory when category changes
+      sections: category === "toolkit" || category === "e-kit" ? prev.sections : [], // Clear sections if not toolkit/e-kit
+      // Clear physicalPrice if not libro/revista
+      physicalPrice: category === "libro" || category === "revista" ? prev.physicalPrice : undefined,
     }))
   }
 
@@ -159,7 +155,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     try {
       const cleanUrl = (url: string | undefined): string | undefined => {
         if (!url || url.trim() === "") return undefined
@@ -180,7 +175,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
               }))
           : undefined
 
-      const dataToSend = {
+      const dataToSend: Partial<Product> = {
         name: formData.name?.trim(),
         author: formData.author?.trim(),
         price: Number(formData.price),
@@ -198,6 +193,13 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             ? cleanUrl(transformDriveUrl(formData.pdfUrl))
             : undefined,
         sections: cleanedSections,
+      }
+
+      // <--- AÑADIDO: Incluir physicalPrice solo para categorías específicas
+      if (formData.category === "libro" || formData.category === "revista") {
+        dataToSend.physicalPrice = Number(formData.physicalPrice)
+      } else {
+        dataToSend.physicalPrice = undefined // Ensure it's not sent for other categories
       }
 
       // Log para debugging
@@ -268,7 +270,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           </div>
         </div>
       </div>
-
       <form onSubmit={handleSubmit} className="space-y-8">
         <Card>
           <CardHeader>
@@ -299,7 +300,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Precio</Label>
+                <Label htmlFor="price">Precio (Digital)</Label> {/* Updated label */}
                 <Input
                   id="price"
                   type="number"
@@ -310,6 +311,20 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                   required
                 />
               </div>
+              {isBookOrMagazine && ( // <--- AÑADIDO: Campo de precio físico condicional
+                <div className="space-y-2">
+                  <Label htmlFor="physicalPrice">Precio (Físico)</Label>
+                  <Input
+                    id="physicalPrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.physicalPrice}
+                    onChange={(e) => handleInputChange("physicalPrice", Number.parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="stock">Stock</Label>
                 <Input
@@ -371,7 +386,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             </div>
           </CardContent>
         </Card>
-
         {/* Card de Multimedia */}
         <Card>
           <CardHeader>
@@ -469,7 +483,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             )}
           </CardContent>
         </Card>
-
         {isToolkitOrEkids && (
           <Card>
             <CardHeader>
@@ -602,7 +615,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             </CardContent>
           </Card>
         )}
-
         <div className="flex justify-end space-x-4">
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancelar

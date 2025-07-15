@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -14,9 +15,10 @@ interface Product {
   id: string
   name: string
   author?: string
-  price: string | number
-  originalPrice?: string | number
-  discount?: number
+  price: string | number // Precio para formato digital
+  physicalPrice?: string | number // <--- AÑADIDO: Precio para formato físico
+  originalPrice?: string | number // Precio original para digital, si hay descuento
+  discount?: number // Porcentaje de descuento para digital
   image: string
   extraImageUrl?: string
   extraImageUrlDos?: string
@@ -99,11 +101,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const { toast } = useToast()
   const { isAuthenticated, user } = useAuthContext()
   const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
+
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
-  const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("fisico")
+  const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("fisico") // Default to physical as per original code
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
 
@@ -140,14 +143,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const getGalleryImages = () => {
     if (!product) return []
     const images = []
-
     // Imagen principal (GIF)
     images.push({
       src: product.gifUrl || product.image,
       alt: product.name,
       type: "image",
     })
-
     // Primera imagen extra
     if (product.extraImageUrl) {
       images.push({
@@ -156,7 +157,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         type: "image",
       })
     }
-
     // Segunda imagen extra
     if (product.extraImageUrlDos) {
       images.push({
@@ -165,7 +165,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         type: "image",
       })
     }
-
     // Video trailer - AGREGAR AQUÍ
     if (product.trailerUrl) {
       images.push({
@@ -174,7 +173,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         type: "video",
       })
     }
-
     return images
   }
 
@@ -182,7 +180,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const getCarouselSlides = () => {
     if (!product) return []
     const slides = []
-
     // Slide 1: GIF principal
     slides.push({
       type: "image",
@@ -190,7 +187,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
       alt: product.name,
       isMain: true,
     })
-
     // Slide 2: Primera imagen extra
     if (product.extraImageUrl) {
       slides.push({
@@ -200,7 +196,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         isMain: false,
       })
     }
-
     // Slide 3: Segunda imagen extra
     if (product.extraImageUrlDos) {
       slides.push({
@@ -210,7 +205,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         isMain: false,
       })
     }
-
     // Slide 4: Video trailer
     if (product.trailerUrl) {
       slides.push({
@@ -220,7 +214,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         isMain: false,
       })
     }
-
     return slides
   }
 
@@ -260,9 +253,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           longDescription:
             data.longDescription ||
             `Somos seres capaces de explorar y transformar materia, pero nuestro gran defecto es nacer en un espacio que limita nuestros sentidos y acciones. La sociedad se ocupa de colocar un sello de conformidad en nosotros, como si la ley del menor esfuerzo nos fuera desde el principio.
-
             Este ${params.category} te ayudará a romper esas barreras mentales y desarrollar todo tu potencial. Con ejercicios prácticos y teoría fundamentada, podrás aplicar los conceptos en tu vida diaria.
-
             Incluye casos de estudio reales, ejemplos prácticos y una metodología probada que ha ayudado a miles de personas a alcanzar sus objetivos.`,
         }
         setProduct(enhancedProduct)
@@ -273,9 +264,10 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           id: params.id,
           name: "ESCUELA FINANCIERA OPTIKIDS",
           author: "Nicolas Crossu",
-          price: 20,
-          originalPrice: 40,
-          discount: 50,
+          price: 20, // Precio digital de ejemplo
+          physicalPrice: 30, // Precio físico de ejemplo
+          originalPrice: 40, // Precio original digital de ejemplo
+          discount: 50, // Descuento digital de ejemplo
           image: "/placeholder.svg?height=400&width=300",
           extraImageUrl: "/placeholder.svg?height=400&width=300",
           extraImageUrlDos: "/placeholder.svg?height=400&width=300",
@@ -293,16 +285,13 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           ],
           formats: ["digital", "fisico"],
           longDescription: `Somos seres capaces de explorar y transformar materia, pero nuestro gran defecto es nacer en un espacio que limita nuestros sentidos y acciones. La sociedad se ocupa de colocar un sello de conformidad en nosotros, como si la ley del menor esfuerzo nos fuera desde el principio.
-
           Este ${params.category} te ayudará a romper esas barreras mentales y desarrollar todo tu potencial. Con ejercicios prácticos y teoría fundamentada, podrás aplicar los conceptos en tu vida diaria.
-
           Incluye casos de estudio reales, ejemplos prácticos y una metodología probada que ha ayudado a miles de personas a alcanzar sus objetivos.`,
         })
       } finally {
         setLoading(false)
       }
     }
-
     fetchProduct()
   }, [params.id, params.category])
 
@@ -382,9 +371,21 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         return price
       }
 
-      const finalPrice = parsePrice(product.price)
-      const originalPrice = product.originalPrice ? parsePrice(product.originalPrice) : finalPrice
-      const discount = product.discount || 0
+      // Determinar el precio final y el precio original para el checkout
+      const currentPriceValue =
+        selectedFormat === "fisico" && product.physicalPrice ? product.physicalPrice : product.price
+      const finalPriceForCheckout = parsePrice(currentPriceValue)
+
+      // El originalPrice y discount en el producto se asumen para la versión digital.
+      // Si el formato es físico, el originalPrice para el checkout será el physicalPrice si no hay un original específico para físico.
+      const originalPriceForCheckout =
+        selectedFormat === "fisico" && product.physicalPrice
+          ? parsePrice(product.physicalPrice) // Si es físico, su "original" es su propio precio si no hay otro definido
+          : product.originalPrice
+            ? parsePrice(product.originalPrice)
+            : finalPriceForCheckout
+
+      const discountForCheckout = selectedFormat === "digital" ? product.discount || 0 : 0
 
       // Limpiar localStorage de datos anteriores
       localStorage.removeItem("checkoutCourse")
@@ -400,13 +401,13 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         JSON.stringify({
           id: product.id,
           name: product.name,
-          price: finalPrice,
-          originalPrice: originalPrice,
-          discount: discount,
+          price: finalPriceForCheckout, // Usar el precio determinado por el formato
+          originalPrice: originalPriceForCheckout, // Usar el precio original determinado por el formato
+          discount: discountForCheckout, // Usar el descuento determinado por el formato
           image: product.image,
           category: product.category,
           format: selectedFormat,
-          deliveryType: selectedFormat === "digital" ? "digital" : "physical",
+          deliveryType: deliveryType,
           department: selectedDepartment,
           departmentName: selectedDeptInfo?.name,
           needsHomeDelivery:
@@ -476,8 +477,20 @@ export default function ProductDetailPage({ params }: { params: { category: stri
     return price
   }
 
-  const finalPrice = parsePrice(product.price)
-  const originalPrice = product.originalPrice ? parsePrice(product.originalPrice) : null
+  // Lógica para determinar el precio a mostrar en la UI
+  const currentDisplayPrice =
+    selectedFormat === "fisico" && product.physicalPrice ? product.physicalPrice : product.price
+
+  const finalPrice = parsePrice(currentDisplayPrice)
+
+  // Lógica para determinar el precio original y el descuento a mostrar en la UI
+  let displayOriginalPrice: number | null = null
+  let displayDiscount: number | null = null
+
+  if (selectedFormat === "digital" && product.originalPrice && product.discount) {
+    displayOriginalPrice = parsePrice(product.originalPrice)
+    displayDiscount = product.discount
+  }
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -492,7 +505,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             Volver a {params.category}s
           </Link>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
           {/* Galería de imágenes */}
           <div className="space-y-4">
@@ -526,13 +538,11 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   />
                 )}
               </div>
-
               {/* Miniaturas - Solo mostrar las que NO están seleccionadas actualmente */}
               <div className="grid grid-cols-3 gap-2">
                 {galleryImages.map((item, index) => {
                   // No mostrar la miniatura si es la que está seleccionada actualmente
                   if (index === mainImageIndex) return null
-
                   return (
                     <div
                       key={index}
@@ -569,14 +579,12 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     </div>
                   )
                 })}
-
                 {/* Rellenar espacios vacíos si hay menos de 3 elementos para mostrar */}
                 {Array.from({ length: Math.max(0, 3 - (galleryImages.length - 1)) }).map((_, emptyIndex) => (
                   <div key={`empty-${emptyIndex}`} className="h-20 bg-gray-100 rounded-lg opacity-50"></div>
                 ))}
               </div>
             </div>
-
             {/* Vista Mobile - Carrusel (sin cambios) */}
             <div className="md:hidden">
               <div className="relative">
@@ -638,26 +646,22 @@ export default function ProductDetailPage({ params }: { params: { category: stri
               </div>
             </div>
           </div>
-
           {/* Información del producto */}
           <div className="space-y-4 md:space-y-6">
             {/* Categoría */}
             <div>
               <span className="text-orange-500 text-sm font-medium uppercase tracking-wide">{params.category}</span>
             </div>
-
             {/* Título y autor */}
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
               {product.author && <p className="text-gray-600 text-sm md:text-base">By {product.author}</p>}
             </div>
-
             {/* Descripción */}
             <div>
               <h3 className="font-semibold mb-2 text-sm md:text-base">Descripción</h3>
               <p className="text-gray-700 leading-relaxed text-sm md:text-base">{product.description}</p>
             </div>
-
             {/* Formato */}
             {product.formats && product.formats.length > 1 && (
               <div>
@@ -687,7 +691,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 </div>
               </div>
             )}
-
             {/* Información de envío - Solo para formato físico */}
             {selectedFormat === "fisico" && (
               <div className="bg-white p-4 md:p-6 rounded-lg ">
@@ -695,7 +698,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   <Truck className="h-5 w-5 md:h-6 md:w-6 text-orange-700" />
                   <h3 className="font-semibold text-orange-700 text-base md:text-lg">Información de Envío</h3>
                 </div>
-
                 {/* Selector de departamento */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Departamento de entrega *</label>
@@ -713,7 +715,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     ))}
                   </select>
                 </div>
-
                 {/* Información de envío según el departamento seleccionado */}
                 {selectedDeptInfo && (
                   <>
@@ -779,7 +780,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     )}
                   </>
                 )}
-
                 {/* Opciones especiales para Cochabamba */}
                 {selectedDepartment === "CBBA" && (
                   <div className="mb-4">
@@ -817,7 +817,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                           </a>
                         </p>
                         <p>
-                          🕒 Horario de atención: Lunes a Viernes de 8:00 a 12:20 y de 13:30 a 17:30 Sábado de 8:00 a
+                          🕒 Horario de atención: Lunes a Viernes de 8:00 a 12:30 y de 13:30 a 17:30 Sábado de 8:00 a
                           13:00.
                         </p>
                         <p>
@@ -828,7 +828,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     )}
                   </div>
                 )}
-
                 {/* Opción de envío a domicilio - Solo para otros departamentos o si en Cochabamba seleccionó envío */}
                 {(selectedDepartment !== "CBBA" || cochabambaDeliveryMethod === "shipping") && (
                   <div className="mb-4">
@@ -853,7 +852,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     </label>
                   </div>
                 )}
-
                 {/* Campo de dirección para envío a domicilio */}
                 {needsHomeDelivery && (
                   <div className="mb-4">
@@ -882,7 +880,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 )}
               </div>
             )}
-
             {/* Precio con funcionalidad completa de moneda */}
             <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
               <div className="flex items-center space-x-2 md:space-x-3 mb-2">
@@ -893,19 +890,19 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                     formatPrice(finalPrice)
                   )}
                 </span>
-                {product.discount && originalPrice && !currencyLoading && (
+                {displayDiscount && displayOriginalPrice && !currencyLoading && (
                   <>
                     <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
-                      {product.discount}% Dto.
+                      {displayDiscount}% Dto.
                     </span>
-                    <span className="text-gray-500 line-through text-sm">{formatPrice(originalPrice)}</span>
+                    <span className="text-gray-500 line-through text-sm">{formatPrice(displayOriginalPrice)}</span>
                   </>
                 )}
               </div>
-              {/* Mostrar ahorros si hay descuento */}
-              {product.discount && originalPrice && !currencyLoading && (
+              {/* Mostrar ahorros si hay descuento y es digital */}
+              {displayDiscount && displayOriginalPrice && !currencyLoading && (
                 <div className="text-green-600 text-sm font-medium mb-2">
-                  Ahorras: {formatPrice(originalPrice - finalPrice)}
+                  Ahorras: {formatPrice(displayOriginalPrice - finalPrice)}
                 </div>
               )}
               {/* Mostrar precio en USD como referencia si no es USD */}
@@ -913,9 +910,9 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 <div className="text-gray-600 text-xs md:text-sm mt-2 p-2 bg-white rounded">
                   <span className="text-xs text-gray-500">Precio original:</span>
                   <br />
-                  {product.discount && originalPrice ? (
+                  {displayDiscount && displayOriginalPrice ? (
                     <>
-                      <span className="line-through text-gray-400">${originalPrice.toFixed(2)} USD</span>
+                      <span className="line-through text-gray-400">${displayOriginalPrice.toFixed(2)} USD</span>
                       <span className="ml-2 font-medium">${finalPrice.toFixed(2)} USD</span>
                     </>
                   ) : (
@@ -947,7 +944,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   </div>
                 )}
             </div>
-
             {/* Botón de compra */}
             <Button
               onClick={handleBuy}
@@ -971,7 +967,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 </>
               )}
             </Button>
-
             {/* Información adicional */}
             <div className="text-xs md:text-sm text-gray-600 text-center">
               {selectedFormat === "fisico" && !selectedDepartment && (
@@ -996,7 +991,6 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           </div>
         </div>
       </div>
-
       {/* Modal de Video */}
       {showVideoModal && product.trailerUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">

@@ -153,7 +153,6 @@ export function ProductList() {
           </Button>
         </Link>
       </div>
-
       <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -169,7 +168,6 @@ export function ProductList() {
           <span>{filteredProducts.length} productos</span>
         </div>
       </div>
-
       {filteredProducts.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -208,12 +206,21 @@ export function ProductList() {
                   <div className="flex items-start justify-between">
                     <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{product.name}</h3>
                   </div>
-
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Por {product.author}</span>
-                    <span className="font-medium text-green-600">${Number(product.price)?.toFixed(2) ?? "0.00"}</span>
+                    {/* <--- AÑADIDO: Lógica para mostrar ambos precios */}
+                    <div className="flex flex-col items-end">
+                      <span className="font-medium text-green-600">
+                        Digital: ${Number(product.price)?.toFixed(2) ?? "0.00"}
+                      </span>
+                      {(product.category === "libro" || product.category === "revista") &&
+                        product.physicalPrice !== undefined && (
+                          <span className="font-medium text-blue-600">
+                            Físico: ${Number(product.physicalPrice)?.toFixed(2) ?? "0.00"}
+                          </span>
+                        )}
+                    </div>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2">
                       <Badge variant="secondary" className="flex items-center gap-1">
@@ -226,15 +233,12 @@ export function ProductList() {
                     </div>
                     <span className="text-sm text-gray-600">Stock: {product.stock}</span>
                   </div>
-
                   <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-
                   {(product.category === "toolkit" || product.category === "e-kit") && product.sections && (
                     <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
                       {product.sections.length} sección{product.sections.length !== 1 ? "es" : ""}
                     </div>
                   )}
-
                   <div className="flex justify-between pt-2">
                     <Link href={`/admin/products/${product.id}`}>
                       <Button variant="outline" size="sm">
@@ -242,7 +246,6 @@ export function ProductList() {
                         Editar
                       </Button>
                     </Link>
-
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 bg-transparent">
