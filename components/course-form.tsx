@@ -67,6 +67,7 @@ const courseSchema = z.object({
   title: z.string().min(1, "El título es requerido"),
   description: z.string().min(1, "La descripción es requerida"),
   price: z.coerce.number().min(0, "El precio debe ser mayor o igual a 0"),
+  discount: z.coerce.number().min(0).max(100).optional().default(0),
   image: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
   startDate: z.string().min(1, "La fecha de inicio es requerida"),
   endDate: z.string().min(1, "La fecha de fin es requerida"),
@@ -98,6 +99,7 @@ type CourseType = {
   title: string
   description: string
   price: number
+  discount: number
   image?: string
   startDate: string
   endDate: string
@@ -332,6 +334,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
       title: "",
       description: "",
       price: 0,
+      discount: 0,
       image: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
@@ -383,6 +386,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
           title: course.title || "",
           description: course.description || "",
           price: isNaN(Number(course.price)) ? 0 : Number(course.price),
+          discount: course.discount || 0,
           image: course.image || "",
           startDate: formatDate(course.startDate),
           endDate: formatDate(course.endDate, 30),
@@ -559,6 +563,21 @@ export function CourseForm({ courseId }: CourseFormProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="discount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descuento (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" max="100" step="1" {...field} />
+                  </FormControl>
+                  <FormDescription>Porcentaje de descuento del curso (0 a 100)</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
