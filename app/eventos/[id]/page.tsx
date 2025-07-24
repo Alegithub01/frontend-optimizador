@@ -346,7 +346,7 @@ export default function EventPage({ params }: EventPageProps) {
             Dirección :<span className="font-light">{event.location}</span>
           </div>
 
-          {/* Precio en mobile */}
+          {/* Precio en mobile 
           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
@@ -370,7 +370,7 @@ export default function EventPage({ params }: EventPageProps) {
                 <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded">{currency.code}</div>
               )}
             </div>
-          </div>
+          </div>*/}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
@@ -574,7 +574,7 @@ export default function EventPage({ params }: EventPageProps) {
                       <h3 className="font-bold mb-2 text-sm md:text-base">{relatedEvent.title}</h3>
                       <p className="text-gray-600 text-xs md:text-sm mb-2">{relatedDate}</p>
                       <p className="text-gray-600 text-xs md:text-sm mb-4 line-clamp-2">{relatedEvent.description}</p>
-
+                      {/*
                       <div className="mb-4">
                         <div className="flex items-center">
                           <span className="text-lg md:text-2xl font-bold">
@@ -591,7 +591,7 @@ export default function EventPage({ params }: EventPageProps) {
                             ${Number.parseFloat(relatedEvent.price).toFixed(2)} USD
                           </div>
                         )}
-                      </div>
+                      </div> */}
 
                       <Button
                         className="w-full bg-orange-700 hover:bg-orange-600 text-black rounded-full py-2 md:py-3 text-sm md:text-base"
