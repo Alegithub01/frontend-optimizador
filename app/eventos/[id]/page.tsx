@@ -28,6 +28,7 @@ interface Event {
   logo2?: string
   logo3?: string
   trailerUrl?: string
+  whatsappNumber:string
 }
 
 interface EventPageProps {
@@ -142,6 +143,32 @@ export default function EventPage({ params }: EventPageProps) {
     fetchEventData()
   }, [eventId, isAuthenticated, user])
 
+  const isEventInFuture = event && new Date(event.dateTime) > new Date()
+
+
+  const handleBuy = () => {
+  if (!event) return
+
+  if (availableSpots <= 0) {
+    toast({
+      title: "Evento lleno",
+      description: "Ya no hay cupos disponibles para este evento.",
+      variant: "destructive",
+    })
+    return
+  }
+
+  const message = encodeURIComponent(
+    `Hola, me interesa reservar mi cupo para el evento "${event.title}". ¿Me puedes dar más información?`
+  )
+  const whatsappNumber = event.whatsappNumber || "59170000000" // Reemplaza con el número por defecto si no existe
+  const url = `https://wa.me/${whatsappNumber}?text=${message}`
+
+  window.open(url, "_blank")
+}
+
+
+  {/* para pasarela de pagos 
   const handleBuy = async () => {
     if (!event) return
 
@@ -204,7 +231,7 @@ export default function EventPage({ params }: EventPageProps) {
     } finally {
       setPurchasing(false)
     }
-  }
+  }*/}
 
   const getEmbedUrl = (url: string) => {
     if (url.includes("vimeo.com")) {
@@ -460,12 +487,12 @@ export default function EventPage({ params }: EventPageProps) {
                     <div className="flex items-center">
                       <Users className="h-5 w-5 md:h-6 md:w-6 text-orange-700 mr-2 md:mr-3" />
                       <div>
-                        <h3 className="text-orange-700 font-medium text-sm md:text-base">Cupos disponibles</h3>
-                        <p className="font-bold text-xs md:text-sm">Quedan {event.capacity}</p>
+                        <h3 className="text-orange-700 font-medium text-sm md:text-base">Ultimos cupos disponibles</h3>
+                        {/* <p className="font-bold text-xs md:text-sm">Quedan {event.capacity}</p> */}
                       </div>
                     </div>
                   </div>
-
+                  {/*
                   <div className="mb-4 md:mb-6">
                     <div className="flex items-center mb-2">
                       <span className="text-2xl md:text-3xl font-bold">
@@ -477,26 +504,25 @@ export default function EventPage({ params }: EventPageProps) {
                       </span>
                     </div>
 
-                    {/* Mostrar precio en USD como referencia si no es USD */}
+                   
                     {!currencyLoading && currency.code !== "USD" && (
                       <div className="text-gray-600 text-xs md:text-sm mt-1">
                         <span>Precio original: ${Number.parseFloat(event.price).toFixed(2)} USD</span>
                       </div>
                     )}
 
-                    {/* Información específica para Bolivia */}
+                    
                     {currency.code === "BOB" && (
                       <div className="text-gray-500 text-xs md:text-sm mt-1">Cambio oficial del BCB aplicado</div>
                     )}
 
-                    {/* Indicador de moneda */}
+                   
                     {!currencyLoading && currency.code !== "USD" && (
                       <div className="text-xs text-gray-500 mt-2">
                         Precios mostrados en {currency.code} • Tasa de cambio actualizada
                       </div>
                     )}
-                  </div>
-
+                  </div> */}
                   <Button
                     className="w-full bg-orange-700 hover:bg-orange-600 text-black mb-4 md:mb-6 py-4 md:py-6 rounded-full text-sm md:text-base font-semibold"
                     onClick={handleBuy}

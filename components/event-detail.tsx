@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Edit, MapPin, Calendar, Users, DollarSign, Loader2 } from "lucide-react"
+import { Edit, MapPin, Calendar, Users, DollarSign, Loader2, Phone } from "lucide-react"
 
 type Event = {
   id: string
@@ -26,6 +26,7 @@ type Event = {
   logo2?: string
   logo3?: string
   trailerUrl?: string
+   whatsappNumber: string
 }
 
 export function EventDetail({ id }: { id: string }) {
@@ -128,7 +129,7 @@ export function EventDetail({ id }: { id: string }) {
                     <p className="mt-1">{event.location}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                {/*<div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Capacidad</h3>
@@ -141,6 +142,13 @@ export function EventDetail({ id }: { id: string }) {
                     <h3 className="font-medium text-sm text-muted-foreground">Precio</h3>
                     <p className="mt-1">${event.price}</p>
                   </div>
+                </div>*/}
+                <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground">WhatsApp</h3>
+                  <p className="mt-1">{event.whatsappNumber}</p>
+                </div>
                 </div>
               </div>
 

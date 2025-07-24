@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { EventForm } from "@/components/event-form"
 import { Button } from "@/components/ui/button"

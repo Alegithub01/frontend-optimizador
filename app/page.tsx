@@ -76,9 +76,11 @@ export default function Home() {
           </div>
         </div>
 
-        <Button className="mt-20 bg-white text-black hover:bg-orange-700 hover:text-white transition-colors px-6 md:px-8 py-3 md:py-6 text-base md:text-lg rounded-full">
-          Descúbrelo
-        </Button>
+          <Link href="/generate-image" passHref>
+            <Button className="mt-20 bg-white text-black hover:bg-orange-700 hover:text-white transition-colors px-6 md:px-8 py-3 md:py-6 text-base md:text-lg rounded-full">
+              Descúbrelo
+            </Button>
+          </Link>
       </section>
 
 

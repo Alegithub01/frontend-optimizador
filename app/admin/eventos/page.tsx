@@ -160,8 +160,8 @@ export default function EventsPage() {
                   <TableHead>Título</TableHead>
                   <TableHead>Fecha y Hora</TableHead>
                   <TableHead>Ubicación</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Capacidad</TableHead>
+                  {/*<TableHead>Precio</TableHead>
+                  <TableHead>Capacidad</TableHead>*/}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -172,8 +172,8 @@ export default function EventsPage() {
                     <TableCell>{event.title}</TableCell>
                     <TableCell>{formatDate(event.dateTime)}</TableCell>
                     <TableCell>{event.location}</TableCell>
-                    <TableCell>${Number(event.price).toFixed(2)}</TableCell>
-                    <TableCell>{event.capacity}</TableCell>
+                    {/*<TableCell>${Number(event.price).toFixed(2)}</TableCell>
+                    <TableCell>{event.capacity}</TableCell>*/}
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Link href={`/admin/eventos/${event.id}`}>
