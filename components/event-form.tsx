@@ -212,9 +212,7 @@ export function EventForm({ eventId }: EventFormProps) {
         return
       }
 
-      const dateTimeLocal = new Date(data.dateTime)
-      const dateTimeISO = new Date(dateTimeLocal.getTime() - dateTimeLocal.getTimezoneOffset() * 60000).toISOString()
-
+      const dateTimeISO = data.dateTime
 
       // Preparar datos para enviar al backend
       const dataToSend = {
