@@ -28,7 +28,7 @@ interface Event {
   logo2?: string
   logo3?: string
   trailerUrl?: string
-  whatsappNumber:string
+  redirectUrl:string
 }
 
 interface EventPageProps {
@@ -40,7 +40,6 @@ interface EventPageProps {
 export default function EventPage({ params }: EventPageProps) {
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
-  const { formatPrice, currency, isLoading: currencyLoading } = useCurrency()
   const resolvedParams = React.use(params)
   const eventId = resolvedParams.id
 
@@ -51,9 +50,6 @@ export default function EventPage({ params }: EventPageProps) {
   const [isTrailerVideo, setIsTrailerVideo] = useState(false)
   const [hasRegistered, setHasRegistered] = useState(false)
   const [availableSpots, setAvailableSpots] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const formatEventDate = (dateTimeStr: string, endTimeStr: string) => {
     const dateTime = new Date(dateTimeStr)
@@ -145,27 +141,29 @@ export default function EventPage({ params }: EventPageProps) {
 
   const isEventInFuture = event && new Date(event.dateTime) > new Date()
 
-
   const handleBuy = () => {
-  if (!event) return
+    if (!event) return
 
-  if (availableSpots <= 0) {
-    toast({
-      title: "Evento lleno",
-      description: "Ya no hay cupos disponibles para este evento.",
-      variant: "destructive",
-    })
-    return
+    if (availableSpots <= 0) {
+      toast({
+        title: "Evento lleno",
+        description: "Ya no hay cupos disponibles para este evento.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!event.redirectUrl) {
+      toast({
+        title: "Sin enlace disponible",
+        description: "Este evento no tiene un enlace de contacto configurado aún.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    window.open(event.redirectUrl, "_blank")
   }
-
-  const message = encodeURIComponent(
-    `Hola, me interesa reservar mi cupo para el evento "${event.title}". ¿Me puedes dar más información?`
-  )
-  const whatsappNumber = event.whatsappNumber || "59170000000" // Reemplaza con el número por defecto si no existe
-  const url = `https://wa.me/${whatsappNumber}?text=${message}`
-
-  window.open(url, "_blank")
-}
 
 
   {/* para pasarela de pagos 

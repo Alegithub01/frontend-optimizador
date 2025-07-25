@@ -15,23 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, X, Plus, Phone } from "lucide-react"
 
-// Lista de países con códigos telefónicos
-const countries = [
-  { code: "BO", name: "Bolivia", dialCode: "+591" },
-  { code: "AR", name: "Argentina", dialCode: "+54" },
-  { code: "BR", name: "Brasil", dialCode: "+55" },
-  { code: "CL", name: "Chile", dialCode: "+56" },
-  { code: "CO", name: "Colombia", dialCode: "+57" },
-  { code: "EC", name: "Ecuador", dialCode: "+593" },
-  { code: "PE", name: "Perú", dialCode: "+51" },
-  { code: "PY", name: "Paraguay", dialCode: "+595" },
-  { code: "UY", name: "Uruguay", dialCode: "+598" },
-  { code: "VE", name: "Venezuela", dialCode: "+58" },
-  { code: "MX", name: "México", dialCode: "+52" },
-  { code: "US", name: "Estados Unidos", dialCode: "+1" },
-  { code: "ES", name: "España", dialCode: "+34" },
-]
-
 // Esquema de validación actualizado
 const eventSchema = z.object({
   title: z.string().min(1, "El título es requerido"),
@@ -44,9 +27,8 @@ const eventSchema = z.object({
   // Campos opcionales
   capacity: z.coerce.number().min(0, "La capacidad debe ser mayor o igual a 0").optional(),
   price: z.coerce.number().min(0, "El precio debe ser mayor o igual a 0").optional(),
-  // WhatsApp
-  countryCode: z.string().min(1, "Selecciona un país"),
-  whatsappNumber: z.string().min(1, "El número de WhatsApp es requerido"),
+  
+  redirectUrl: z.string().url("Debe ser una URL válida"),
   topics: z.array(z.string()).min(1, "Debe haber al menos un tema"),
   logo1: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
   logo2: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
@@ -83,7 +65,6 @@ export function EventForm({ eventId }: EventFormProps) {
   const [loading, setLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(!!eventId)
   const [newTopic, setNewTopic] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]) // Bolivia por defecto
   const { toast } = useToast()
   const router = useRouter()
 
@@ -99,8 +80,7 @@ export function EventForm({ eventId }: EventFormProps) {
       logo: "https://via.placeholder.com/200x200?text=Logo",
       capacity: undefined, // Opcional
       price: undefined, // Opcional
-      countryCode: "BO", // Bolivia por defecto
-      whatsappNumber: "",
+      redirectUrl: "",
       topics: ["Tema 1"],
       logo1: "",
       logo2: "",
@@ -108,23 +88,6 @@ export function EventForm({ eventId }: EventFormProps) {
       trailerUrl: "",
     },
   })
-
-  // Función para extraer código de país y número del whatsappNumber completo
-  const parseWhatsAppNumber = (fullNumber: string) => {
-    if (!fullNumber) return { countryCode: "BO", number: "" }
-
-    // Buscar el país que coincida con el inicio del número
-    const country = countries.find((c) => fullNumber.startsWith(c.dialCode))
-    if (country) {
-      return {
-        countryCode: country.code,
-        number: fullNumber.substring(country.dialCode.length),
-      }
-    }
-
-    // Si no encuentra coincidencia, usar Bolivia por defecto
-    return { countryCode: "BO", number: fullNumber.replace(/^\+\d+/, "") }
-  }
 
   // Cargar datos del evento si estamos en modo edición
   useEffect(() => {
@@ -150,11 +113,6 @@ export function EventForm({ eventId }: EventFormProps) {
           const dateTimeLocal = event.dateTime ? localDateTime : ""
           const endTimeFormatted = event.endTime ? event.endTime.substring(0, 5) : "13:00"
 
-          // Parsear número de WhatsApp
-          const { countryCode, number } = parseWhatsAppNumber(event.whatsappNumber || "")
-          const country = countries.find((c) => c.code === countryCode) || countries[0]
-          setSelectedCountry(country)
-
           const formattedEvent = {
             title: event.title || "",
             description: event.description || "",
@@ -173,8 +131,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 ? Number.parseFloat(event.price)
                 : event.price
               : undefined,
-            countryCode: countryCode,
-            whatsappNumber: number,
+            redirectUrl: event.redirectUrl || "",
             topics: Array.isArray(event.topics) ? event.topics : ["Tema 1"],
             logo1: event.logo1 || "",
             logo2: event.logo2 || "",
@@ -200,15 +157,6 @@ export function EventForm({ eventId }: EventFormProps) {
       fetchEvent()
     }
   }, [eventId, form, toast])
-
-  // Actualizar país seleccionado cuando cambia el código de país en el formulario
-  useEffect(() => {
-    const countryCode = form.watch("countryCode")
-    const country = countries.find((c) => c.code === countryCode)
-    if (country) {
-      setSelectedCountry(country)
-    }
-  }, [form.watch("countryCode")])
 
   const addTopic = () => {
     if (!newTopic.trim()) return
@@ -264,9 +212,6 @@ export function EventForm({ eventId }: EventFormProps) {
         return
       }
 
-      // Construir número completo de WhatsApp
-      const fullWhatsAppNumber = `${selectedCountry.dialCode}${data.whatsappNumber}`
-
       const dateTimeISO = data.dateTime
 
       // Preparar datos para enviar al backend
@@ -281,7 +226,7 @@ export function EventForm({ eventId }: EventFormProps) {
         // Campos opcionales - solo enviar si tienen valor
         ...(data.capacity !== undefined && { capacity: Number(data.capacity) }),
         ...(data.price !== undefined && { price: data.price.toString() }),
-        whatsappNumber: fullWhatsAppNumber,
+        redirectUrl: data.redirectUrl,
         topics: data.topics,
         logo1: data.logo1 || "",
         logo2: data.logo2 || "",
@@ -462,62 +407,21 @@ export function EventForm({ eventId }: EventFormProps) {
                 )}
               />
             </div>*/}
-
-            {/* Campo de WhatsApp */}
-            <div className="space-y-4">
-              <FormLabel className="text-base font-medium">Contacto WhatsApp</FormLabel>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="countryCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>País</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar país" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-white">
-                          {countries.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                              <div className="flex items-center gap-2 ">
-                                <span>{country.name}</span>
-                                <span className="text-muted-foreground">{country.dialCode}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="whatsappNumber"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Número de WhatsApp</FormLabel>
-                      <FormControl>
-                        <div className="flex">
-                          <div className="flex items-center px-3 border border-r-0 rounded-l-md bg-muted text-muted-foreground">
-                            <Phone className="h-4 w-4 mr-1" />
-                            {selectedCountry.dialCode}
-                          </div>
-                          <Input placeholder="" className="rounded-l-none" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Número completo: {selectedCountry.dialCode}
-                        {field.value}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <div>
+              <FormField
+                control={form.control}
+                name="redirectUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL de redirección al hacer clic en "Comprar"</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://t.me/mi_grupo" {...field} />
+                    </FormControl>
+                    <FormDescription>Enlace a Telegram, WhatsApp, Instagram, etc.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>

@@ -26,7 +26,7 @@ type Event = {
   logo2?: string
   logo3?: string
   trailerUrl?: string
-   whatsappNumber: string
+  redirectUlr: string
 }
 
 export function EventDetail({ id }: { id: string }) {
@@ -146,8 +146,8 @@ export function EventDetail({ id }: { id: string }) {
                 <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <h3 className="font-medium text-sm text-muted-foreground">WhatsApp</h3>
-                  <p className="mt-1">{event.whatsappNumber}</p>
+                  <h3 className="font-medium text-sm text-muted-foreground">Contacto</h3>
+                  <p className="mt-1">{event.redirectUlr}</p>
                 </div>
                 </div>
               </div>
