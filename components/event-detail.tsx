@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Edit, MapPin, Calendar, Users, DollarSign, Loader2, Phone } from "lucide-react"
+import { Edit, MapPin, Calendar, Loader2, Phone } from "lucide-react"
 
 type Event = {
   id: string
@@ -26,7 +26,7 @@ type Event = {
   logo2?: string
   logo3?: string
   trailerUrl?: string
-  redirectUlr: string
+  redirectUrl: string
 }
 
 export function EventDetail({ id }: { id: string }) {
@@ -144,11 +144,11 @@ export function EventDetail({ id }: { id: string }) {
                   </div>
                 </div>*/}
                 <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <h3 className="font-medium text-sm text-muted-foreground">Contacto</h3>
-                  <p className="mt-1">{event.redirectUlr}</p>
-                </div>
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground">Contacto</h3>
+                    <p className="mt-1">{event.redirectUrl}</p>
+                  </div>
                 </div>
               </div>
 
@@ -215,7 +215,12 @@ export function EventDetail({ id }: { id: string }) {
                 </CardHeader>
                 <CardContent>
                   <div className="relative aspect-square w-full overflow-hidden rounded-md">
-                    <Image src={event.logo1 || "/placeholder.svg"} alt="Logo 1" fill className="object-contain" />
+                    <Image
+                      src={event.logo1 || "/placeholder.svg?height=200&width=200&text=Logo+1"}
+                      alt="Logo 1"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -228,7 +233,12 @@ export function EventDetail({ id }: { id: string }) {
                 </CardHeader>
                 <CardContent>
                   <div className="relative aspect-square w-full overflow-hidden rounded-md">
-                    <Image src={event.logo2 || "/placeholder.svg"} alt="Logo 2" fill className="object-contain" />
+                    <Image
+                      src={event.logo2 || "/placeholder.svg?height=200&width=200&text=Logo+2"}
+                      alt="Logo 2"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -241,7 +251,12 @@ export function EventDetail({ id }: { id: string }) {
                 </CardHeader>
                 <CardContent>
                   <div className="relative aspect-square w-full overflow-hidden rounded-md">
-                    <Image src={event.logo3 || "/placeholder.svg"} alt="Logo 3" fill className="object-contain" />
+                    <Image
+                      src={event.logo3 || "/placeholder.svg?height=200&width=200&text=Logo+3"}
+                      alt="Logo 3"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
                 </CardContent>
               </Card>

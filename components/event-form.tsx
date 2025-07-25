@@ -1,5 +1,4 @@
 "use client"
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -11,9 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, X, Plus, Phone } from "lucide-react"
+import { Loader2, X, Plus } from "lucide-react"
 
 // Esquema de validación actualizado
 const eventSchema = z.object({
@@ -27,7 +25,6 @@ const eventSchema = z.object({
   // Campos opcionales
   capacity: z.coerce.number().min(0, "La capacidad debe ser mayor o igual a 0").optional(),
   price: z.coerce.number().min(0, "El precio debe ser mayor o igual a 0").optional(),
-  
   redirectUrl: z.string().url("Debe ser una URL válida"),
   topics: z.array(z.string()).min(1, "Debe haber al menos un tema"),
   logo1: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
@@ -59,6 +56,32 @@ type Event = {
 
 type EventFormProps = {
   eventId?: string
+}
+
+// Función para convertir fecha del servidor a formato local para el input
+const formatDateTimeForInput = (dateTimeString: string): string => {
+  if (!dateTimeString) return ""
+
+  // Crear fecha directamente sin conversiones de zona horaria
+  const date = new Date(dateTimeString)
+
+  // Formatear para datetime-local input (YYYY-MM-DDTHH:MM)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+// Función para convertir fecha del input a formato ISO para enviar al servidor
+const formatDateTimeForServer = (dateTimeLocal: string): string => {
+  if (!dateTimeLocal) return ""
+
+  // El input datetime-local ya está en formato local, solo necesitamos convertir a ISO
+  const date = new Date(dateTimeLocal)
+  return date.toISOString()
 }
 
 export function EventForm({ eventId }: EventFormProps) {
@@ -98,25 +121,24 @@ export function EventForm({ eventId }: EventFormProps) {
           console.log("Cargando evento con ID:", eventId)
           const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
           const response = await fetch(`${apiUrl}/event/${eventId}`)
+
           if (!response.ok) {
             throw new Error(`Error al cargar el evento: ${response.status}`)
           }
+
           const event = await response.json()
           console.log("Datos recibidos de la API:", event)
 
           if (!event) throw new Error("Evento no encontrado")
 
-          const utcDate = new Date(event.dateTime)
-          const localDateTime = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000)
-            .toISOString()
-            .slice(0, 16)
-          const dateTimeLocal = event.dateTime ? localDateTime : ""
+          // Usar la nueva función para formatear la fecha
+          const dateTimeFormatted = formatDateTimeForInput(event.dateTime)
           const endTimeFormatted = event.endTime ? event.endTime.substring(0, 5) : "13:00"
 
           const formattedEvent = {
             title: event.title || "",
             description: event.description || "",
-            dateTime: dateTimeLocal,
+            dateTime: dateTimeFormatted,
             endTime: endTimeFormatted,
             location: event.location || "",
             image: event.image || "https://via.placeholder.com/800x400?text=Imagen+del+Evento",
@@ -154,6 +176,7 @@ export function EventForm({ eventId }: EventFormProps) {
           setLoading(false)
         }
       }
+
       fetchEvent()
     }
   }, [eventId, form, toast])
@@ -185,8 +208,8 @@ export function EventForm({ eventId }: EventFormProps) {
   const handleSaveClick = async () => {
     try {
       setLoading(true)
-
       const isValid = await form.trigger()
+
       if (!isValid) {
         console.log("Formulario inválido:", form.formState.errors)
         toast({
@@ -212,7 +235,8 @@ export function EventForm({ eventId }: EventFormProps) {
         return
       }
 
-      const dateTimeISO = data.dateTime
+      // Convertir la fecha local a formato ISO para el servidor
+      const dateTimeISO = formatDateTimeForServer(data.dateTime)
 
       // Preparar datos para enviar al backend
       const dataToSend = {
@@ -302,6 +326,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="description"
@@ -315,6 +340,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 </FormItem>
               )}
             />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -330,6 +356,7 @@ export function EventForm({ eventId }: EventFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="endTime"
@@ -344,6 +371,7 @@ export function EventForm({ eventId }: EventFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="location"
@@ -359,54 +387,6 @@ export function EventForm({ eventId }: EventFormProps) {
               />
             </div>
 
-            {/* Campos opcionales comentados 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="capacity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Capacidad <span className="text-muted-foreground">(Opcional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="Ej: 100 (dejar vacío = sin límite)"
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormDescription>Número máximo de participantes (opcional)</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Precio <span className="text-muted-foreground">(Opcional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="Ej: 25.50 (dejar vacío = gratis)"
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormDescription>Precio en USD (opcional - vacío = evento gratuito)</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>*/}
             <div>
               <FormField
                 control={form.control}
@@ -445,6 +425,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="logo"
@@ -459,6 +440,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 </FormItem>
               )}
             />
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -473,6 +455,7 @@ export function EventForm({ eventId }: EventFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="logo2"
@@ -486,6 +469,7 @@ export function EventForm({ eventId }: EventFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="logo3"
@@ -500,6 +484,7 @@ export function EventForm({ eventId }: EventFormProps) {
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="trailerUrl"
