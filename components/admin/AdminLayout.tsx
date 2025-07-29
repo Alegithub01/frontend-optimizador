@@ -44,7 +44,7 @@ const getNavigationForRole = (role: string) => {
     { name: 'Productos', href: '/admin/products', icon: Package, roles: ['admin'] },
     { name: 'Cursos', href: '/admin/cursos', icon: GraduationCap, roles: ['admin'] },
     { name: 'Nuevo Producto', href: '/admin/products/new', icon: Plus, roles: ['admin'] },
-    { name: 'Estadísticas', href: '/admin/stats', icon: BarChart3, roles: ['admin'] },
+    { name: 'Optikids', href: '/admin/optikids', icon: BarChart3, roles: ['admin'] },
     { name: 'Usuarios', href: '/admin/users', icon: Users, roles: ['admin'] },
     { name: 'Configuración', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];

@@ -49,12 +49,12 @@ const adminFeatures = [
     stats: 'usuarios'
   },
   {
-    title: 'Estadísticas',
-    description: 'Análisis detallado del inventario y rendimiento',
+    title: 'Optikids',
+    description: 'Crea nuevos proyectos optkids para diferentes paises',
     icon: BarChart3,
-    href: '/admin/stats',
+    href: '/admin/optikids',
     color: 'bg-orange-500',
-    stats: 'reportes'
+    stats: 'optikids'
   },
   {
     title: 'Ventas Manuales',
