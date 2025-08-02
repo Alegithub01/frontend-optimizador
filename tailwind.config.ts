@@ -55,6 +55,7 @@ const config: Config = {
           400: "#4ADE80",
           500: "#22C55E",
           600: "#16A34A",
+          0:"#6BCE44",
         },
         purple: {
           400: "#C084FC",
@@ -73,7 +74,14 @@ const config: Config = {
           3:"#404040",
           4:"#272727",
           5:"#747474",
-          6:"#F3F3F3",        
+          6:"#F3F3F3",
+          7:"#535353",
+        },
+        skyblue: {
+          0:"#018EFA",
+        },
+        red: {
+          0:"#FF0353",
         },
       },
       borderRadius: {
@@ -84,6 +92,8 @@ const config: Config = {
 
       fontFamily: {
         sans: ['Montserrat', 'ui-sans-serif', 'system-ui'],
+        anton: ['"Anton"', 'sans-serif'],
+        baloo: ['"Baloo 2"', 'cursive'],
         },
     },
   },

@@ -8,6 +8,8 @@ export interface Optikids {
   bandera: string
   videoTutorialUrl?: string
   lessons?: Lesson[]
+  decoracion1?: string // Mantener para el diseño de Figma
+  decoracion2?: string // Mantener para el diseño de Figma
 }
 
 export interface Lesson {

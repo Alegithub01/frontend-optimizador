@@ -2,42 +2,64 @@
 
 type TranslationKey = "enter" | "lets_go" | "video_tutorial"
 
-const translations: Record<string, Record<TranslationKey, string>> = {
+const languageTranslations: Record<string, Record<TranslationKey, string>> = {
   ES: {
-    // Spanish (default for many Latin American countries)
     enter: "Ingresar",
     lets_go: "¡VAMOS!",
     video_tutorial: "VIDEO TUTORIAL",
   },
-  AR: {
-    // Argentina (example, can be same as ES or specific)
-    enter: "Ingresar",
-    lets_go: "¡VAMOS!",
-    video_tutorial: "VIDEO TUTORIAL",
-  },
-  BO: {
-    // Bolivia (example)
-    enter: "Ingresar",
-    lets_go: "¡VAMOS!",
-    video_tutorial: "VIDEO TUTORIAL",
-  },
-  US: {
-    // United States
+  EN: {
     enter: "Enter",
     lets_go: "LET'S GO!",
     video_tutorial: "VIDEO TUTORIAL",
   },
   RU: {
-    // Russia
-    enter: "Войти", // Voyti
-    lets_go: "ПОЕХАЛИ!", // Poyekhali
-    video_tutorial: "ВИДЕО УРОК", // Video Urok
+    enter: "Войти",
+    lets_go: "ПОЕХАЛИ!",
+    video_tutorial: "ВИДЕО УРОК",
   },
-  // Add more country codes and their translations as needed
+  ZH: {
+    enter: "进入",
+    lets_go: "开始吧！",
+    video_tutorial: "视频教程",
+  },
+  JA: {
+    enter: "入る",
+    lets_go: "さあ行こう！",
+    video_tutorial: "ビデオチュートリアル",
+  },
+  KO: {
+    enter: "입장",
+    lets_go: "가자!",
+    video_tutorial: "비디오 튜토리얼",
+  },
+}
+
+const countryToLanguage: Record<string, string> = {
+  // Español
+  AR: "ES", BO: "ES", CL: "ES", CO: "ES", CR: "ES", CU: "ES", DO: "ES", EC: "ES",
+  SV: "ES", GT: "ES", HN: "ES", MX: "ES", NI: "ES", PA: "ES", PY: "ES", PE: "ES",
+  PR: "ES", ES: "ES", UY: "ES", VE: "ES",
+
+  // Inglés
+  US: "EN", GB: "EN", CA: "EN", AU: "EN", NZ: "EN", IE: "EN", ZA: "EN",
+
+  // Ruso
+  RU: "RU", BY: "RU", KZ: "RU", UA: "RU",
+
+  // Chino (Mandarín)
+  CN: "ZH", TW: "ZH", HK: "ZH", SG: "ZH", MO: "ZH",
+
+  // Japonés
+  JP: "JA",
+
+  // Coreano
+  KR: "KO",
 }
 
 export function getTranslation(countryCode: string, key: TranslationKey): string {
-  const upperCaseCode = countryCode.toUpperCase()
-  const countryTranslations = translations[upperCaseCode] || translations["ES"] // Fallback to Spanish
-  return countryTranslations[key] || key // Fallback to key itself if translation not found
+  const upperCountryCode = countryCode.toUpperCase()
+  const langCode = countryToLanguage[upperCountryCode] || "ES" // fallback a Español
+  const translations = languageTranslations[langCode] || languageTranslations["ES"]
+  return translations[key] || key
 }
