@@ -76,6 +76,7 @@ const config: Config = {
           5:"#747474",
           6:"#F3F3F3",
           7:"#535353",
+          8:"#656565"
         },
         skyblue: {
           0:"#018EFA",
@@ -94,6 +95,9 @@ const config: Config = {
         sans: ['Montserrat', 'ui-sans-serif', 'system-ui'],
         anton: ['"Anton"', 'sans-serif'],
         baloo: ['"Baloo 2"', 'cursive'],
+        amsipro: ['"AmsiPro"', 'sans-serif'],
+        amsiprocondultra: ['"AmsiProCondUltra"', 'sans-serif'],
+        amsipronarwultra: ['"AmsiProNarwUltra"', 'sans-serif'],
         },
     },
   },

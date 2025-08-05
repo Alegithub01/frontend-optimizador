@@ -322,57 +322,70 @@ export function OptikidsForm({ initialOptikids, isNew = false }: OptikidsFormPro
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Nombre</Label>
-            <Input id="name" name="name" value={optikidsData.name || ""} onChange={handleChange} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="descripcion1">Descripción 1</Label>
-            <Textarea
-              id="descripcion1"
-              name="descripcion1"
-              value={optikidsData.descripcion1 || ""}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="descripcion2">Descripción 2</Label>
-            <Textarea
-              id="descripcion2"
-              name="descripcion2"
-              value={optikidsData.descripcion2 || ""}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="portada1">Portada 1 URL</Label>
-            <Input id="portada1" name="portada1" value={optikidsData.portada1 || ""} onChange={handleChange} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="portada2">Portada 2 URL</Label>
-            <Input id="portada2" name="portada2" value={optikidsData.portada2 || ""} onChange={handleChange} />
-          </div>
+  <div className="grid gap-2">
+    <Label htmlFor="name">Nombre</Label>
+    <Input id="name" name="name" value={optikidsData.name || ""} onChange={handleChange} />
+  </div>
 
-          {/* Aquí reemplazamos input bandera por select */}
-          <div className="grid gap-2">
-            <Label htmlFor="bandera">País</Label>
-            <select
-              id="bandera"
-              name="bandera"
-              value={optikidsData.bandera || ""}
-              onChange={handleChange}
-              className="rounded border border-gray-300 px-3 py-2"
-            >
-              <option value="">Selecciona un país</option>
-              {countries.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-          </div>
+  <div className="grid gap-2">
+    <Label htmlFor="descripcion1">Descripción 1</Label>
+    <Textarea id="descripcion1" name="descripcion1" value={optikidsData.descripcion1 || ""} onChange={handleChange} />
+  </div>
 
-        </CardContent>
+  <div className="grid gap-2">
+    <Label htmlFor="descripcion2">Descripción 2</Label>
+    <Textarea id="descripcion2" name="descripcion2" value={optikidsData.descripcion2 || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="portada1">Portada 1 URL</Label>
+    <Input id="portada1" name="portada1" value={optikidsData.portada1 || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="videoTutorialUrl">Video Tutorial URL</Label>
+    <Input id="videoTutorialUrl" name="videoTutorialUrl" value={optikidsData.videoTutorialUrl || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="whatsText">Texto WhatsApp</Label>
+    <Input id="whatsText" name="whatsText" value={optikidsData.whatsText || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="whatsUrl">Enlace WhatsApp</Label>
+    <Input id="whatsUrl" name="whatsUrl" value={optikidsData.whatsUrl || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="snapText">Texto Snap</Label>
+    <Input id="snapText" name="snapText" value={optikidsData.snapText || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="snapUrl">Enlace Snap</Label>
+    <Input id="snapUrl" name="snapUrl" value={optikidsData.snapUrl || ""} onChange={handleChange} />
+  </div>
+
+  <div className="grid gap-2">
+    <Label htmlFor="bandera">País</Label>
+    <select
+      id="bandera"
+      name="bandera"
+      value={optikidsData.bandera || ""}
+      onChange={handleChange}
+      className="rounded border border-gray-300 px-3 py-2"
+    >
+      <option value="">Selecciona un país</option>
+      {countries.map((country) => (
+        <option key={country.code} value={country.code}>
+          {country.name}
+        </option>
+      ))}
+    </select>
+  </div>
+</CardContent>
+
         <CardFooter className="flex justify-between items-center">
           <Button variant="outline" onClick={handleAddLesson} disabled={!optikidsData.id}>
             <PlusCircle className="mr-2 h-4 w-4" />

@@ -71,7 +71,6 @@ html {
   pointer-events: none !important;
 }
 
-
 /* Estilos para los controles personalizados */
 .custom-video-controls {
   position: absolute;
@@ -98,3 +97,44 @@ html {
 .custom-mute-button:hover {
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
+
+/* -------------------- */
+/* 🎨 Amsi Pro Font Face */
+/* -------------------- */
+
+@font-face {
+  font-family: 'AmsiPro';
+  src: url('/EM-Amsi-Pro-Font-Family/OTF/AmsiPro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AmsiPro';
+  src: url('/EM-Amsi-Pro-Font-Family/OTF/AmsiPro-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AmsiPro';
+  src: url('/EM-Amsi-Pro-Font-Family/OTF/AmsiPro-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AmsiProCondUltra';
+  src: url('/EM-Amsi-Pro-Font-Family/OTF/AmsiProCond-Ultra.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'AmsiProNarwUltra';
+  src: url('/EM-Amsi-Pro-Font-Family/OTF/AmsiProNarw-Ultra.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+

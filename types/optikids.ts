@@ -4,9 +4,12 @@ export interface Optikids {
   descripcion1?: string
   descripcion2?: string
   portada1?: string
-  portada2?: string
   bandera: string
   videoTutorialUrl?: string
+  whatsUrl:string
+  whatsText:string
+  snapUrl:string
+  snapText:string
   lessons?: Lesson[]
   decoracion1?: string // Mantener para el diseño de Figma
   decoracion2?: string // Mantener para el diseño de Figma
@@ -21,6 +24,8 @@ export interface Lesson {
   urlIos?: string
   urlVideo?: string
   urlSnap?: string
+  urlBg?: string
+  urlImage?: string
   optikidsId: number // This is for the DTO when creating/updating a lesson
 }
 
@@ -29,9 +34,12 @@ export interface CreateOptikidsDto {
   descripcion1?: string
   descripcion2?: string
   portada1?: string
-  portada2?: string
   bandera: string
   videoTutorialUrl?: string
+  whatsUrl:string
+  whatsText:string
+  snapUrl:string
+  snapText:string
 }
 
 export interface UpdateOptikidsDto extends Partial<CreateOptikidsDto> {}
@@ -44,6 +52,8 @@ export interface CreateLessonDto {
   urlIos?: string
   urlVideo?: string
   urlSnap?: string
+  urlBg?: string
+  urlImage?: string
   optikidsId: number
 }
 
