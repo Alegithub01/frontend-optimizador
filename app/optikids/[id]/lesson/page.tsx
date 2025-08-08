@@ -1,75 +1,95 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { LessonCard } from "@/components/optikids/lesson-card"
-import type { Lesson, Optikids } from "@/types/optikids" // Import Optikids type
-import { api } from "@/lib/api"
-import Image from "next/image" // Import Image
-import { getTranslation } from "@/lib/translations" // Import getTranslation
+import { useState, useEffect } from "react";
+import { LessonCard } from "@/components/optikids/lesson-card";
+import type { Lesson, Optikids } from "@/types/optikids"; // Import Optikids type
+import { api } from "@/lib/api";
+import Image from "next/image"; // Import Image
+import { getTranslation } from "@/lib/translations"; // Import getTranslation
 
 const gradientClasses = [
   "bg-gradient-to-r from-[#007bff] to-[#00c6ff]",
   "bg-gradient-to-r from-[#28a745] to-[#20c997]",
   "bg-gradient-to-r from-[#6f42c1] to-[#e83e8c]",
   "bg-gradient-to-r from-[#fd7e14] to-[#dc3545]",
-]
+];
 
 interface LessonPageProps {
   params: {
-    id: string // El ID del Optikids de la URL
-  }
+    id: string; // El ID del Optikids de la URL
+  };
 }
 
 export default function LessonPage({ params }: LessonPageProps) {
-  const [lessons, setLessons] = useState<Lesson[]>([])
-  const [optikids, setOptikids] = useState<Optikids | null>(null) // State for optikids data
-  const [loadingLessons, setLoadingLessons] = useState(true)
-  const [loadingOptikids, setLoadingOptikids] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [optikids, setOptikids] = useState<Optikids | null>(null); // State for optikids data
+  const [loadingLessons, setLoadingLessons] = useState(true);
+  const [loadingOptikids, setLoadingOptikids] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("LessonPage - params.id:", params.id) // Debugging
+    console.log("LessonPage - params.id:", params.id); // Debugging
     const fetchOptikidsData = async () => {
       try {
-        setLoadingOptikids(true)
-        const data = await api.get<Optikids>(`/optikids/${params.id}`)
-        setOptikids(data)
-        console.log("LessonPage - Fetched Optikids data:", data) // Debugging
+        setLoadingOptikids(true);
+        const data = await api.get<Optikids>(`/optikids/${params.id}`);
+        setOptikids(data);
+        console.log("LessonPage - Fetched Optikids data:", data); // Debugging
       } catch (err: any) {
-        console.error(`LessonPage - Failed to fetch Optikids data for ID ${params.id}:`, err)
-        setError(err.message || "No se pudo cargar la información de Optikids.")
+        console.error(
+          `LessonPage - Failed to fetch Optikids data for ID ${params.id}:`,
+          err
+        );
+        setError(
+          err.message || "No se pudo cargar la información de Optikids."
+        );
       } finally {
-        setLoadingOptikids(false)
+        setLoadingOptikids(false);
       }
-    }
-    fetchOptikidsData()
-  }, [params.id])
+    };
+    fetchOptikidsData();
+  }, [params.id]);
 
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        setLoadingLessons(true)
-        const fetchedLessons: Lesson[] = await api.get(`/optikids/${params.id}/lessons`)
-        setLessons(fetchedLessons)
-      } catch (err) {
-        console.error(`LessonPage - Failed to fetch lessons for Optikids ID ${params.id}:`, err)
-        setError("No se pudieron cargar las lecciones. Inténtalo de nuevo más tarde.")
-      } finally {
-        setLoadingLessons(false)
-      }
-    }
-    fetchLessons()
-  }, [params.id])
+        setLoadingLessons(true);
+        const fetchedLessons: Lesson[] = await api.get(
+          `/optikids/${params.id}/lessons`
+        );
 
-  const loading = loadingLessons || loadingOptikids
-  const lang = optikids?.bandera || "ES" // Use optikids.bandera for translation
+        // Ordenar por id ascendente (más antiguo primero)
+        const sorted = [...fetchedLessons].sort((a, b) => {
+          const aId = typeof a.id === "string" ? Number(a.id) : a.id;
+          const bId = typeof b.id === "string" ? Number(b.id) : b.id;
+          return aId - bId;
+        });
+
+        setLessons(sorted);
+      } catch (err) {
+        console.error(
+          `LessonPage - Failed to fetch lessons for Optikids ID ${params.id}:`,
+          err
+        );
+        setError(
+          "No se pudieron cargar las lecciones. Inténtalo de nuevo más tarde."
+        );
+      } finally {
+        setLoadingLessons(false);
+      }
+    };
+    fetchLessons();
+  }, [params.id]);
+
+  const loading = loadingLessons || loadingOptikids;
+  const lang = optikids?.bandera || "ES"; // Use optikids.bandera for translation
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 md:px-6 lg:px-8 bg-gray-50 min-h-screen">
         <p className="text-gray-600 text-lg">Cargando lecciones...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -77,15 +97,17 @@ export default function LessonPage({ params }: LessonPageProps) {
       <div className="flex flex-col items-center justify-center py-8 px-4 md:px-6 lg:px-8 bg-gray-50 min-h-screen">
         <p className="text-red-600 text-lg">{error}</p>
       </div>
-    )
+    );
   }
 
   if (lessons.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 md:px-6 lg:px-8 bg-gray-50 min-h-screen">
-        <p className="text-gray-600 text-lg">No hay lecciones disponibles para este Optikids.</p>
+        <p className="text-gray-600 text-lg">
+          No hay lecciones disponibles para este Optikids.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,7 +125,7 @@ export default function LessonPage({ params }: LessonPageProps) {
         {/* Added hidden md:block */}
         {getTranslation(lang, "recommend_mobile_ar")}
       </p>
-      <div className="grid gap-16 w-full max-w-screen-lg px-4 md:px-6 lg:px-8 mt-16 md:mt-0">
+      <div className="grid gap-24 w-full max-w-screen-lg px-4 md:px-6 lg:px-8 mt-16 md:mt-0">
         {lessons.map((lesson, index) => (
           <LessonCard
             key={lesson.id}
@@ -116,7 +138,7 @@ export default function LessonPage({ params }: LessonPageProps) {
       </div>
 
       {/* Footer completo sin espacios */}
-      <div className="w-full relative mt-auto">
+      <div className="w-full relative mt-32">
         {" "}
         {/* mt-auto pushes footer to bottom */}
         {/* Césped pegado justo encima del fondo verde */}
@@ -133,8 +155,19 @@ export default function LessonPage({ params }: LessonPageProps) {
           <div className="text-white font-baloo font-black text-sm md:text-lg flex flex-col gap-2">
             <span className="text-xl font-baloo">Contacto</span>
             {optikids?.whatsUrl && (
-              <a href={optikids.whatsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                <Image src="/optikids/whatsico.svg" alt="WhatsApp" width={24} height={24} className="w-6 h-6" />
+              <a
+                href={optikids.whatsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <Image
+                  src="/optikids/whatsico.svg"
+                  alt="WhatsApp"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
+                />
                 <span>{optikids.whatsText || "WhatsApp"}</span>
               </a>
             )}
@@ -146,8 +179,16 @@ export default function LessonPage({ params }: LessonPageProps) {
                   rel="noopener noreferrer"
                   className="absolute md:bottom-[20px] w-full flex justify-start md:justify-center"
                 >
-                  <Image src="/optikids/snapico.svg" alt="Snapchat" width={24} height={24} className="w-6 h-6" />
-                  <span className="ml-1">{optikids.snapText || "Snapchat"}</span>
+                  <Image
+                    src="/optikids/snapico.svg"
+                    alt="Snapchat"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                  <span className="ml-1">
+                    {optikids.snapText || "Snapchat"}
+                  </span>
                 </a>
               </div>
             )}
@@ -165,5 +206,5 @@ export default function LessonPage({ params }: LessonPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

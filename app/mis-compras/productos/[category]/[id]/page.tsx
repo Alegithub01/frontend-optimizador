@@ -228,7 +228,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
               {product?.name?.trim().toLowerCase() === "escuela financiera: optikids" && (
                 <div className="mt-4">
                   <a
-                    href="https://optimizadorbo.com/optikids/"
+                    href="https://sanatoriumbusiness.com/optikids/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -494,7 +494,7 @@ export default function ProductViewerPage({ params }: ProductViewerPageProps) {
 
             {/* Botón principal */}
             <a
-              href="https://optimizadorbo.com/optikids/"
+              href="https://sanatoriumbusiness.com/optikids/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full text-sm transition-all duration-200"

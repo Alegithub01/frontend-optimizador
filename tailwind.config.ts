@@ -98,6 +98,7 @@ const config: Config = {
         amsipro: ['"AmsiPro"', 'sans-serif'],
         amsiprocondultra: ['"AmsiProCondUltra"', 'sans-serif'],
         amsipronarwultra: ['"AmsiProNarwUltra"', 'sans-serif'],
+        montserrat: ["var(--font-montserrat)"],
         },
     },
   },

@@ -52,9 +52,9 @@ export default function OptikidsDetailPage() {
     <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Sección superior con fondo azul, logo, descripción y portada1 */}
       <div className="relative flex flex-col items-center bg-skyblue-0 flex-grow justify-end pb-[40px]">
-        <p className="mb-10"></p>
+        
         {/* Título "Optikids" como texto */}
-        <h1 className="text-white text-8xl md:text-9xl font-amsiprocondultra font-bold mb-2 text-center">
+        <h1 className="text-white text-8xl md:text-9xl font-amsiprocondultra font-bold mb-2 text-center mt-[-100px] md:mt-0">
           Optikids
         </h1>
         {/* Descripción "Aprendamos sobre finanzas" */}
@@ -65,13 +65,13 @@ export default function OptikidsDetailPage() {
         {/* Contenedor de la imagen principal (portada1) */}
         {optikids.portada1 && (
           <div className="relative w-full flex justify-center items-end h-full ">
-            <div className="w-full h-[350px] md:h-[400px] lg:h-[500px] max-w-[400px] md:max-w-[500px] lg:max-w-[600px] overflow-hidden rounded-xl relative z-10">
+            <div className="w-full h-[350px] md:h-[400px] lg:h-[600px] max-w-[400px] md:max-w-[500px] lg:max-w-[600px] overflow-hidden rounded-xl relative z-10 translate-y-[40px]">
               <Image
                 src={optikids.portada1 || "/placeholder.svg"}
                 alt={`Portada de ${optikids.name}`}
                 width={979}
                 height={576}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full"
                 priority
               />
             </div>
@@ -79,7 +79,7 @@ export default function OptikidsDetailPage() {
             <div
               className="absolute -bottom-14 left-0 w-full h-[100px] bg-repeat-x bg-[length:auto_100%] z-20"
               style={{
-                backgroundImage: "url('/optikids/footer-grass-front.png')",
+                backgroundImage: "url('/optikids/image-grass.png')",
               }}
             />
           </div>

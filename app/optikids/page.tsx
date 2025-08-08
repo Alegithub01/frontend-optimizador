@@ -77,14 +77,14 @@ export default function OptikidsHomePage() {
               <Card className="relative rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 w-full mx-auto bg-white overflow-visible flex flex-col md:flex-row items-start">
                 {/* Imagen dentro del Card solo en desktop */}
                 <div className="hidden md:flex justify-center items-center md:w-[300px] md:h-[300px] relative z-40">
-                  <div className="w-[300px] lg:h-[260px] relative overflow-hidden">
+                  <div className="w-[300px] relative overflow-hidden">
                     <Image
                       src={optikids.portada1 || "/placeholder.svg"}
                       alt={`Optikids ${optikids.name}`}
                       width={300}
-                      height={600} // Ajustá esto según la proporción que querés
-                      className="object-cover object-top"
+                      height={600}
                       priority
+                      className="object-cover object-top"
                     />
                   </div>
                 </div>

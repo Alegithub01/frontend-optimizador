@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
       <html lang="es">
-        <body className={inter.className}>
+        <body className="font-montserrat">
           <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
               <LayoutWrapper>{children}</LayoutWrapper> {/* Use the wrapper here */}
