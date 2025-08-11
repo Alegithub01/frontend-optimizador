@@ -152,8 +152,8 @@ export default function LessonPage({ params }: LessonPageProps) {
         </div>
         {/* Zona de contacto con fondo verde */}
         <div className="w-full relative z-10 bg-green-0 py-6 px-4 md:px-10">
-          <div className="text-white font-baloo font-black text-sm md:text-lg flex flex-col gap-2">
-            <span className="text-xl font-baloo">Contacto</span>
+          <div className="text-white font-black text-sm md:text-lg flex flex-col gap-2">
+            <span className="text-xl">Contacto</span>
             {optikids?.whatsUrl && (
               <a
                 href={optikids.whatsUrl}
