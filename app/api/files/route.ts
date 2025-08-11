@@ -34,7 +34,6 @@ function sanitizeFilename(name: string) {
 export async function POST(request: Request) {
   try {
     await ensureDirExists(UPLOAD_DIR)
-
     const formData = await request.formData()
     const file = formData.get("file") as File | null
     const oldFilePath = (formData.get("oldFilePath") as string | null) || null
@@ -79,7 +78,7 @@ export async function POST(request: Request) {
     })
 
     // Return the public path to access the file
-    return NextResponse.json({ filePath: publicPath }, { status: 200 }) // Uses NextResponse.json to produce a JSON response. [^1]
+    return NextResponse.json({ filePath: publicPath }, { status: 200 })
   } catch (error: any) {
     console.error("Error uploading file:", error)
     return NextResponse.json(
@@ -92,6 +91,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const { filePath } = await request.json()
+
     if (!filePath) {
       return NextResponse.json({ error: "File path is required." }, { status: 400 })
     }

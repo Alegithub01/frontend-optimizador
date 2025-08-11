@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Trash, Save } from "lucide-react" // Added UploadCloud icon
+import { Trash, Save, X } from "lucide-react" // Added X icon for delete buttons
 import type { Lesson, CreateLessonDto, UpdateLessonDto } from "@/types/optikids"
 import { api } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
@@ -32,6 +32,8 @@ export function LessonForm({
   const [iosFile, setIosFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(isNew) // Start in editing mode if it's a new lesson
+  const [deleteAndroidFile, setDeleteAndroidFile] = useState(false)
+  const [deleteIosFile, setDeleteIosFile] = useState(false)
 
   useEffect(() => {
     setLessonData(initialLesson || { optikidsId })
@@ -39,6 +41,8 @@ export function LessonForm({
     // Clear file inputs when initialLesson changes or it's a new lesson
     setAndroidFile(null)
     setIosFile(null)
+    setDeleteAndroidFile(false)
+    setDeleteIosFile(false)
   }, [initialLesson, optikidsId, isNew])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -46,8 +50,10 @@ export function LessonForm({
     if (files && files.length > 0) {
       if (name === "androidFile") {
         setAndroidFile(files[0])
+        setDeleteAndroidFile(false)
       } else if (name === "iosFile") {
         setIosFile(files[0])
+        setDeleteIosFile(false)
       }
     } else {
       setLessonData((prev) => ({ ...prev, [name]: value }))
@@ -72,6 +78,7 @@ export function LessonForm({
       const errorData = await res.json()
       throw new Error(errorData.error || "Failed to upload file.")
     }
+
     const data = await res.json()
     return data.filePath
   }, [])
@@ -96,6 +103,55 @@ export function LessonForm({
     }
   }, [])
 
+  const handleDeleteExistingFile = async (fileType: "android" | "ios") => {
+    setLoading(true)
+    try {
+      const filePath = fileType === "android" ? lessonData.urlAndroid : lessonData.urlIos
+      if (filePath) {
+        // Delete file from server
+        await deleteFile(filePath)
+
+        const updatedLessonData = {
+          ...lessonData,
+          [fileType === "android" ? "urlAndroid" : "urlIos"]: null,
+        }
+
+        // Update in database immediately if it's an existing lesson
+        if (typeof lessonData.id === "number") {
+          const savedLesson = await api.patch<Lesson>(
+            `/optikids/lessons/${lessonData.id}`,
+            updatedLessonData as UpdateLessonDto,
+          )
+          setLessonData(savedLesson)
+        } else {
+          // For new lessons, just update local state
+          setLessonData(updatedLessonData)
+        }
+
+        // Set delete flag for UI feedback
+        if (fileType === "android") {
+          setDeleteAndroidFile(true)
+        } else {
+          setDeleteIosFile(true)
+        }
+
+        toast({
+          title: "Archivo eliminado",
+          description: `El archivo ${fileType === "android" ? "Android" : "iOS"} ha sido eliminado exitosamente de la base de datos.`,
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error.message || `Hubo un error al eliminar el archivo ${fileType === "android" ? "Android" : "iOS"}.`,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSave = async () => {
     setLoading(true)
     try {
@@ -105,9 +161,10 @@ export function LessonForm({
       if (androidFile) {
         const newAndroidPath = await uploadFile(androidFile, initialLesson?.urlAndroid || null)
         updatedLessonData.urlAndroid = newAndroidPath || undefined
-      } else if (initialLesson && !androidFile && lessonData.urlAndroid === "") {
-        // If Android file was removed (input cleared)
-        await deleteFile(initialLesson.urlAndroid || "")
+      } else if (deleteAndroidFile || (initialLesson && !androidFile && lessonData.urlAndroid === "")) {
+        if (initialLesson?.urlAndroid && !deleteAndroidFile) {
+          await deleteFile(initialLesson.urlAndroid)
+        }
         updatedLessonData.urlAndroid = undefined // Set to undefined to clear in DB
       }
 
@@ -115,13 +172,15 @@ export function LessonForm({
       if (iosFile) {
         const newIosPath = await uploadFile(iosFile, initialLesson?.urlIos || null)
         updatedLessonData.urlIos = newIosPath || undefined
-      } else if (initialLesson && !iosFile && lessonData.urlIos === "") {
-        // If iOS file was removed (input cleared)
-        await deleteFile(initialLesson.urlIos || "")
+      } else if (deleteIosFile || (initialLesson && !iosFile && lessonData.urlIos === "")) {
+        if (initialLesson?.urlIos && !deleteIosFile) {
+          await deleteFile(initialLesson.urlIos)
+        }
         updatedLessonData.urlIos = undefined // Set to undefined to clear in DB
       }
 
       const isNewLessonInForm = typeof lessonData.id === "string" && String(lessonData.id).startsWith("new-")
+
       let savedLesson: Lesson
       let tempId: string | undefined
 
@@ -146,9 +205,11 @@ export function LessonForm({
             ([_, value]) => value !== "" && value !== null, // Also filter out nulls from file uploads if no file was selected
           ),
         ) as unknown as CreateLessonDto
+
         savedLesson = await api.post<Lesson>("/optikids/lessons", cleanedData as CreateLessonDto)
         toast({ title: "Lección creada", description: "La nueva lección ha sido creada exitosamente." })
       }
+
       setLessonData(savedLesson)
       onSaveSuccess(savedLesson, tempId) // Pass tempId if it was a new lesson
       setIsEditing(false)
@@ -170,12 +231,14 @@ export function LessonForm({
       onDeleteSuccess(lessonData.id)
       return
     }
+
     // For existing lessons, call the API
     if (typeof lessonData.id !== "number") {
       // Ensure it's a valid numeric ID for deletion
       toast({ title: "Error", description: "ID de lección inválido para eliminar.", variant: "destructive" })
       return
     }
+
     setLoading(true)
     try {
       // Delete associated files first
@@ -241,6 +304,7 @@ export function LessonForm({
               <Label htmlFor="urlImage">URL Imagen</Label>
               <Input id="urlImage" name="urlImage" value={lessonData.urlImage || ""} onChange={handleChange} />
             </div>
+
             {/* File input for Android */}
             <div className="grid gap-2">
               <Label htmlFor="androidFile">Archivo Android</Label>
@@ -251,30 +315,58 @@ export function LessonForm({
                 onChange={handleChange}
                 className="cursor-pointer"
               />
-              {lessonData.urlAndroid && !androidFile && (
-                <p className="text-xs text-gray-500">
-                  Archivo actual:{" "}
-                  <a href={lessonData.urlAndroid} target="_blank" rel="noopener noreferrer" className="underline">
-                    {lessonData.urlAndroid.split("/").pop()}
-                  </a>
-                </p>
+              {lessonData.urlAndroid && !androidFile && !deleteAndroidFile && (
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                  <p className="text-xs text-gray-500">
+                    Archivo actual:{" "}
+                    <a href={lessonData.urlAndroid} target="_blank" rel="noopener noreferrer" className="underline">
+                      {lessonData.urlAndroid.split("/").pop()}
+                    </a>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteExistingFile("android")}
+                    className="h-7 w-7 p-0 bg-red-500 hover:bg-red-600"
+                    title="Eliminar archivo Android"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
               {androidFile && <p className="text-xs text-gray-500">Nuevo archivo seleccionado: {androidFile.name}</p>}
+              {deleteAndroidFile && <p className="text-xs text-red-500 font-medium">✓ Archivo Android eliminado</p>}
             </div>
+
             {/* File input for iOS */}
             <div className="grid gap-2">
               <Label htmlFor="iosFile">Archivo iOS</Label>
               <Input id="iosFile" name="iosFile" type="file" onChange={handleChange} className="cursor-pointer" />
-              {lessonData.urlIos && !iosFile && (
-                <p className="text-xs text-gray-500">
-                  Archivo actual:{" "}
-                  <a href={lessonData.urlIos} target="_blank" rel="noopener noreferrer" className="underline">
-                    {lessonData.urlIos.split("/").pop()}
-                  </a>
-                </p>
+              {lessonData.urlIos && !iosFile && !deleteIosFile && (
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                  <p className="text-xs text-gray-500">
+                    Archivo actual:{" "}
+                    <a href={lessonData.urlIos} target="_blank" rel="noopener noreferrer" className="underline">
+                      {lessonData.urlIos.split("/").pop()}
+                    </a>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteExistingFile("ios")}
+                    className="h-7 w-7 p-0 bg-red-500 hover:bg-red-600"
+                    title="Eliminar archivo iOS"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
               {iosFile && <p className="text-xs text-gray-500">Nuevo archivo seleccionado: {iosFile.name}</p>}
+              {deleteIosFile && <p className="text-xs text-red-500 font-medium">✓ Archivo iOS eliminado</p>}
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="urlVideo">URL Video</Label>
               <Input id="urlVideo" name="urlVideo" value={lessonData.urlVideo || ""} onChange={handleChange} />
@@ -392,6 +484,8 @@ export function LessonForm({
                 setLessonData(initialLesson || { optikidsId })
                 setAndroidFile(null) // Clear file input state
                 setIosFile(null) // Clear file input state
+                setDeleteAndroidFile(false)
+                setDeleteIosFile(false)
               }
             }}
             disabled={loading}
