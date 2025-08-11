@@ -77,7 +77,7 @@ export default function OptikidsDetailPage() {
             </div>
             {/* Imagen del pasto - posicionada absolutamente en la parte inferior de esta sección azul */}
             <div
-              className="absolute -bottom-14 left-0 w-full h-[100px] bg-repeat-x bg-[length:auto_100%] z-20"
+              className="absolute -bottom-14 left-0 w-full h-[75px] md:h-[100px] bg-repeat-x bg-[length:auto_100%] z-20"
               style={{
                 backgroundImage: "url('/optikids/image-grass.png')",
               }}

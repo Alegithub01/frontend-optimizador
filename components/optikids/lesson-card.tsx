@@ -1,37 +1,53 @@
-"use client";
-
-import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Camera, PlayCircle } from 'lucide-react';
-import type { Lesson } from "@/types/optikids";
-import { getTranslation } from "@/lib/translations";
-import { cn } from "@/lib/utils";
+"use client"
+import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Camera, PlayCircle } from "lucide-react"
+import type { Lesson } from "@/types/optikids"
+import { getTranslation } from "@/lib/translations"
+import { cn } from "@/lib/utils"
+import { useMemo } from "react"
 
 interface LessonCardProps {
-  lesson: Lesson;
-  gradientClass: string;
-  countryCode: string;
-  optikidsId: string; // Added optikidsId prop
+  lesson: Lesson
+  gradientClass: string
+  countryCode: string
+  optikidsId: string // Added optikidsId prop
 }
 
-export function LessonCard({
-  lesson,
-  gradientClass,
-  countryCode,
-  optikidsId,
-}: LessonCardProps) {
-  const imageSizeMobile = 200; // Tamaño de la imagen para el posicionamiento en px en móvil
-  const imageSizeDesktop = 300; // Tamaño de la imagen para el posicionamiento en px en desktop
-  const MOBILE_TOP_CUSHION = 12; // menor = más pegado, mayor = más separación
+export function LessonCard({ lesson, gradientClass, countryCode, optikidsId }: LessonCardProps) {
+  const imageSizeMobile = 200 // Tamaño de la imagen para el posicionamiento en px en móvil
+  const imageSizeDesktop = 300 // Tamaño de la imagen para el posicionamiento en px en desktop
+  const MOBILE_TOP_CUSHION = 12 // menor = más pegado, mayor = más separación
+
+  const normalizePublicPath = (url?: string) => {
+    if (!url) return undefined
+    return url.startsWith("/") ? url : `/${url}`
+  }
+
+  const fixCommonTypos = (url?: string) => {
+    if (!url) return undefined
+    // Corrige el typo más común en la carpeta
+    return url.replace("/optikids/descartgable/", "/optikids/descargable/")
+  }
+
+  const ensureDownloadPath = (url?: string) => normalizePublicPath(fixCommonTypos(url))
+
+  const androidHref = lesson.urlAndroid
+  const iosHref = lesson.urlIos
+
+  const cacheBuster = useMemo(() => Date.now().toString(), [])
+  const withBuster = (url?: string) => (url ? `${url}${url.includes("?") ? "&" : "?"}v=${cacheBuster}` : undefined)
+
+  const androidDownloadHref = withBuster(androidHref)
+  const iosDownloadHref = withBuster(iosHref)
 
   // Calculamos los valores directamente (basados en tamaño móvil)
-  const marginTopForCard = imageSizeMobile / 3; // 1/3 de la imagen sobresale
-  // Antes: (imageSizeMobile * 2) / 3 + 16
+  const marginTopForCard = imageSizeMobile / 3 // 1/3 de la imagen sobresale
   // Ahora: lo mínimo para esquivar la imagen dentro de la tarjeta + 8px de colchón
-  const paddingTopForContent = Math.max(0, imageSizeMobile - marginTopForCard - MOBILE_TOP_CUSHION);
+  const paddingTopForContent = Math.max(0, imageSizeMobile - marginTopForCard - MOBILE_TOP_CUSHION)
 
-  console.log("LessonCard - optikidsId prop:", optikidsId, "lesson.id:", lesson.id); // Debugging
+  console.log("LessonCard - optikidsId prop:", optikidsId, "lesson.id:", lesson.id) // Debugging
 
   return (
     // Contenedor principal para la tarjeta y la imagen que sobresale
@@ -65,7 +81,7 @@ export function LessonCard({
           // Alturas mínimas por defecto, pero permitiendo crecimiento
           "min-h-[328px] md:min-h-[280px]",
           "flex flex-col md:flex-row items-center md:items-stretch",
-          "md:mt-0" // Resetea el margin-top en escritorio
+          "md:mt-0", // Resetea el margin-top en escritorio
         )}
         style={{
           // Empuja la tarjeta hacia abajo en móvil para dejar espacio a la imagen que sobresale
@@ -89,48 +105,34 @@ export function LessonCard({
             <span className="text-sm font-semibold bg-black/30 px-2 py-1 rounded-full mb-1 md:mb-2">
               {lesson.etiqueta}
             </span>
-            <h2 className="text-xl font-bold mb-2 break-words hyphens-auto leading-tight">
-              {lesson.titulo}
-            </h2>
+            <h2 className="text-xl font-bold mb-2 break-words hyphens-auto leading-tight">{lesson.titulo}</h2>
             <p className="text-sm mb-4 break-words hyphens-auto">{lesson.descripcion}</p>
 
             <div className="flex flex-nowrap justify-center gap-1 overflow-x-auto pb-2">
-              {/* Botón de Descargar Android */}
-              {lesson.urlAndroid && (
-                <Link href={lesson.urlAndroid} target="_blank" rel="noopener noreferrer">
+              {/* Botón de Descargar Android (móvil) */}
+              {androidDownloadHref && (
+                <a href={androidDownloadHref} download>
                   <Button
                     variant="secondary"
                     className="gap-1 px-1 h-8 text-xs flex-shrink-0 bg-white text-gray-8 rounded-xl"
                   >
                     {getTranslation(countryCode, "descargar")}{" "}
-                    <Image
-                      src="/optikids/android.svg"
-                      alt="Android"
-                      width={16}
-                      height={16}
-                      className="w-5 h-5"
-                    />
+                    <Image src="/optikids/android.svg" alt="Android" width={16} height={16} className="w-5 h-5" />
                   </Button>
-                </Link>
+                </a>
               )}
 
-              {/* Botón de Descargar iOS */}
-              {lesson.urlIos && (
-                <Link href={lesson.urlIos} target="_blank" rel="noopener noreferrer">
+              {/* Botón de Descargar iOS (móvil) */}
+              {iosDownloadHref && (
+                <a href={iosDownloadHref} download>
                   <Button
                     variant="secondary"
                     className="gap-1 px-1 h-8 text-xs flex-shrink-0 bg-white text-gray-8 rounded-xl"
                   >
                     {getTranslation(countryCode, "descargar")}{" "}
-                    <Image
-                      src="/optikids/apple.svg"
-                      alt="IOS"
-                      width={16}
-                      height={16}
-                      className="w-6 h-6"
-                    />
+                    <Image src="/optikids/apple.svg" alt="IOS" width={16} height={16} className="w-6 h-6" />
                   </Button>
-                </Link>
+                </a>
               )}
 
               {/* Botón de Cámara */}
@@ -140,8 +142,7 @@ export function LessonCard({
                     variant="secondary"
                     className="gap-1 px-1 h-8 text-xs flex-shrink-0 bg-white text-gray-8 rounded-xl"
                   >
-                    {getTranslation(countryCode, "camara")}{" "}
-                    <Camera className="w-4 h-4 text-gray-8" />
+                    {getTranslation(countryCode, "camara")} <Camera className="w-4 h-4 text-gray-8" />
                   </Button>
                 </Link>
               )}
@@ -153,8 +154,7 @@ export function LessonCard({
                     variant="secondary"
                     className="gap-1 px-1 h-8 text-xs flex-shrink-0 bg-white text-gray-8 rounded-xl"
                   >
-                    {getTranslation(countryCode, "video")}{" "}
-                    <PlayCircle className="w-4 h-4 text-gray-8" />
+                    {getTranslation(countryCode, "video")} <PlayCircle className="w-4 h-4 text-gray-8" />
                   </Button>
                 </Link>
               )}
@@ -166,46 +166,34 @@ export function LessonCard({
             <span className="text-sm font-semibold bg-black/30 px-2 py-1 rounded-full self-start mb-2">
               {lesson.etiqueta}
             </span>
-            <h2 className="text-2xl font-bold mb-2 break-words hyphens-auto leading-tight">
-              {lesson.titulo}
-            </h2>
+            <h2 className="text-2xl font-bold mb-2 break-words hyphens-auto leading-tight">{lesson.titulo}</h2>
             <p className="text-base mb-4 break-words hyphens-auto">{lesson.descripcion}</p>
 
             <div className="flex md:flex-nowrap flex-wrap gap-2">
-              {lesson.urlAndroid && (
-                <Link href={lesson.urlAndroid} target="_blank" rel="noopener noreferrer">
+              {/* Descargar Android (escritorio) */}
+              {androidDownloadHref && (
+                <a href={androidDownloadHref} download>
                   <Button
                     variant="secondary"
                     className="gap-1 md:h-8 md:shrink-0 whitespace-nowrap bg-white text-gray-8 rounded-xl"
                   >
                     {getTranslation(countryCode, "descargar")}
-                    <Image
-                      src="/optikids/android.svg"
-                      alt="Android"
-                      width={16}
-                      height={16}
-                      className="w-5 h-5"
-                    />
+                    <Image src="/optikids/android.svg" alt="Android" width={16} height={16} className="w-5 h-5" />
                   </Button>
-                </Link>
+                </a>
               )}
 
-              {lesson.urlIos && (
-                <Link href={lesson.urlIos} target="_blank" rel="noopener noreferrer">
+              {/* Descargar iOS (escritorio) */}
+              {iosDownloadHref && (
+                <a href={iosDownloadHref} download>
                   <Button
                     variant="secondary"
                     className="gap-1 md:h-8 md:shrink-0 whitespace-nowrap bg-white text-gray-8 rounded-xl"
                   >
                     {getTranslation(countryCode, "descargar")}{" "}
-                    <Image
-                      src="/optikids/apple.svg"
-                      alt="Ios"
-                      width={16}
-                      height={16}
-                      className="w-6 h-6"
-                    />
+                    <Image src="/optikids/apple.svg" alt="Ios" width={16} height={16} className="w-6 h-6" />
                   </Button>
-                </Link>
+                </a>
               )}
 
               {lesson.urlSnap && (
@@ -214,8 +202,7 @@ export function LessonCard({
                     variant="secondary"
                     className="gap-1 md:h-8 md:shrink-0 whitespace-nowrap bg-white text-gray-8 rounded-xl"
                   >
-                    {getTranslation(countryCode, "camara")}{" "}
-                    <Camera className="w-4 h-4 text-gray-8" />
+                    {getTranslation(countryCode, "camara")} <Camera className="w-4 h-4 text-gray-8" />
                   </Button>
                 </Link>
               )}
@@ -226,8 +213,7 @@ export function LessonCard({
                     variant="secondary"
                     className="gap-1 md:h-8 md:shrink-0 whitespace-nowrap bg-white text-gray-8 rounded-xl"
                   >
-                    {getTranslation(countryCode, "video")}{" "}
-                    <PlayCircle className="w-4 h-4 text-gray-8" />
+                    {getTranslation(countryCode, "video")} <PlayCircle className="w-4 h-4 text-gray-8" />
                   </Button>
                 </Link>
               )}
@@ -249,5 +235,5 @@ export function LessonCard({
         )}
       </div>
     </div>
-  );
+  )
 }
