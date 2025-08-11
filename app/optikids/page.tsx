@@ -35,8 +35,8 @@ export default function OptikidsHomePage() {
     const last = words.length > 1 ? words[words.length - 1] : "";
     return (
       <>
-        <span className="block font-medium">{first}</span>
-        {last && <span className="block font-black">{last}</span>}
+        <span className="block font-semibold">{first}</span>
+        {last && <span className="block font-extrablack extra-fat">{last}</span>}
       </>
     );
   };

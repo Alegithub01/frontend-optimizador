@@ -100,7 +100,12 @@ const config: Config = {
         amsipronarwultra: ['"AmsiProNarwUltra"', 'sans-serif'],
         montserrat: ["var(--font-montserrat)"],
         },
-    },
+            
+      fontWeight: {
+              extrablack: '950',
+              heavy: '1000'
+      }
+    }
   },
   plugins: [require("tailwindcss-animate")],
 }

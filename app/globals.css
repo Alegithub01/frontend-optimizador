@@ -99,6 +99,11 @@ html {
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
+.extra-fat {
+  -webkit-text-stroke: 1px currentColor; /* Engrosa con el mismo color */
+}
+
+
 /* -------------------- */
 /* 🎨 Amsi Pro Font Face */
 /* -------------------- */
