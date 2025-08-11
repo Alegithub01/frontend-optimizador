@@ -122,7 +122,7 @@ export default function Home() {
             <div className="w-full lg:w-[20%] lg:shrink-0 mb-8 lg:mb-12 flex flex-col justify-center text-center lg:text-left">
               <div className="mb-6 lg:mb-10">
                 <h2 className="text-lg font-medium text-orange-700">Programas y</h2>
-                <h3 className="text-3xl md:text-4xl lg:text-5xl text-black font-black">CURSOS</h3>
+                <h3 className="text-3xl md:text-4xl lg:text-5xl text-black font-extrablack">CURSOS</h3>
               </div>
 
               <p className="text-gray-3 mb-8 lg:mb-20">

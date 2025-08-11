@@ -23,7 +23,7 @@ const languageTranslations: Record<string, Record<TranslationKey, string>> = {
     video: "Video",
     start_adventure: "Aquí comienza tu aventura", // Traducción en español
     recommend_mobile_ar:
-      "Te recomendamos que ingreses a través de un celular para la experiencia de realidad aumentada", // Traducción en español
+      "Te recomendamos acceder desde tu celular para disfrutar la experiencia de realidad aumentada", // Traducción en español
   
   },
   EN: {
