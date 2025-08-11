@@ -45,7 +45,7 @@ export function LessonCard({ lesson, gradientClass, countryCode, optikidsId }: L
   // Calculamos los valores directamente (basados en tamaño móvil)
   const marginTopForCard = imageSizeMobile / 3 // 1/3 de la imagen sobresale
   // Ahora: lo mínimo para esquivar la imagen dentro de la tarjeta + 8px de colchón
-  const paddingTopForContent = Math.max(0, imageSizeMobile - marginTopForCard - MOBILE_TOP_CUSHION)
+  const paddingTopForContent = Math.max(0, imageSizeMobile - marginTopForCard - MOBILE_TOP_CUSHION - 50)
 
   console.log("LessonCard - optikidsId prop:", optikidsId, "lesson.id:", lesson.id) // Debugging
 

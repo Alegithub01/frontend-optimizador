@@ -117,7 +117,7 @@ export default function LessonPage({ params }: LessonPageProps) {
         className="w-full h-14 bg-repeat-x bg-[length:auto_100%]"
         style={{ backgroundImage: "url('/optikids/top-grass.png')" }}
       />
-      <h1 className="text-3xl md:text-4xl font-bold font-amsipronarwultra text-gray-800 mt-4 mb-2 text-center">
+      <h1 className="text-5xl md:text-4xl font-bold font-amsipronarwultra text-gray-800 mt-4 mb-2 text-center">
         {getTranslation(lang, "start_adventure")}
       </h1>
       <p className="text-gray-600 text-center mb-8 max-w-md hidden md:block">
@@ -125,7 +125,7 @@ export default function LessonPage({ params }: LessonPageProps) {
         {/* Added hidden md:block */}
         {getTranslation(lang, "recommend_mobile_ar")}
       </p>
-      <div className="grid gap-24 w-full max-w-screen-lg px-4 md:px-6 lg:px-8 mt-16 md:mt-0">
+      <div className="grid gap-24 w-full max-w-screen-lg px-4 md:px-6 lg:px-8 mt-20 md:mt-0">
         {lessons.map((lesson, index) => (
           <LessonCard
             key={lesson.id}

@@ -54,7 +54,7 @@ export default function OptikidsDetailPage() {
       <div className="relative flex flex-col items-center bg-skyblue-0 flex-grow justify-end pb-[40px]">
         
         {/* Título "Optikids" como texto */}
-        <h1 className="text-white text-8xl md:text-9xl font-amsiprocondultra font-bold mb-2 text-center mt-[-100px] md:mt-0">
+        <h1 className="text-white text-9xl md:text-9xl font-amsiprocondultra font-bold mb-2 text-center mt-[-100px] md:mt-0">
           Optikids
         </h1>
         {/* Descripción "Aprendamos sobre finanzas" */}
@@ -71,7 +71,7 @@ export default function OptikidsDetailPage() {
                 alt={`Portada de ${optikids.name}`}
                 width={979}
                 height={576}
-                className="w-full h-full"
+                className="w-full h-full object-contain"
                 priority
               />
             </div>
