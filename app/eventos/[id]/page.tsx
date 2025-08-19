@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, Calendar, MapPin, Clock, Users, Volume2, VolumeX, CheckCircle } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Calendar, MapPin, Clock, Users, CheckCircle } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
-import { useCurrency } from "@/hooks/use-currency"
 import VimeoPlayer from "@/components/VimeoPlayer"
 
 interface Event {
@@ -28,7 +27,7 @@ interface Event {
   logo2?: string
   logo3?: string
   trailerUrl?: string
-  redirectUrl:string
+  redirectUrl: string
 }
 
 interface EventPageProps {
@@ -144,10 +143,10 @@ export default function EventPage({ params }: EventPageProps) {
   const handleBuy = () => {
     if (!event) return
 
-    if (availableSpots <= 0) {
+    if (!isEventInFuture) {
       toast({
-        title: "Evento lleno",
-        description: "Ya no hay cupos disponibles para este evento.",
+        title: "Evento finalizado",
+        description: "Este evento ya se realizó.",
         variant: "destructive",
       })
       return
@@ -164,72 +163,6 @@ export default function EventPage({ params }: EventPageProps) {
 
     window.open(event.redirectUrl, "_blank")
   }
-
-
-  {/* para pasarela de pagos 
-  const handleBuy = async () => {
-    if (!event) return
-
-    if (availableSpots <= 0) {
-      toast({
-        title: "Evento lleno",
-        description: "Ya no hay cupos disponibles para este evento.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setPurchasing(true)
-    try {
-      const parsePrice = (price: string | number): number => {
-        if (typeof price === "string") return Number.parseFloat(price)
-        return price
-      }
-
-      const finalPrice = parsePrice(event.price)
-
-      if (!isAuthenticated) {
-        localStorage.setItem("pendingPurchaseEventId", eventId)
-        const redirectUrl = `/checkout?eventId=${eventId}`
-        router.push(`/login?redirect=${encodeURIComponent(redirectUrl)}`)
-        return
-      }
-
-      localStorage.removeItem("checkoutCourse")
-      localStorage.removeItem("checkoutProduct")
-      localStorage.removeItem("checkoutEvent")
-
-      const eventData = {
-        id: event.id,
-        name: event.title,
-        title: event.title,
-        price: finalPrice,
-        image: event.image,
-        type: "event",
-        deliveryType: "digital",
-        dateTime: event.dateTime,
-        location: event.location,
-        capacity: event.capacity,
-        availableSpots: availableSpots,
-        fullName: user?.name || "",
-        email: user?.email || "",
-        phone: "",
-        country: "Bolivia",
-      }
-
-      localStorage.setItem("checkoutEvent", JSON.stringify(eventData))
-      router.push("/checkout")
-    } catch (error) {
-      console.error("Error preparing checkout:", error)
-      toast({
-        title: "Error",
-        description: "Ocurrió un problema al preparar la reserva.",
-        variant: "destructive",
-      })
-    } finally {
-      setPurchasing(false)
-    }
-  }*/}
 
   const getEmbedUrl = (url: string) => {
     if (url.includes("vimeo.com")) {
@@ -293,7 +226,9 @@ export default function EventPage({ params }: EventPageProps) {
           <div className="aspect-video bg-black">
             {event.trailerUrl ? (
               <VimeoPlayer videoUrl={event.trailerUrl} title={`Trailer de ${event.title}`} />
-            ) : ( <p className="text-gray-500">Este evento aún no tiene video de presentación.</p>)}
+            ) : (
+              <p className="text-gray-500">Este evento aún no tiene video de presentación.</p>
+            )}
           </div>
         </div>
 
@@ -323,13 +258,15 @@ export default function EventPage({ params }: EventPageProps) {
             <Button
               className="bg-orange-700 hover:bg-orange-600 text-black rounded-full text-xs px-4 py-2 font-semibold flex items-center gap-2"
               onClick={handleBuy}
-              disabled={availableSpots <= 0 || purchasing}
+              disabled={!isEventInFuture || purchasing}
             >
               {purchasing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   ...
                 </>
+              ) : !isEventInFuture ? (
+                "Evento realizado"
               ) : (
                 <>
                   Comprar
@@ -502,7 +439,7 @@ export default function EventPage({ params }: EventPageProps) {
                       </span>
                     </div>
 
-                   
+                    
                     {!currencyLoading && currency.code !== "USD" && (
                       <div className="text-gray-600 text-xs md:text-sm mt-1">
                         <span>Precio original: ${Number.parseFloat(event.price).toFixed(2)} USD</span>
@@ -514,7 +451,7 @@ export default function EventPage({ params }: EventPageProps) {
                       <div className="text-gray-500 text-xs md:text-sm mt-1">Cambio oficial del BCB aplicado</div>
                     )}
 
-                   
+                    
                     {!currencyLoading && currency.code !== "USD" && (
                       <div className="text-xs text-gray-500 mt-2">
                         Precios mostrados en {currency.code} • Tasa de cambio actualizada
@@ -524,22 +461,24 @@ export default function EventPage({ params }: EventPageProps) {
                   <Button
                     className="w-full bg-orange-700 hover:bg-orange-600 text-black mb-4 md:mb-6 py-4 md:py-6 rounded-full text-sm md:text-base font-semibold"
                     onClick={handleBuy}
-                    disabled={availableSpots <= 0 || purchasing}
+                    disabled={!isEventInFuture || purchasing}
                   >
                     {purchasing ? (
                       <>
                         <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                         Procesando...
                       </>
+                    ) : !isEventInFuture ? (
+                      "Evento realizado"
                     ) : (
                       <>
                         <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                        {availableSpots <= 0 ? "Evento lleno" : "Reservar cupo"}
+                        Reservar cupo
                       </>
                     )}
                   </Button>
 
-                  {availableSpots <= 5 && availableSpots > 0 && (
+                  {isEventInFuture && availableSpots <= 5 && availableSpots > 0 && (
                     <div className="text-center text-xs md:text-sm text-orange-700">
                       ⚠️ Solo quedan {availableSpots} cupos disponibles
                     </div>

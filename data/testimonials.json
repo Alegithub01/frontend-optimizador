@@ -1,29 +1,29 @@
 [
   {
     "id": "1",
-    "name": "Luke Marquina 25585",
-    "description": "Fundadora y empresaria boliviana",
-    "coverImage": "/placeholder.svg?height=300&width=400",
-    "videoUrl": "https://vimeo.com/1091240808",
-    "avatarImage": "/placeholder.svg?height=48&width=48",
-    "logoImage": "/placeholder.svg?height=30&width=30"
+    "name": "Luka Marquina",
+    "description": "Luka Marquina es un diseñador de moda y dueño de un taller y tienda en Cochabamba, Boliviampresaria boliviana",
+    "coverImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUKA3_rc38lj.jpg",
+    "videoUrl": "https://vimeo.com/1089335939",
+    "avatarImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752074434/347866649_792060015647448_5073043485053314625_n_pysimf.png",
+    "logoImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752496101/Meditacion-negocio_qd4m27.png"
   },
   {
     "id": "2",
-    "name": "María González 12",
-    "description": "Emprendedora exitosa",
-    "coverImage": "/placeholder.svg?height=300&width=400",
-    "videoUrl": "https://vimeo.com/1091240808",
-    "avatarImage": "/placeholder.svg?height=48&width=48",
-    "logoImage": "/placeholder.svg?height=30&width=30"
+    "name": "Kelly Quinn",
+    "description": "Reconocida pastelera de Cochabamba",
+    "coverImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/KELLY1_loco2c.jpg",
+    "videoUrl": "https://vimeo.com/1089335881",
+    "avatarImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752495347/Kelly_quinn_t0igtx.jpg",
+    "logoImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752496034/Vector-3_dsetdf.png"
   },
   {
     "id": "3",
-    "name": "Carlos Rodríguez 65165",
-    "description": "Inversor y mentor",
-    "coverImage": "/placeholder.svg?height=300&width=400",
-    "videoUrl": "https://vimeo.com/1091240808",
-    "avatarImage": "/placeholder.svg?height=48&width=48",
-    "logoImage": "/placeholder.svg?height=30&width=30"
+    "name": "Luz Marquina",
+    "description": "Luz Marquina es propietaria de Tiendas Aria, una tienda de zapatos en Bolivia",
+    "coverImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1750707240/LUZ1_vex832.jpg",
+    "videoUrl": "https://vimeo.com/1089335914",
+    "avatarImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752495694/422418238_820180376804653_8291293413080082468_n_r9wd0s.jpg",
+    "logoImage": "https://res.cloudinary.com/dyuzrs87l/image/upload/v1752496034/Vector-3_dsetdf.png"
   }
 ]
