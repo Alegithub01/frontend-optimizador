@@ -30,6 +30,7 @@ interface Product {
   images?: string[]
   formats?: ("digital" | "fisico")[]
   longDescription?: string
+  isFree?: boolean // Added isFree field to Product interface
 }
 
 // Departamentos de Bolivia con información de envío
@@ -287,6 +288,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
           longDescription: `Somos seres capaces de explorar y transformar materia, pero nuestro gran defecto es nacer en un espacio que limita nuestros sentidos y acciones. La sociedad se ocupa de colocar un sello de conformidad en nosotros, como si la ley del menor esfuerzo nos fuera desde el principio.
           Este ${params.category} te ayudará a romper esas barreras mentales y desarrollar todo tu potencial. Con ejercicios prácticos y teoría fundamentada, podrás aplicar los conceptos en tu vida diaria.
           Incluye casos de estudio reales, ejemplos prácticos y una metodología probada que ha ayudado a miles de personas a alcanzar sus objetivos.`,
+          isFree: false, // Added isFree field to example product
         })
       } finally {
         setLoading(false)
@@ -371,10 +373,11 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         return price
       }
 
-      // Determinar el precio final y el precio original para el checkout
       const currentPriceValue =
         selectedFormat === "fisico" && product.physicalPrice ? product.physicalPrice : product.price
-      const finalPriceForCheckout = parsePrice(currentPriceValue)
+
+      // Si el producto es gratis y es formato digital, precio = 0
+      const finalPriceForCheckout = product.isFree && selectedFormat === "digital" ? 0 : parsePrice(currentPriceValue)
 
       // El originalPrice y discount en el producto se asumen para la versión digital.
       // Si el formato es físico, el originalPrice para el checkout será el physicalPrice si no hay un original específico para físico.
@@ -401,7 +404,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
         JSON.stringify({
           id: product.id,
           name: product.name,
-          price: finalPriceForCheckout, // Usar el precio determinado por el formato
+          price: finalPriceForCheckout, // Usar el precio determinado por el formato (0 si es gratis)
           originalPrice: originalPriceForCheckout, // Usar el precio original determinado por el formato
           discount: discountForCheckout, // Usar el descuento determinado por el formato
           image: product.image,
@@ -882,20 +885,39 @@ export default function ProductDetailPage({ params }: { params: { category: stri
             )}
             {/* Precio con funcionalidad completa de moneda */}
             <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-              <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-                <span className="text-2xl md:text-3xl font-bold">
-                  {currencyLoading ? (
-                    <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
-                  ) : (
-                    formatPrice(finalPrice)
-                  )}
-                </span>
-                {displayDiscount && displayOriginalPrice && !currencyLoading && (
+              <div className="space-y-2">
+                {product.isFree && selectedFormat === "digital" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-green-600">Oferta especial gratis</span>
+                  </div>
+                ) : (
                   <>
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
-                      {displayDiscount}% Dto.
-                    </span>
-                    <span className="text-gray-500 line-through text-sm">{formatPrice(displayOriginalPrice)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-black">
+                        {currencyLoading ? (
+                          <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                        ) : (
+                          formatPrice(finalPrice)
+                        )}
+                      </span>
+                      {product.originalPrice && selectedFormat === "digital" && (
+                        <span className="text-lg text-gray-500 line-through">
+                          {currencyLoading ? (
+                            <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                          ) : (
+                            formatPrice(parsePrice(product.originalPrice))
+                          )}
+                        </span>
+                      )}
+                      {product.discount && selectedFormat === "digital" && (
+                        <span className="rounded bg-red-100 px-2 py-1 text-sm font-medium text-red-600">
+                          -{product.discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    {selectedFormat === "fisico" && product.physicalPrice && (
+                      <p className="text-sm text-gray-600">Precio incluye envío nacional</p>
+                    )}
                   </>
                 )}
               </div>
@@ -963,7 +985,9 @@ export default function ProductDetailPage({ params }: { params: { category: stri
               ) : (
                 <>
                   <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                  Comprar {selectedFormat === "digital" ? "Digital" : "Físico"}
+                  {product.isFree && selectedFormat === "digital"
+                    ? "Adquiérelo gratis"
+                    : `Comprar ${selectedFormat === "digital" ? "Digital" : "Físico"}`}
                 </>
               )}
             </Button>

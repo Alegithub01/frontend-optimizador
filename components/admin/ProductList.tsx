@@ -208,17 +208,24 @@ export function ProductList() {
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Por {product.author}</span>
-                    {/* <--- AÑADIDO: Lógica para mostrar ambos precios */}
                     <div className="flex flex-col items-end">
-                      <span className="font-medium text-green-600">
-                        Digital: ${Number(product.price)?.toFixed(2) ?? "0.00"}
-                      </span>
-                      {(product.category === "libro" || product.category === "revista") &&
-                        product.physicalPrice !== undefined && (
-                          <span className="font-medium text-blue-600">
-                            Físico: ${Number(product.physicalPrice)?.toFixed(2) ?? "0.00"}
+                      {product.isFree ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 font-semibold">
+                          GRATIS
+                        </Badge>
+                      ) : (
+                        <>
+                          <span className="font-medium text-green-600">
+                            Digital: ${Number(product.price)?.toFixed(2) ?? "0.00"}
                           </span>
-                        )}
+                          {(product.category === "libro" || product.category === "revista") &&
+                            product.physicalPrice !== undefined && (
+                              <span className="font-medium text-blue-600">
+                                Físico: ${Number(product.physicalPrice)?.toFixed(2) ?? "0.00"}
+                              </span>
+                            )}
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">

@@ -27,4 +27,5 @@ export interface Product {
   createdAt?: Date
   updatedAt?: Date
   trailerUrl?: string
+  isFree: boolean
 }

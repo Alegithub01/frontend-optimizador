@@ -80,6 +80,7 @@ export interface Sale {
   fullName?: string;
   country?: string;
   phone?: string;
+  isFree?:boolean;
 }
 
 export interface SaleStats {

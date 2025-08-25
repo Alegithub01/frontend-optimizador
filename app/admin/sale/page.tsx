@@ -33,6 +33,7 @@ import {
   Building2,
   Navigation,
   ArrowUpDown,
+  Gift,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -243,21 +244,21 @@ export default function SalesPage() {
     return [...salesToSort].sort((a, b) => {
       let aValue = a[sortField]
       let bValue = b[sortField]
-      
+
       // Manejo especial para fechas
       if (sortField === "createdAt") {
         aValue = new Date(aValue as string).getTime()
         bValue = new Date(bValue as string).getTime()
       }
-      
+
       // Manejo especial para montos
       if (sortField === "amount") {
         aValue = Number(aValue)
         bValue = Number(bValue)
       }
-      
+
       if (aValue === undefined || bValue === undefined) return 0
-      
+
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
       return 0
@@ -267,6 +268,29 @@ export default function SalesPage() {
   // Función para determinar si es pago QR
   const isQRPayment = (sale: Sale): boolean => {
     return !!(sale.qrReference && sale.qrReference.trim() !== "")
+  }
+
+  const getPaymentMethodBadge = (sale: Sale) => {
+    if (sale.isFree) {
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+          <Gift className="h-3 w-3 mr-1" />
+          Gratis
+        </Badge>
+      )
+    }
+
+    return isQRPayment(sale) ? (
+      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">
+        <QrCode className="h-3 w-3 mr-1" />
+        QR (BOB)
+      </Badge>
+    ) : (
+      <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100">
+        <CreditCard className="h-3 w-3 mr-1" />
+        Tarjeta (USD)
+      </Badge>
+    )
   }
 
   const calculateStats = (salesData: Sale[]) => {
@@ -380,12 +404,13 @@ export default function SalesPage() {
       filtered = filtered.filter((sale) => sale.deliveryType === deliveryFilter)
     }
 
-    // Filtro por método de pago
     if (paymentMethodFilter !== "all") {
-      if (paymentMethodFilter === "qr") {
-        filtered = filtered.filter((sale) => isQRPayment(sale))
+      if (paymentMethodFilter === "free") {
+        filtered = filtered.filter((sale) => sale.isFree === true)
+      } else if (paymentMethodFilter === "qr") {
+        filtered = filtered.filter((sale) => isQRPayment(sale) && !sale.isFree)
       } else if (paymentMethodFilter === "card") {
-        filtered = filtered.filter((sale) => !isQRPayment(sale))
+        filtered = filtered.filter((sale) => !isQRPayment(sale) && !sale.isFree)
       }
     }
 
@@ -910,20 +935,6 @@ export default function SalesPage() {
     }
   }
 
-  const getPaymentMethodBadge = (sale: Sale) => {
-    return isQRPayment(sale) ? (
-      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">
-        <QrCode className="h-3 w-3 mr-1" />
-        QR (BOB)
-      </Badge>
-    ) : (
-      <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100">
-        <CreditCard className="h-3 w-3 mr-1" />
-        Tarjeta (USD)
-      </Badge>
-    )
-  }
-
   const getDateFilterLabel = () => {
     switch (dateFilter) {
       case "today":
@@ -956,14 +967,13 @@ export default function SalesPage() {
       purple: "text-purple-700 bg-purple-50 border-purple-200",
       orange: "text-orange-700 bg-orange-50 border-orange-200",
     }
-
-    {filteredSales.map(sale => (
-  console.log(`Venta ${sale.id}:`, {
-    course: sale.course,
-    product: sale.product, 
-    event: sale.event
-  })
-))}
+    filteredSales.map((sale) =>
+      console.log(`Venta ${sale.id}:`, {
+        course: sale.course,
+        product: sale.product,
+        event: sale.event,
+      }),
+    )
 
     return (
       <div
@@ -1228,6 +1238,7 @@ export default function SalesPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-white">
                       <SelectItem value="all">Todos los métodos</SelectItem>
+                      <SelectItem value="free">🎁 Gratis</SelectItem>
                       <SelectItem value="qr">📱 QR (Bolivianos)</SelectItem>
                       <SelectItem value="card">💳 Tarjeta (Dólares)</SelectItem>
                     </SelectContent>
@@ -1299,10 +1310,7 @@ export default function SalesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[80px]">
-                        <button
-                          onClick={() => handleSort("id")}
-                          className="flex items-center hover:text-primary"
-                        >
+                        <button onClick={() => handleSort("id")} className="flex items-center hover:text-primary">
                           ID
                           {getSortIcon("id")}
                         </button>
@@ -1317,10 +1325,7 @@ export default function SalesPage() {
                         </button>
                       </TableHead>
                       <TableHead className="min-w-[180px]">
-                        <button
-                          onClick={() => handleSort("fullName")}
-                          className="flex items-center hover:text-primary"
-                        >
+                        <button onClick={() => handleSort("fullName")} className="flex items-center hover:text-primary">
                           Cliente
                           {getSortIcon("fullName")}
                         </button>
@@ -1329,19 +1334,13 @@ export default function SalesPage() {
                       <TableHead className="w-[100px]">Tipo</TableHead>
                       <TableHead className="w-[120px]">Método Pago</TableHead>
                       <TableHead className="w-[100px]">
-                        <button
-                          onClick={() => handleSort("amount")}
-                          className="flex items-center hover:text-primary"
-                        >
+                        <button onClick={() => handleSort("amount")} className="flex items-center hover:text-primary">
                           Monto
                           {getSortIcon("amount")}
                         </button>
                       </TableHead>
                       <TableHead className="w-[120px]">
-                        <button
-                          onClick={() => handleSort("status")}
-                          className="flex items-center hover:text-primary"
-                        >
+                        <button onClick={() => handleSort("status")} className="flex items-center hover:text-primary">
                           Estado
                           {getSortIcon("status")}
                         </button>
