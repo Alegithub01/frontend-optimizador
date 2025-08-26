@@ -13,6 +13,7 @@ import { CountrySelector, countries, type Country } from "./country-selector"
 import { useAuthContext } from "@/context/AuthContext"
 import PaymentOptions from "./payment-options"
 import { useToast } from "@/components/ui/use-toast"
+import { api } from "@/lib/api"
 
 interface CheckoutFormProps {
   country?: string | null
@@ -114,6 +115,88 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
     setFormData((prev) => ({ ...prev, country }))
   }
 
+  const isItemFree = () => {
+    if (!itemData) return false
+    return itemData.price === 0 || itemData.amount === 0 || itemData.total === 0
+  }
+
+  const createFreeSale = async () => {
+    try {
+      const productData = localStorage.getItem("checkoutProduct")
+      const courseData = localStorage.getItem("checkoutCourse")
+      const eventData = localStorage.getItem("checkoutEvent")
+
+      let currentItemData
+      let itemType = "course"
+
+      if (productData) {
+        currentItemData = JSON.parse(productData)
+        itemType = "product"
+      } else if (courseData) {
+        currentItemData = JSON.parse(courseData)
+        itemType = "course"
+      } else if (eventData) {
+        currentItemData = JSON.parse(eventData)
+        itemType = "event"
+      } else {
+        throw new Error("No se encontraron datos del producto, curso o evento")
+      }
+
+      const saleData: any = {
+        userId: user?.id,
+        type: itemType,
+        name: currentItemData.title,
+        amount: 0,
+        isFree: true,
+        status: "paid",
+        billingInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.country?.phoneCode ? `${formData.country.phoneCode}${formData.phone}` : formData.phone,
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          country: formData.country?.name,
+          countryCode: formData.country?.code,
+        },
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        phone: formData.country?.phoneCode ? `${formData.country.phoneCode}${formData.phone}` : formData.phone,
+        country: formData.country?.name,
+        shippingAddress: currentItemData.shippingAddress || formData.address,
+      }
+
+      if (itemType === "product") {
+        saleData.productId = String(currentItemData.id) // Ensure string type for product ID
+      } else if (itemType === "course") {
+        saleData.courseId = Number.parseInt(currentItemData.id) // Ensure integer type for course ID
+      } else if (itemType === "event") {
+        saleData.eventId = String(currentItemData.id) // Ensure string type for event ID
+      }
+
+      const response = await api.post("/sales", saleData)
+
+      toast({
+        title: "¡Éxito!",
+        description: "Tu compra gratuita ha sido procesada correctamente.",
+        variant: "default",
+      })
+
+      // Clear localStorage
+      localStorage.removeItem("checkoutProduct")
+      localStorage.removeItem("checkoutCourse")
+      localStorage.removeItem("checkoutEvent")
+
+      // Redirect to success page or dashboard
+      router.push("/mis-compras")
+
+      return response
+    } catch (error) {
+      console.error("Error al crear venta gratuita:", error)
+      throw error
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -179,7 +262,12 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
       }
 
       setItemData(updatedItemData)
-      setShowPaymentOptions(true)
+
+      if (isItemFree()) {
+        await createFreeSale()
+      } else {
+        setShowPaymentOptions(true)
+      }
     } catch (error) {
       console.error("Error al procesar el pago:", error)
       toast({
@@ -197,7 +285,10 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
       <Card>
         <CardHeader>
           <CardTitle>Información de Cliente</CardTitle>
-          <h1 className="text-red-600">Es importante que llene sus datos correctamente, ya que si su compra es para algún evento, recojo en oficina o para un envio fisico se le validara su identidad mediante los datos que ponga.</h1>
+          <h1 className="text-red-600">
+            Es importante que llene sus datos correctamente, ya que si su compra es para algún evento, recojo en oficina
+            o para un envio fisico se le validara su identidad mediante los datos que ponga.
+          </h1>
           <CardDescription>Completa tus datos para procesar el pago</CardDescription>
         </CardHeader>
         <CardContent>
@@ -273,12 +364,19 @@ export default function CheckoutForm({ country: detectedCountry, courseId }: Che
               </div>
             </div>
             <Separator />
-            <Button type="submit" className="rounded-xl w-full bg-orange-500 hover:bg-orange-600" size="lg" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="rounded-xl w-full bg-orange-500 hover:bg-orange-600"
+              size="lg"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Procesando...
                 </div>
+              ) : itemData && isItemFree() ? (
+                "Obtener Gratis"
               ) : (
                 "Proceder al pago"
               )}

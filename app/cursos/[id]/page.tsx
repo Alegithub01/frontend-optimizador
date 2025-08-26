@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, Volume2, VolumeX } from "lucide-react"
+import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { VideoService } from "@/services/video-service"
@@ -36,6 +36,7 @@ interface Course {
   image: string
   trailer: string // URL del trailer (video o imagen)
   sections: Section[]
+  isFree?: boolean
 }
 
 interface CoursePageProps {
@@ -161,6 +162,8 @@ export default function CoursePage({ params }: CoursePageProps) {
       // Calcular precio final
       const priceInfo = calculateDiscountedPrice(course.price, course.discount)
 
+      const finalPrice = course.isFree ? 0 : priceInfo.finalPrice
+
       // Limpiar localStorage de datos anteriores
       localStorage.removeItem("checkoutProduct")
       localStorage.removeItem("checkoutCourse")
@@ -171,10 +174,10 @@ export default function CoursePage({ params }: CoursePageProps) {
         JSON.stringify({
           id: course.id,
           title: course.title,
-          price: priceInfo.finalPrice,
-          originalPrice: priceInfo.originalPrice,
-          discount: priceInfo.discountPercentage,
-          savings: priceInfo.savings,
+          price: finalPrice,
+          originalPrice: course.isFree ? 0 : priceInfo.originalPrice,
+          discount: course.isFree ? 0 : priceInfo.discountPercentage,
+          savings: course.isFree ? 0 : priceInfo.savings,
           image: course.image,
           type: "course",
         }),
@@ -232,10 +235,10 @@ export default function CoursePage({ params }: CoursePageProps) {
         {/* Video/Imagen del trailer */}
         <div className="relative w-full aspect-video mb-12 rounded-3xl overflow-hidden">
           {course.trailer ? (
-        <VimeoPlayer videoUrl={course.trailer} title={`Trailer de ${course.title}`} />
-      ) : (
-        <p className="text-gray-500">Este curso aún no tiene video de presentación.</p>
-     )}
+            <VimeoPlayer videoUrl={course.trailer} title={`Trailer de ${course.title}`} />
+          ) : (
+            <p className="text-gray-500">Este curso aún no tiene video de presentación.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -245,7 +248,6 @@ export default function CoursePage({ params }: CoursePageProps) {
               <div className="text-orange-700 font-medium mb-2">CURSO</div>
               <h1 className="text-4xl font-black mb-6">{course.title}</h1>
               <p className="text-lg mb-8">{course.description}</p>
-
 
               {/* Plan de estudios/Secciones */}
               <div className="mb-8">
@@ -331,55 +333,68 @@ export default function CoursePage({ params }: CoursePageProps) {
                 <>
                   {/* Precio con mejor visualización */}
                   <div className="mb-6">
-                    {/* Precio principal en moneda local */}
-                    <div className="flex items-center mb-2">
-                      <span className="text-3xl font-bold">
-                        {currencyLoading ? (
-                          <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
-                        ) : (
-                          formatPrice(priceInfo.finalPrice)
-                        )}
-                      </span>
-                      {priceInfo.discountPercentage > 0 && !currencyLoading && (
-                        <span className="ml-3 px-2 py-1 bg-red-100 text-red-600 text-sm font-medium rounded">
-                          {priceInfo.discountPercentage}% OFF
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Mostrar precio original y ahorros si hay descuento */}
-                    {priceInfo.discountPercentage > 0 && !currencyLoading && (
-                      <>
-                        <div className="text-gray-500 text-sm line-through">{formatPrice(priceInfo.originalPrice)}</div>
-                        <div className="text-green-600 text-sm font-medium">
-                          Ahorras: {formatPrice(priceInfo.savings)}
+                    {course.isFree ? (
+                      <div className="mb-4">
+                        <div className="text-3xl font-bold text-green-600 mb-2">GRATIS</div>
+                        <div className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                          🎉 Oferta especial gratis
                         </div>
-                      </>
-                    )}
-
-                    {/* Mostrar precio en USD como referencia si no es USD */}
-                    {!currencyLoading && currency.code !== "USD" && (
-                      <div className="text-gray-600 text-sm mt-2 p-2 bg-gray-50 rounded">
-                        <span className="text-xs text-gray-500">Precio original:</span>
-                        <br />
-                        {priceInfo.discountPercentage > 0 ? (
-                          <>
-                            <span className="line-through text-gray-400">
-                              ${priceInfo.originalPrice?.toFixed(2)} USD
+                      </div>
+                    ) : (
+                      <>
+                        {/* Precio principal en moneda local */}
+                        <div className="flex items-center mb-2">
+                          <span className="text-3xl font-bold">
+                            {currencyLoading ? (
+                              <span className="animate-pulse bg-gray-200 rounded px-4 py-1">Cargando...</span>
+                            ) : (
+                              formatPrice(priceInfo.finalPrice)
+                            )}
+                          </span>
+                          {priceInfo.discountPercentage > 0 && !currencyLoading && (
+                            <span className="ml-3 px-2 py-1 bg-red-100 text-red-600 text-sm font-medium rounded">
+                              {priceInfo.discountPercentage}% OFF
                             </span>
-                            <span className="ml-2 font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
-                          </>
-                        ) : (
-                          <span className="font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
 
-                    {/* Información específica para Bolivia */}
-                    {currency.code === "BOB" && (
-                      <div className="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                        🇧🇴 Cambio oficial del BCB aplicado
-                      </div>
+                        {/* Mostrar precio original y ahorros si hay descuento */}
+                        {priceInfo.discountPercentage > 0 && !currencyLoading && (
+                          <>
+                            <div className="text-gray-500 text-sm line-through">
+                              {formatPrice(priceInfo.originalPrice)}
+                            </div>
+                            <div className="text-green-600 text-sm font-medium">
+                              Ahorras: {formatPrice(priceInfo.savings)}
+                            </div>
+                          </>
+                        )}
+
+                        {/* Mostrar precio en USD como referencia si no es USD */}
+                        {!currencyLoading && currency.code !== "USD" && (
+                          <div className="text-gray-600 text-sm mt-2 p-2 bg-gray-50 rounded">
+                            <span className="text-xs text-gray-500">Precio original:</span>
+                            <br />
+                            {priceInfo.discountPercentage > 0 ? (
+                              <>
+                                <span className="line-through text-gray-400">
+                                  ${priceInfo.originalPrice?.toFixed(2)} USD
+                                </span>
+                                <span className="ml-2 font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
+                              </>
+                            ) : (
+                              <span className="font-medium">${priceInfo.finalPrice.toFixed(2)} USD</span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Información específica para Bolivia */}
+                        {currency.code === "BOB" && (
+                          <div className="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                            🇧🇴 Cambio oficial del BCB aplicado
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -401,7 +416,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                     ) : (
                       <>
                         <ShoppingCart className="mr-2 h-5 w-5" />
-                        Comprar
+                        {course.isFree ? "Adquiérelo gratis" : "Comprar"}
                       </>
                     )}
                   </Button>
@@ -448,40 +463,48 @@ export default function CoursePage({ params }: CoursePageProps) {
 
                       {/* Precio con descuento para cursos relacionados */}
                       <div className="mb-4">
-                        <div className="flex items-center">
-                          <span className="text-2xl font-bold">
-                            {currencyLoading ? (
-                              <span className="animate-pulse bg-gray-200 rounded px-2 py-1">...</span>
-                            ) : (
-                              formatPrice(relatedPriceInfo.finalPrice)
-                            )}
-                          </span>
-                          {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
-                            <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">
-                              {relatedPriceInfo.discountPercentage}% OFF
-                            </span>
-                          )}
-                        </div>
+                        {relatedCourse.isFree ? (
+                          <div className="text-2xl font-bold text-green-600">GRATIS</div>
+                        ) : (
+                          <>
+                            <div className="flex items-center">
+                              <span className="text-2xl font-bold">
+                                {currencyLoading ? (
+                                  <span className="animate-pulse bg-gray-200 rounded px-2 py-1">...</span>
+                                ) : (
+                                  formatPrice(relatedPriceInfo.finalPrice)
+                                )}
+                              </span>
+                              {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
+                                <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">
+                                  {relatedPriceInfo.discountPercentage}% OFF
+                                </span>
+                              )}
+                            </div>
 
-                        {/* Precio original tachado si hay descuento */}
-                        {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
-                          <div className="text-gray-500 text-sm line-through">
-                            {formatPrice(relatedPriceInfo.originalPrice)}
-                          </div>
-                        )}
-
-                        {/* Precio en USD como referencia si no es USD */}
-                        {!currencyLoading && currency.code !== "USD" && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            {relatedPriceInfo.discountPercentage > 0 ? (
-                              <>
-                                <span className="line-through">${relatedPriceInfo.originalPrice?.toFixed(2)} USD</span>
-                                <span className="ml-1">${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
-                              </>
-                            ) : (
-                              <span>${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
+                            {/* Precio original tachado si hay descuento */}
+                            {relatedPriceInfo.discountPercentage > 0 && !currencyLoading && (
+                              <div className="text-gray-500 text-sm line-through">
+                                {formatPrice(relatedPriceInfo.originalPrice)}
+                              </div>
                             )}
-                          </div>
+
+                            {/* Precio en USD como referencia si no es USD */}
+                            {!currencyLoading && currency.code !== "USD" && (
+                              <div className="text-gray-500 text-xs mt-1">
+                                {relatedPriceInfo.discountPercentage > 0 ? (
+                                  <>
+                                    <span className="line-through">
+                                      ${relatedPriceInfo.originalPrice?.toFixed(2)} USD
+                                    </span>
+                                    <span className="ml-1">${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
+                                  </>
+                                ) : (
+                                  <span>${relatedPriceInfo.finalPrice.toFixed(2)} USD</span>
+                                )}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -492,7 +515,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                           disabled={currencyLoading}
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
-                          Comprar
+                          {relatedCourse.isFree ? "Adquiérelo gratis" : "Comprar"}
                         </Button>
                       </div>
                     </div>

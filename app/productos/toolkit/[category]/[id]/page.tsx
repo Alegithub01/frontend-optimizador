@@ -27,6 +27,7 @@ interface ToolkitProduct {
   name: string
   author: string
   price: string
+  isFree?: boolean
   stock: number
   image: string
   category: string
@@ -66,7 +67,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
   const router = useRouter()
   const { isAuthenticated, user } = useAuthContext()
   const { currency, formatPrice, isLoading: currencyLoading, error: currencyError } = useCurrency()
-  
+
   const [product, setProduct] = useState<ToolkitProduct | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<ToolkitProduct[]>([])
   const [loading, setLoading] = useState(true)
@@ -183,7 +184,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
         return price
       }
 
-      const finalPrice = parsePrice(product.price)
+      const finalPrice = product.isFree ? 0 : parsePrice(product.price)
 
       if (!isAuthenticated) {
         // Si no está autenticado, guardar el producto actual y redirigir a login
@@ -273,7 +274,9 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
         <div className="relative w-full aspect-video mb-12 rounded-lg overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
           {product.trailerUrl ? (
             <VimeoPlayer videoUrl={product.trailerUrl} title={`Trailer de ${product.name}`} />
-      ) : (<p className="text-gray-500">Este producto aún no tiene video de presentación.</p>)}
+          ) : (
+            <p className="text-gray-500">Este producto aún no tiene video de presentación.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -370,28 +373,35 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                         <div className="h-4 bg-gray-200 rounded w-16"></div>
                       </div>
                     ) : currencyError ? (
-                      <div className="text-red-500 text-sm mb-2">
-                        Error cargando precio: {currencyError}
-                      </div>
+                      <div className="text-red-500 text-sm mb-2">Error cargando precio: {currencyError}</div>
                     ) : (
                       <>
-                        {/* Precio en moneda local - PRIMERO */}
-                        <div className="flex items-center mb-2">
-                          <span className="text-3xl font-bold">
-                            {formatPrice(productPriceUSD)}
-                          </span>
-                          {currency.code !== "USD" && (
-                            <div className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              🌍 {currency.code}
+                        {product.isFree ? (
+                          <div className="flex items-center mb-2">
+                            <span className="text-3xl font-bold text-green-600">Oferta especial gratis</span>
+                            <div className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                              🎉 GRATIS
                             </div>
-                          )}
-                        </div>
-
-                        {/* Precio en USD - SEGUNDO (solo si no es USD) */}
-                        {currency.code !== "USD" && (
-                          <div className="text-gray-600 text-sm mt-1">
-                            <span>${productPriceUSD.toFixed(2)} USD</span>
                           </div>
+                        ) : (
+                          <>
+                            {/* Precio en moneda local - PRIMERO */}
+                            <div className="flex items-center mb-2">
+                              <span className="text-3xl font-bold">{formatPrice(productPriceUSD)}</span>
+                              {currency.code !== "USD" && (
+                                <div className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                  🌍 {currency.code}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Precio en USD - SEGUNDO (solo si no es USD) */}
+                            {currency.code !== "USD" && (
+                              <div className="text-gray-600 text-sm mt-1">
+                                <span>${productPriceUSD.toFixed(2)} USD</span>
+                              </div>
+                            )}
+                          </>
                         )}
                       </>
                     )}
@@ -410,7 +420,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                     ) : (
                       <>
                         <ShoppingCart className="mr-2 h-5 w-5 " />
-                        Comprar
+                        {product.isFree ? "Adquiérelo gratis" : "Comprar"}
                       </>
                     )}
                   </Button>
@@ -454,15 +464,20 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-center">
-                              <span className="text-2xl font-bold">
-                                {formatPrice(relatedPriceUSD)}
-                              </span>
-                            </div>
-                            {currency.code !== "USD" && (
-                              <div className="text-gray-500 text-xs mt-1">
-                                ${relatedPriceUSD.toFixed(2)} USD
+                            {relatedProduct.isFree ? (
+                              <div className="flex items-center">
+                                <span className="text-2xl font-bold text-green-600">GRATIS</span>
+                                <div className="ml-2 px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">🎉</div>
                               </div>
+                            ) : (
+                              <>
+                                <div className="flex items-center">
+                                  <span className="text-2xl font-bold">{formatPrice(relatedPriceUSD)}</span>
+                                </div>
+                                {currency.code !== "USD" && (
+                                  <div className="text-gray-500 text-xs mt-1">${relatedPriceUSD.toFixed(2)} USD</div>
+                                )}
+                              </>
                             )}
                           </>
                         )}
@@ -474,7 +489,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                         disabled={currencyLoading}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        Comprar
+                        {relatedProduct.isFree ? "Adquiérelo gratis" : "Comprar"}
                       </Button>
                     </div>
                   </div>

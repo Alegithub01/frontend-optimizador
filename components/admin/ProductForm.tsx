@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Trash2, Save, ArrowLeft, Video, FileText, Link, ImageIcon, Film, Baby, Package } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -53,6 +54,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     sections: product?.sections || [],
     trailerUrl: product?.trailerUrl || "",
     pdfUrl: product?.pdfUrl || "",
+    isFree: product?.isFree || false, // Added isFree field initialization
   })
 
   // Función para transformar URLs de Google Drive
@@ -193,6 +195,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
             ? cleanUrl(transformDriveUrl(formData.pdfUrl))
             : undefined,
         sections: cleanedSections,
+        isFree: formData.isFree, // Added isFree to data being sent
       }
 
       // <--- AÑADIDO: Incluir physicalPrice solo para categorías específicas
@@ -351,6 +354,19 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isFree"
+                checked={formData.isFree}
+                onCheckedChange={(checked) => handleInputChange("isFree", checked)}
+              />
+              <Label
+                htmlFor="isFree"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Producto gratuito
+              </Label>
             </div>
             {isToolkitOrEkids && (
               <div className="space-y-2">

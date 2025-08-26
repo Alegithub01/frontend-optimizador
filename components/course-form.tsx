@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2, Plus, Minus, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
@@ -18,17 +19,17 @@ import { api } from "@/lib/api"
 // Función para transformar URLs de Google Drive
 const transformDriveUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined
-  
+
   // Si ya es un enlace de descarga directa, no hacer nada
-  if (url.includes('uc?export=download')) return url
-  
+  if (url.includes("uc?export=download")) return url
+
   // Extraer el ID del archivo de diferentes formatos de URL de Drive
   const patterns = [
-    /drive\.google\.com\/file\/d\/([^\/]+)/,
+    /drive\.google\.com\/file\/d\/([^/]+)/,
     /drive\.google\.com\/open\?id=([^&]+)/,
-    /drive\.google\.com\/uc\?id=([^&]+)/
+    /drive\.google\.com\/uc\?id=([^&]+)/,
   ]
-  
+
   let fileId = null
   for (const pattern of patterns) {
     const match = url.match(pattern)
@@ -37,11 +38,11 @@ const transformDriveUrl = (url: string | undefined): string | undefined => {
       break
     }
   }
-  
+
   if (fileId) {
     return `https://drive.google.com/uc?export=download&id=${fileId}`
   }
-  
+
   return url
 }
 
@@ -68,6 +69,7 @@ const courseSchema = z.object({
   description: z.string().min(1, "La descripción es requerida"),
   price: z.coerce.number().min(0, "El precio debe ser mayor o igual a 0"),
   discount: z.coerce.number().min(0).max(100).optional().default(0),
+  isFree: z.boolean().default(false),
   image: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
   startDate: z.string().min(1, "La fecha de inicio es requerida"),
   endDate: z.string().min(1, "La fecha de fin es requerida"),
@@ -100,6 +102,7 @@ type CourseType = {
   description: string
   price: number
   discount: number
+  isFree?: boolean
   image?: string
   startDate: string
   endDate: string
@@ -261,21 +264,22 @@ function SectionItem({
                   <FormItem>
                     <FormLabel>URL o Texto</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder={
-                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" 
-                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view" 
+                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf"
+                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
                             : "URL o texto del contenido"
-                        } 
-                        {...field} 
+                        }
+                        {...field}
                       />
                     </FormControl>
                     {control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" && (
                       <FormDescription>
-                        {field.value && field.value.includes('drive.google.com') && 
-                         !field.value.includes('uc?export=download') && (
-                          <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
-                        )}
+                        {field.value &&
+                          field.value.includes("drive.google.com") &&
+                          !field.value.includes("uc?export=download") && (
+                            <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
+                          )}
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -290,21 +294,22 @@ function SectionItem({
                   <FormItem>
                     <FormLabel>URL Secundaria (opcional)</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder={
-                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" 
-                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view" 
+                          control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf"
+                            ? "https://drive.google.com/file/d/ID-DEL-ARCHIVO/view"
                             : "URL secundaria (opcional)"
-                        } 
-                        {...field} 
+                        }
+                        {...field}
                       />
                     </FormControl>
                     {control._formValues.sections[sectionIndex].contents[contentIndex].type === "pdf" && (
                       <FormDescription>
-                        {field.value && field.value.includes('drive.google.com') && 
-                         !field.value.includes('uc?export=download') && (
-                          <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
-                        )}
+                        {field.value &&
+                          field.value.includes("drive.google.com") &&
+                          !field.value.includes("uc?export=download") && (
+                            <span className="text-green-600">✔ El enlace de Drive será convertido automáticamente</span>
+                          )}
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -335,6 +340,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
       description: "",
       price: 0,
       discount: 0,
+      isFree: false,
       image: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
@@ -387,6 +393,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
           description: course.description || "",
           price: isNaN(Number(course.price)) ? 0 : Number(course.price),
           discount: course.discount || 0,
+          isFree: course.isFree || false,
           image: course.image || "",
           startDate: formatDate(course.startDate),
           endDate: formatDate(course.endDate, 30),
@@ -402,12 +409,12 @@ export function CourseForm({ courseId }: CourseFormProps) {
                       id: content?.id ?? undefined,
                       title: content?.title || "",
                       type: content?.type || "video",
-                      urlOrText: content?.type === "pdf" 
-                        ? transformDriveUrl(content.urlOrText) || "" 
-                        : content?.urlOrText || "",
-                      secondaryUrl: content?.type === "pdf" 
-                        ? transformDriveUrl(content.secondaryUrl) || "" 
-                        : content?.secondaryUrl || "",
+                      urlOrText:
+                        content?.type === "pdf" ? transformDriveUrl(content.urlOrText) || "" : content?.urlOrText || "",
+                      secondaryUrl:
+                        content?.type === "pdf"
+                          ? transformDriveUrl(content.secondaryUrl) || ""
+                          : content?.secondaryUrl || "",
                     }))
                   : [{ title: "", type: "video" as const, urlOrText: "" }],
               }))
@@ -448,18 +455,18 @@ export function CourseForm({ courseId }: CourseFormProps) {
       // Transformar URLs de Drive para todos los PDFs
       const transformedData = {
         ...formData,
-        sections: formData.sections.map(section => ({
+        sections: formData.sections.map((section) => ({
           ...section,
-          contents: section.contents.map(content => ({
+          contents: section.contents.map((content) => ({
             ...content,
-            urlOrText: content.type === "pdf" 
-              ? transformDriveUrl(content.urlOrText) || content.urlOrText 
-              : content.urlOrText,
-            secondaryUrl: content.type === "pdf" && content.secondaryUrl
-              ? transformDriveUrl(content.secondaryUrl) 
-              : content.secondaryUrl
-          }))
-        }))
+            urlOrText:
+              content.type === "pdf" ? transformDriveUrl(content.urlOrText) || content.urlOrText : content.urlOrText,
+            secondaryUrl:
+              content.type === "pdf" && content.secondaryUrl
+                ? transformDriveUrl(content.secondaryUrl)
+                : content.secondaryUrl,
+          })),
+        })),
       }
 
       console.log("Datos a enviar:", JSON.stringify(transformedData, null, 2))
@@ -549,19 +556,44 @@ export function CourseForm({ courseId }: CourseFormProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="isFree"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Curso Gratis</FormLabel>
+                        <FormDescription>Marcar si el curso es gratuito</FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{form.watch("isFree") ? "Precio (GRATIS)" : "Precio"}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          {...field}
+                          disabled={form.watch("isFree")}
+                          value={form.watch("isFree") ? "0" : field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField
