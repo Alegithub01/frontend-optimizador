@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock } from "lucide-react"
+import { ArrowLeft, ShoppingCart, ChevronDown, Play, FileText, Lock, CheckCircle } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { VideoService } from "@/services/video-service"
@@ -335,10 +335,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                   <div className="mb-6">
                     {course.isFree ? (
                       <div className="mb-4">
-                        <div className="text-3xl font-bold text-green-600 mb-2">GRATIS</div>
-                        <div className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                          🎉 Oferta especial gratis
-                        </div>
+                        
                       </div>
                     ) : (
                       <>
@@ -399,27 +396,33 @@ export default function CoursePage({ params }: CoursePageProps) {
                   </div>
 
                   <Button
-                    className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full mb-6 py-6"
-                    onClick={handleBuy}
-                    disabled={purchasing || currencyLoading}
-                  >
-                    {purchasing ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Procesando...
-                      </>
-                    ) : currencyLoading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Cargando precio...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        {course.isFree ? "Adquiérelo gratis" : "Comprar"}
-                      </>
-                    )}
-                  </Button>
+  className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full mb-6 py-6 flex items-center justify-center"
+  onClick={handleBuy}
+  disabled={purchasing || currencyLoading}
+>
+  {purchasing ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+      Procesando...
+    </>
+  ) : currencyLoading ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+      Cargando precio...
+    </>
+  ) : course.isFree ? (
+    <>
+      <span>Adquirir gratis</span>
+      <CheckCircle className="ml-2 h-8 w-8" />
+    </>
+  ) : (
+    <>
+      <ShoppingCart className="mr-2 h-5 w-5" />
+      <span>Comprar</span>
+    </>
+  )}
+</Button>
+
                 </>
               )}
             </div>

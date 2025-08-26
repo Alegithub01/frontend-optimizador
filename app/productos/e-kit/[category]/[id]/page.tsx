@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ShoppingCart, ChevronDown, Lock, Check } from "lucide-react"
+import { ArrowLeft, ShoppingCart, ChevronDown, Lock, Check, CheckCircle } from "lucide-react"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { toast } from "@/components/ui/use-toast"
@@ -373,10 +373,7 @@ export default function EKitProductPage({ params }: EKitProductPageProps) {
                       <>
                         {product.isFree ? (
                           <div className="flex items-center mb-2">
-                            <span className="text-3xl font-bold text-green-600">GRATIS</span>
-                            <div className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                              🎉 Oferta especial
-                            </div>
+              
                           </div>
                         ) : (
                           <>
@@ -402,22 +399,33 @@ export default function EKitProductPage({ params }: EKitProductPageProps) {
                   </div>
 
                   <Button
-                    className={`w-full ${getButtonColor(category)} rounded-full text-white mb-6 py-5`}
-                    onClick={handleBuy}
-                    disabled={purchasing || currencyLoading}
-                  >
-                    {purchasing ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="mr-2 h-5 w-5 " />
-                        {product.isFree ? "Adquiérelo gratis" : "Comprar"}
-                      </>
-                    )}
-                  </Button>
+  className="w-full bg-orange-700 hover:bg-orange-600 text-black font-bold rounded-full mb-6 py-6 flex items-center justify-center"
+  onClick={handleBuy}
+  disabled={purchasing || currencyLoading}
+>
+  {purchasing ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+      Procesando...
+    </>
+  ) : currencyLoading ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+      Cargando precio...
+    </>
+  ) : product.isFree ? (
+    <>
+      <span>Adquirir gratis</span>
+      <CheckCircle className="ml-2 h-8 w-8" />
+    </>
+  ) : (
+    <>
+      <ShoppingCart className="mr-2 h-5 w-5" />
+      <span>Comprar</span>
+    </>
+  )}
+</Button>
+
                 </>
               )}
             </div>

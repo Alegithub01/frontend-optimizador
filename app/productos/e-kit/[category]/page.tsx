@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
@@ -21,6 +21,7 @@ interface EKidsProduct {
   description?: string
   createdAt: string
   updatedAt: string
+  isFree?: boolean // Added isFree property
 }
 
 interface PurchasedProduct {
@@ -327,6 +328,10 @@ export default function EKidsCategoryPage() {
                     {isPurchased ? (
                       <>
                         Continuar <ArrowRight className="h-4 w-4" />
+                      </>
+                    ) : product.isFree ? (
+                      <>
+                        Gratis <CheckCircle className="h-4 w-4" />
                       </>
                     ) : (
                       <>

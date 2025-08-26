@@ -2,9 +2,8 @@
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Eye, ShoppingCart, Package, Download } from "lucide-react"
+import { Eye, ShoppingCart, Package, Download, ArrowRight, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
-import { ArrowRight } from "lucide-react"
 
 // Actualizar las interfaces para incluir las nuevas props
 interface ProductGridProps {
@@ -32,6 +31,7 @@ interface Product {
   stock: number
   category: "libro" | "revista" | "toolkit"
   description?: string
+  isFree?: boolean // Added isFree property
 }
 
 interface Currency {
@@ -350,6 +350,8 @@ export default function ProductGrid({
                     <h2 className="text-xl font-bold line-clamp-2">{product.name}</h2>
                     {product.author && <p className="text-black font-light text-sm mt-1">Por {product.author}</p>}
 
+    
+
                     {/* Avisos según el estado de compra */}
                     {purchaseStatus.isPurchased && (
                       <div className="mt-2 mb-2 space-y-2">
@@ -412,11 +414,18 @@ export default function ProductGrid({
                           onClick={() => handleProductAction(product.id)}
                           disabled={finalCurrencyLoading}
                         >
-                          {purchaseStatus.hasBoth
-                            ? "Leer"
-                            : purchaseStatus.isPurchased
-                              ? "Ver más"
-                              : "Ver más"}
+                          {product.isFree ? (
+                            <span className="flex items-center gap-2">
+                              Gratis
+                              <CheckCircle className="h-4 w-4" />
+                            </span>
+                          ) : purchaseStatus.hasBoth ? (
+                            "Leer"
+                          ) : purchaseStatus.isPurchased ? (
+                            "Ver más"
+                          ) : (
+                            "Ver más"
+                          )}
                         </Button>
                       </div>
                     </div>

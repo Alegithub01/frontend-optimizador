@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, ArrowRightCircle } from "lucide-react"
+import { ShoppingCart, ArrowRightCircle, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
@@ -19,6 +19,7 @@ interface Course {
   discount?: number
   image: string
   hasVideo?: boolean
+  isFree?: boolean // Added isFree property to Course interface
 }
 
 interface PurchasedCourse {
@@ -206,7 +207,7 @@ export default function CoursesPage() {
                   <p className="text-gray-600 mb-4 flex-grow line-clamp-3">{course.description}</p>
 
                   <div className="mt-auto">
-                    {!isOwned && (
+                    {!isOwned && !course.isFree && (
                       <>
                         <div className="flex items-center mb-2">
                           <span className="text-2xl font-bold text-gray-900">
@@ -242,6 +243,12 @@ export default function CoursesPage() {
                       </>
                     )}
 
+                    {!isOwned && course.isFree && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 text-sm font-medium">¡Este curso es completamente gratuito!</p>
+                      </div>
+                    )}
+
                     {isOwned && (
                       <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-green-800 text-sm font-medium">
@@ -254,13 +261,19 @@ export default function CoursesPage() {
                       className={`w-full font-bold flex items-center justify-center rounded-full gap-2 py-5 ${
                         isOwned
                           ? "bg-gray-500 hover:bg-gray-600 text-white"
-                          : "bg-orange-700 hover:bg-orange-500 text-black"
+                          : course.isFree
+                            ? "bg-orange-700 hover:bg-orange-500 text-black"
+                            : "bg-orange-700 hover:bg-orange-500 text-black"
                       }`}
                       onClick={() => handleCourseAction(course.id)}
                     >
                       {isOwned ? (
                         <>
                           Continuar curso <ArrowRightCircle className="h-5 w-5" />
+                        </>
+                      ) : course.isFree ? (
+                        <>
+                          Gratis <CheckCircle className="h-4 w-4" />
                         </>
                       ) : (
                         <>

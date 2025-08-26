@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ShoppingCart, Truck, Package, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Truck, Package, X, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { api } from "@/lib/api"
@@ -888,7 +888,8 @@ export default function ProductDetailPage({ params }: { params: { category: stri
               <div className="space-y-2">
                 {product.isFree && selectedFormat === "digital" ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-green-600">Oferta especial gratis</span>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    Adquirir gratis
                   </div>
                 ) : (
                   <>
@@ -984,10 +985,17 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                  {product.isFree && selectedFormat === "digital"
-                    ? "Adquiérelo gratis"
-                    : `Comprar ${selectedFormat === "digital" ? "Digital" : "Físico"}`}
+                  {product.isFree && selectedFormat === "digital" ? (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                      Adquirir gratis
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                      {`Comprar ${selectedFormat === "digital" ? "Digital" : "Físico"}`}
+                    </>
+                  )}
                 </>
               )}
             </Button>

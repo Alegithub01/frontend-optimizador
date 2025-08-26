@@ -18,6 +18,7 @@ interface Product {
   stock: number
   category: "libro" | "revista" | "toolkit"
   description?: string
+  isFree?: boolean // Added isFree property to handle free products
 }
 
 interface PurchasedProduct {

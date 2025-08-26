@@ -4,12 +4,12 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
 import { useAuthContext } from "@/context/AuthContext"
 import { useCurrency } from "@/hooks/use-currency"
-import { ShoppingCart, Eye } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 
 interface ToolkitProduct {
   id: string
@@ -22,6 +22,7 @@ interface ToolkitProduct {
   description?: string
   createdAt: string
   updatedAt: string
+  isFree?: boolean
 }
 
 interface PurchasedProduct {
@@ -335,6 +336,10 @@ export default function ToolkitCategoryPage() {
                     {isPurchased ? (
                       <>
                         Continuar <ArrowRight className="h-4 w-4" />
+                      </>
+                    ) : product.isFree ? (
+                      <>
+                        Gratis <CheckCircle className="h-4 w-4" />
                       </>
                     ) : (
                       <>
