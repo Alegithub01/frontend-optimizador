@@ -107,7 +107,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
-  const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("fisico") // Default to physical as per original code
+  const [selectedFormat, setSelectedFormat] = useState<"digital" | "fisico">("digital") // Default to digital format
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
 
