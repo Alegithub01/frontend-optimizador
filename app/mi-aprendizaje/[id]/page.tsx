@@ -9,7 +9,9 @@ import { api } from "@/lib/api"
 import VideoPlayer from "@/components/video-player"
 import { IconRight } from "react-day-picker"
 import { useAccessToCourse } from "@/hooks/useAccessToCourse"
-
+import ImageGenerator from "@/components/cursoIa/image-generator"
+import MusicUploader from "@/components/cursoIa/music-uploader"
+import VideoUploader from "@/components/cursoIa/video-uploader"
 
 interface Content {
   id: number
@@ -17,6 +19,9 @@ interface Content {
   type: "video" | "pdf" | "text"
   urlOrText: string
   secondaryUrl?: string
+  imageGenerator?: boolean
+  music?: boolean
+  selectedVideo?: boolean
 }
 
 interface Section {
@@ -40,8 +45,7 @@ interface Course {
 export default function CoursePlayerPage() {
   const params = useParams()
   const courseId = Number(params.id)
-const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCourse(courseId)
-
+  const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCourse(courseId)
 
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,19 +56,17 @@ const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCou
   const [activeTab, setActiveTab] = useState<"modulos" | "recursos">("modulos")
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set())
 
-  // Fetch course data from your backend
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         setLoading(true)
         const courseData = await api.get<Course>(`/courses/${courseId}`)
-        
-        // Ordenar secciones por ID ascendente (más antiguo primero)
+
         const sortedSections = [...courseData.sections].sort((a, b) => a.id - b.id)
-        
+
         setCourse({
           ...courseData,
-          sections: sortedSections
+          sections: sortedSections,
         })
 
         if (sortedSections.length > 0) {
@@ -167,7 +169,6 @@ const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCou
   const parseTemario = (temario: string | null) => {
     if (!temario) return []
     try {
-      // Remove brackets and split by comma
       const cleaned = temario.replace(/[[\]]/g, "").trim()
       return cleaned
         .split(",")
@@ -203,10 +204,7 @@ const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCou
 
           {contentType === "video" && (
             <div className="w-full">
-              <VideoPlayer
-                videoUrl={content.secondaryUrl}
-                title={`${content.title} - Recurso adicional`}
-              />
+              <VideoPlayer videoUrl={content.secondaryUrl} title={`${content.title} - Recurso adicional`} />
             </div>
           )}
 
@@ -223,48 +221,62 @@ const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCou
             </div>
           )}
 
-          {/* Botón Ingresar a OptiKids (solo para Escuela financiera) */}
-                    {course?.title?.trim().toLowerCase() === "escuela financiera" && (
-                    <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
-                      <div>
-                        <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
-                        <p className="text-gray-600 text-sm max-w-xs mx-auto">
-                          Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad aumentada
-                        </p>
-                      </div>
-          
-                      {/* Botón principal */}
-                      <a
-                        href="https://sanatoriumbusiness.com/optikids/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
-                      >
-                        Ingresar a OPTIKIDS
-                        <IconRight className="w-4 h-4" />
-                      </a>
-          
-                      {/* Instrucciones */}
-                      <div className="text-gray-500 text-xs space-y-3 mt-2">
-                        <div className="flex items-center gap-2 justify-center">
-                          <Smartphone className="w-5 h-5 flex-shrink-0" />
-                          <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
-                        </div>
-                        <div className="flex items-center gap-2 justify-center">
-                          <DownloadCloud className="w-5 h-5 flex-shrink-0" />
-                          <span>
-                            Descarga las apps y escanea las imágenes para vivir la experiencia completa en realidad aumentada.
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+          {course?.title?.trim().toLowerCase() === "escuela financiera" && (
+            <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
+              <div>
+                <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
+                <p className="text-gray-600 text-sm max-w-xs mx-auto">
+                  Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad
+                  aumentada
+                </p>
+              </div>
+              <a
+                href="https://sanatoriumbusiness.com/optikids/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
+              >
+                Ingresar a OPTIKIDS
+                <IconRight className="w-4 h-4" />
+              </a>
+              <div className="text-gray-500 text-xs space-y-3 mt-2">
+                <div className="flex items-center gap-2 justify-center">
+                  <Smartphone className="w-5 h-5 flex-shrink-0" />
+                  <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
+                </div>
+                <div className="flex items-center gap-2 justify-center">
+                  <DownloadCloud className="w-5 h-5 flex-shrink-0" />
+                  <span>
+                    Descarga las apps y escanea las imágenes para vivir la experiencia completa en realidad aumentada.
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
   }
 
-  if (loading) {
+  const renderIAComponents = (content: Content) => {
+    const components = []
+
+    if (content.imageGenerator) {
+      components.push(<ImageGenerator key="image-generator" />)
+    }
+
+    if (content.selectedVideo) {
+      components.push(<VideoUploader key="video-uploader" />)
+    }
+
+    if (content.music) {
+      components.push(<MusicUploader key="music-uploader" />)
+    }
+
+    return components
+  }
+
+  if (loading || accessLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -274,34 +286,22 @@ const { hasAccess, loading: accessLoading, error: accessError } = useAccessToCou
       </div>
     )
   }
-if (accessLoading || loading) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-t-orange-500 border-orange-200 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-xl text-gray-600">Cargando curso...</p>
-      </div>
-    </div>
-  )
-}
 
-if (!hasAccess) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-red-500 text-xl mb-4">
-          No tienes acceso a este curso.
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">No tienes acceso a este curso.</div>
+          <Link
+            href="/cursos"
+            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Volver a cursos
+          </Link>
         </div>
-        <Link
-          href="/cursos"
-          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          Volver a cursos
-        </Link>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
   if (error || !course) {
     return (
@@ -319,7 +319,6 @@ if (!hasAccess) {
     )
   }
 
-  // Get active video
   const activeVideo =
     course.sections
       .flatMap((section) => section.contents)
@@ -327,7 +326,6 @@ if (!hasAccess) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -344,11 +342,9 @@ if (!hasAccess) {
         </div>
       </header>
 
-      {/* Desktop Layout */}
       <div className="hidden lg:block">
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div className="p-4 border-b bg-gray-50">
@@ -361,7 +357,6 @@ if (!hasAccess) {
                 </div>
 
                 <div className="max-h-[600px] overflow-y-auto">
-                  {/* Secciones ya están ordenadas por ID ascendente */}
                   {course.sections.map((section) => {
                     const firstVideo = section.contents.find((content) => content.type === "video")
                     const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
@@ -407,7 +402,6 @@ if (!hasAccess) {
                           </div>
                         </div>
 
-                        {/* Temario expandible */}
                         {temarioItems.length > 0 && (
                           <div className="px-4 pb-2">
                             <button
@@ -441,24 +435,17 @@ if (!hasAccess) {
               </div>
             </div>
 
-            {/* Main Content */}
             <div className="lg:col-span-3">
               {activeVideo ? (
                 <div className="space-y-6">
-                  {/* Course Title */}
                   <div className="text-right">
                     <h1 className="text-2xl font-bold text-gray-800">{course.title}</h1>
                   </div>
 
-                  {/* Video Player Component */}
                   <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <VideoPlayer
-                      videoUrl={activeVideo.urlOrText}
-                      title={activeVideo.title}
-                    />
+                    <VideoPlayer videoUrl={activeVideo.urlOrText} title={activeVideo.title} />
                   </div>
 
-                  {/* Video Info */}
                   <div className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="h-4 w-4 text-gray-500" />
@@ -467,7 +454,10 @@ if (!hasAccess) {
                     <h2 className="text-xl font-bold text-gray-800 mb-2">{activeVideo.title}</h2>
                   </div>
 
-                  {/* Secondary Content */}
+                  {(activeVideo.imageGenerator || activeVideo.music || activeVideo.selectedVideo) && (
+                    <div className="space-y-4">{renderIAComponents(activeVideo)}</div>
+                  )}
+
                   <SecondaryContent content={activeVideo} />
                 </div>
               ) : (
@@ -486,23 +476,15 @@ if (!hasAccess) {
         </div>
       </div>
 
-      {/* Mobile Layout - New Design */}
       <div className="lg:hidden">
-        {/* Back Button */}
         <div className="p-4">
           <Link href="/cursos" className="flex items-center gap-2 text-gray-600">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </div>
 
-        {/* Video Player Mobile */}
         <div className="relative w-full aspect-video bg-black">
-          {activeVideo && (
-            <VideoPlayer
-              videoUrl={activeVideo.urlOrText}
-              title={activeVideo.title}
-            />
-          )}
+          {activeVideo && <VideoPlayer videoUrl={activeVideo.urlOrText} title={activeVideo.title} />}
           {!activeVideo && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Play className="h-16 w-16 text-white opacity-70" />
@@ -510,7 +492,6 @@ if (!hasAccess) {
           )}
         </div>
 
-        {/* Course Badge and Title */}
         <div className="p-4">
           <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs rounded-full mb-2">
             {course.sections.length} Cursos
@@ -518,7 +499,10 @@ if (!hasAccess) {
           <h1 className="text-xl font-bold text-gray-800">{course.title}</h1>
         </div>
 
-        {/* Tab Navigation */}
+        {activeVideo && (activeVideo.imageGenerator || activeVideo.music || activeVideo.selectedVideo) && (
+          <div className="p-4 space-y-4">{renderIAComponents(activeVideo)}</div>
+        )}
+
         <div className="flex border-b">
           <button
             className={`flex-1 py-3 text-center font-medium ${
@@ -542,10 +526,8 @@ if (!hasAccess) {
           </button>
         </div>
 
-        {/* Módulos Tab Content */}
         {activeTab === "modulos" && (
           <div className="p-4 space-y-4">
-            {/* Secciones ya están ordenadas por ID ascendente */}
             {course.sections.map((section) => {
               const firstVideo = section.contents.find((content) => content.type === "video")
               const thumbnail = firstVideo ? getVideoThumbnail(firstVideo.urlOrText) : "/placeholder.svg"
@@ -589,7 +571,6 @@ if (!hasAccess) {
                     </div>
                   </div>
 
-                  {/* Temario expandible */}
                   {temarioItems.length > 0 && (
                     <div className="bg-gray-100 rounded-lg">
                       <button
@@ -619,10 +600,8 @@ if (!hasAccess) {
           </div>
         )}
 
-        {/* Recursos Tab Content */}
         {activeTab === "recursos" && (
           <div className="p-4 space-y-4">
-            {/* Secciones ya están ordenadas por ID ascendente */}
             {course.sections.map((section) => {
               const firstVideo = section.contents.find((content) => content.type === "video")
               if (!firstVideo || !firstVideo.secondaryUrl) return null
@@ -643,7 +622,6 @@ if (!hasAccess) {
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                   </div>
 
-                  {/* Recursos expandible */}
                   <div className="bg-gray-100 rounded-lg">
                     <button
                       onClick={() => toggleResource(section.id)}
@@ -676,7 +654,7 @@ if (!hasAccess) {
                             <VideoPlayer
                               videoUrl={firstVideo.secondaryUrl}
                               title={`${firstVideo.title} - Recurso adicional`}
-                              />
+                            />
                           </div>
                         )}
 
@@ -693,42 +671,39 @@ if (!hasAccess) {
                           </div>
                         )}
 
-                        {/* Botón Ingresar a OptiKids (solo para Escuela financiera) */}
                         {course?.title?.trim().toLowerCase() === "escuela financiera" && (
-                        <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
-                          <div>
-                            <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
-                            <p className="text-gray-600 text-sm max-w-xs mx-auto">
-                              Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia de realidad aumentada
-                            </p>
-                          </div>
-              
-                          {/* Botón principal */}
-                          <a
-                            href="https://sanatoriumbusiness.com/optikids/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
-                          >
-                            Ingresar a OPTIKIDS
-                            <IconRight className="w-4 h-4" />
-                          </a>
-              
-                          {/* Instrucciones */}
-                          <div className="text-gray-500 text-xs space-y-3 mt-2">
-                            <div className="flex items-center gap-2 justify-center">
-                              <Smartphone className="w-5 h-5 flex-shrink-0" />
-                              <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
+                          <div className="flex flex-col items-center justify-center text-center space-y-6 px-4 py-8">
+                            <div>
+                              <h2 className="text-sm text-gray-500 font-semibold mb-1">Usa otro dispositivo</h2>
+                              <p className="text-gray-600 text-sm max-w-xs mx-auto">
+                                Ingresa al sitio web para poder descargar las aplicaciones y experimentar la experiencia
+                                de realidad aumentada
+                              </p>
                             </div>
-                            <div className="flex items-center gap-2 justify-center">
-                              <DownloadCloud className="w-5 h-5 flex-shrink-0" />
-                              <span>
-                                Descarga las apps y escanea las imágenes para vivir la experiencia completa en realidad aumentada.
-                              </span>
+                            <a
+                              href="https://sanatoriumbusiness.com/optikids/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-full text-sm transition-all duration-200"
+                            >
+                              Ingresar a OPTIKIDS
+                              <IconRight className="w-4 h-4" />
+                            </a>
+                            <div className="text-gray-500 text-xs space-y-3 mt-2">
+                              <div className="flex items-center gap-2 justify-center">
+                                <Smartphone className="w-5 h-5 flex-shrink-0" />
+                                <span>Escanea los códigos QR de la hoja con otro teléfono.</span>
+                              </div>
+                              <div className="flex items-center gap-2 justify-center">
+                                <DownloadCloud className="w-5 h-5 flex-shrink-0" />
+                                <span>
+                                  Descarga las apps y escanea las imágenes para vivir la experiencia completa en
+                                  realidad aumentada.
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                       </div>
                     )}
                   </div>

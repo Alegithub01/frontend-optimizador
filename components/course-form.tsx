@@ -12,9 +12,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2, Plus, Minus, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
+import { useToast } from "@/components/ui/use-toast" // Import useToast
 
 // Función para transformar URLs de Google Drive
 const transformDriveUrl = (url: string | undefined): string | undefined => {
@@ -55,6 +55,9 @@ const contentSchema = z.object({
   }),
   urlOrText: z.string().min(1, "La URL o texto es requerido"),
   secondaryUrl: z.string().optional(),
+  imageGenerator: z.boolean().default(false),
+  music: z.boolean().default(false),
+  selectedVideo: z.boolean().default(false),
 })
 
 const sectionSchema = z.object({
@@ -87,6 +90,9 @@ type ContentType = {
   type: "video" | "pdf" | "image"
   urlOrText: string
   secondaryUrl?: string
+  imageGenerator?: boolean
+  music?: boolean
+  selectedVideo?: boolean
 }
 
 type SectionType = {
@@ -195,6 +201,9 @@ function SectionItem({
                   title: "",
                   type: "video",
                   urlOrText: "",
+                  imageGenerator: false,
+                  music: false,
+                  selectedVideo: false,
                 })
               }
             >
@@ -316,6 +325,59 @@ function SectionItem({
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-gray-700">Características del contenido</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={control}
+                    name={`sections.${sectionIndex}.contents.${contentIndex}.imageGenerator`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm">Generador de Imágenes</FormLabel>
+                          <FormDescription className="text-xs">Habilitar generación de imágenes</FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name={`sections.${sectionIndex}.contents.${contentIndex}.music`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm">Música</FormLabel>
+                          <FormDescription className="text-xs">Incluir funcionalidad de música</FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={control}
+                    name={`sections.${sectionIndex}.contents.${contentIndex}.selectedVideo`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm">Video Seleccionado</FormLabel>
+                          <FormDescription className="text-xs">Marcar como video destacado</FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -327,7 +389,7 @@ function SectionItem({
 export function CourseForm({ courseId }: CourseFormProps) {
   const [loading, setLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(!!courseId)
-  const { toast } = useToast()
+  const { toast } = useToast() // Declare useToast
   const router = useRouter()
 
   // Estado para el botón de guardar independiente
@@ -355,6 +417,9 @@ export function CourseForm({ courseId }: CourseFormProps) {
               title: "",
               type: "video",
               urlOrText: "",
+              imageGenerator: false,
+              music: false,
+              selectedVideo: false,
             },
           ],
         },
@@ -415,8 +480,20 @@ export function CourseForm({ courseId }: CourseFormProps) {
                         content?.type === "pdf"
                           ? transformDriveUrl(content.secondaryUrl) || ""
                           : content?.secondaryUrl || "",
+                      imageGenerator: content?.imageGenerator || false,
+                      music: content?.music || false,
+                      selectedVideo: content?.selectedVideo || false,
                     }))
-                  : [{ title: "", type: "video" as const, urlOrText: "" }],
+                  : [
+                      {
+                        title: "",
+                        type: "video" as const,
+                        urlOrText: "",
+                        imageGenerator: false,
+                        music: false,
+                        selectedVideo: false,
+                      },
+                    ],
               }))
             : [],
         }
@@ -714,7 +791,16 @@ export function CourseForm({ courseId }: CourseFormProps) {
                 appendSection({
                   title: "",
                   temario: "",
-                  contents: [{ title: "", type: "video", urlOrText: "" }],
+                  contents: [
+                    {
+                      title: "",
+                      type: "video",
+                      urlOrText: "",
+                      imageGenerator: false,
+                      music: false,
+                      selectedVideo: false,
+                    },
+                  ],
                 })
               }
             >
