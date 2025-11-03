@@ -412,7 +412,7 @@ export default function CoursePage({ params }: CoursePageProps) {
     </>
   ) : course.isFree ? (
     <>
-      <span>Adquirir gratis</span>
+      <span>Obtenlo sin costo</span>
       <CheckCircle className="ml-2 h-8 w-8" />
     </>
   ) : (

@@ -15,8 +15,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Edit, MoreVertical, Trash2, Eye } from "lucide-react"
+import { Edit, MoreVertical, Trash2, Eye, Save } from "lucide-react"
 import { api } from "@/lib/api"
 
 type Course = {
@@ -29,6 +30,7 @@ type Course = {
   endDate: string
   capacity: number
   trailer?: string
+  order?: number
 }
 
 export function CourseList() {
@@ -38,14 +40,15 @@ export function CourseList() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const [editingOrderId, setEditingOrderId] = useState<number | null>(null)
+  const [orderValue, setOrderValue] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const data = await api.get<Course[]>("/courses")
-        // Ordenar cursos por ID de forma ascendente
-        const sortedCourses = [...data].sort((a, b) => a.id - b.id)
-        setCourses(sortedCourses)
+        // ❌ no reordenamos por id; ya viene ordenado por 'order' desde el backend
+        setCourses(data)
       } catch (error) {
         toast({
           title: "Error",
@@ -59,6 +62,7 @@ export function CourseList() {
 
     fetchCourses()
   }, [toast])
+
   const handleDelete = async () => {
     if (deleteId === null) return
 
@@ -86,6 +90,29 @@ export function CourseList() {
     setIsDeleteDialogOpen(true)
   }
 
+  const startEditOrder = (course: Course) => {
+    setEditingOrderId(course.id)
+    setOrderValue(course.order ?? 0)
+  }
+
+  const saveOrder = async (id: number) => {
+    try {
+      await api.patch(`/courses/${id}`, { order: orderValue })
+      setCourses((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, order: orderValue ?? c.order } : c))
+      )
+      toast({ title: "Orden actualizado", description: `El curso fue movido al orden ${orderValue}` })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el orden",
+        variant: "destructive",
+      })
+    } finally {
+      setEditingOrderId(null)
+    }
+  }
+
   if (loading) {
     return <div>Cargando cursos...</div>
   }
@@ -97,6 +124,7 @@ export function CourseList() {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
+              <TableHead>Orden</TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Precio</TableHead>
               <TableHead>Capacidad</TableHead>
@@ -108,7 +136,7 @@ export function CourseList() {
           <TableBody>
             {courses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6">
+                <TableCell colSpan={8} className="text-center py-6">
                   No hay cursos disponibles
                 </TableCell>
               </TableRow>
@@ -116,6 +144,35 @@ export function CourseList() {
               courses.map((course) => (
                 <TableRow key={course.id}>
                   <TableCell>{course.id}</TableCell>
+
+                  {/* ✅ COLUMNA DE ORDEN */}
+                  <TableCell>
+                    {editingOrderId === course.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={orderValue ?? ""}
+                          onChange={(e) => setOrderValue(Number(e.target.value))}
+                          className="w-16"
+                        />
+                        <Button size="icon" onClick={() => saveOrder(course.id)}>
+                          <Save className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>{course.order ?? 0}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => startEditOrder(course)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+
                   <TableCell className="font-medium">{course.title}</TableCell>
                   <TableCell>${course.price}</TableCell>
                   <TableCell>{course.capacity}</TableCell>

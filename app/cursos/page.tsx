@@ -19,7 +19,7 @@ interface Course {
   discount?: number
   image: string
   hasVideo?: boolean
-  isFree?: boolean // Added isFree property to Course interface
+  isFree?: boolean
 }
 
 interface PurchasedCourse {
@@ -44,25 +44,24 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [purchasedCourses, setPurchasedCourses] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
+  const [priceSort, setPriceSort] = useState<"asc" | "desc" | "none">("none")
+  const [showFreeFirst, setShowFreeFirst] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
 
-        // Fetch cursos disponibles (tu lógica original)
         const data = await api.get<Course[]>("/courses")
         setCourses(data)
         console.log("📚 Cursos obtenidos:", data)
 
-        // Fetch cursos comprados por el usuario si está autenticado
         if (isAuthenticated && user?.id) {
           try {
             console.log(`🔍 Haciendo fetch a: /sales/user/${user.id}/courses`)
             const purchasedData = await api.get<PurchasedCourse[]>(`/sales/user/${user.id}/courses`)
             console.log("🛒 Respuesta de cursos comprados:", purchasedData)
 
-            // Solo considerar cursos con status "paid"
             const paidCourses = purchasedData.filter((purchase) => purchase.status === "paid")
             const purchasedCourseIds = paidCourses.map((purchase) => purchase.course.id)
             console.log("🛒 IDs de cursos comprados:", purchasedCourseIds)
@@ -77,7 +76,6 @@ export default function CoursesPage() {
         }
       } catch (error) {
         console.error("Error:", error)
-        // Tu fallback original
         setCourses([
           {
             id: 1,
@@ -120,20 +118,53 @@ export default function CoursesPage() {
       }
     }
 
-    // Solo hacer fetch cuando la autenticación haya terminado de cargar
     if (!authLoading) {
       fetchData()
     }
   }, [authLoading])
 
+  const getFilteredAndSortedCourses = () => {
+    let filtered = [...courses]
+
+    if (showFreeFirst) {
+      const freeCourses = filtered.filter((c) => c.isFree || c.price === 0)
+      const paidCourses = filtered.filter((c) => !c.isFree && c.price > 0)
+
+      // Apply price sorting to each group independently
+      if (priceSort !== "none") {
+        freeCourses.sort((a, b) => {
+          const aPrice = a.price || 0
+          const bPrice = b.price || 0
+          return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
+        })
+
+        paidCourses.sort((a, b) => {
+          const aPrice = a.price || 0
+          const bPrice = b.price || 0
+          return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
+        })
+      }
+
+      // Combine: free courses first, then paid courses
+      filtered = [...freeCourses, ...paidCourses]
+    } else if (priceSort !== "none") {
+      // Only apply price sorting if "show free first" is not active
+      filtered.sort((a, b) => {
+        const aPrice = a.price || 0
+        const bPrice = b.price || 0
+        return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
+      })
+    }
+
+    return filtered
+  }
+
   const handleCourseAction = (courseId: number) => {
     const isOwned = isAuthenticated && purchasedCourses.includes(courseId)
 
     if (isOwned) {
-      // Si ya compró el curso, ir a mi-aprendizaje
       router.push(`/mi-aprendizaje/${courseId}`)
     } else {
-      // Si no lo compró, ir a la página de compra (tu lógica original)
       router.push(`/cursos/${courseId}`)
     }
   }
@@ -148,6 +179,8 @@ export default function CoursesPage() {
       </div>
     )
   }
+
+  const filteredCourses = getFilteredAndSortedCourses()
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -165,8 +198,53 @@ export default function CoursesPage() {
           )}
         </div>
 
+        <div className="max-w-6xl mx-auto mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+          <h3 className="text-lg font-bold mb-4 text-gray-900">Filtros</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Price Sort Filter */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-2">Ordenar por precio</label>
+              <select
+                value={priceSort}
+                onChange={(e) => setPriceSort(e.target.value as "asc" | "desc" | "none")}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="none">Sin ordenar</option>
+                <option value="asc">Menor a mayor precio</option>
+                <option value="desc">Mayor a menor precio</option>
+              </select>
+            </div>
+
+            {/* Free Courses First Filter */}
+            <div className="flex items-end">
+              <label className="flex items-center cursor-pointer gap-3 p-2 rounded-lg hover:bg-gray-200 transition">
+                <input
+                  type="checkbox"
+                  checked={showFreeFirst}
+                  onChange={(e) => setShowFreeFirst(e.target.checked)}
+                  className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
+                />
+                <span className="text-sm font-semibold text-gray-700">Mostrar cursos gratis primero</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Active filters indicator */}
+          {(priceSort !== "none" || showFreeFirst) && (
+            <div className="mt-4 p-2 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-800">
+                <span className="font-semibold">Filtros activos:</span>{" "}
+                {priceSort !== "none" &&
+                  `Ordenado por precio (${priceSort === "asc" ? "menor a mayor" : "mayor a menor"})`}
+                {priceSort !== "none" && showFreeFirst && " • "}
+                {showFreeFirst && "Cursos gratis primero"}
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {courses.map((course) => {
+          {filteredCourses.map((course) => {
             const isOwned = isAuthenticated && purchasedCourses.includes(course.id)
             return (
               <div
@@ -231,12 +309,10 @@ export default function CoursesPage() {
                           )}
                         </div>
 
-                        {/* Mostrar precio en USD como referencia si no es USD */}
                         {!currencyLoading && currency.code !== "USD" && (
                           <p className="text-gray-500 text-sm mb-2">Precio original: ${course.price} USD</p>
                         )}
 
-                        {/* Información específica para Bolivia */}
                         {currency.code === "BOB" && (
                           <p className="text-gray-500 text-sm mb-4">Cambio oficial del BCB aplicado</p>
                         )}
@@ -273,7 +349,7 @@ export default function CoursesPage() {
                         </>
                       ) : course.isFree ? (
                         <>
-                          Gratis <CheckCircle className="h-4 w-4" />
+                          Obtenlo sin costo <CheckCircle className="h-4 w-4" />
                         </>
                       ) : (
                         <>
@@ -287,43 +363,6 @@ export default function CoursesPage() {
             )
           })}
         </div>
-
-        {/* Sección Premium */}
-        <div className="mt-16 max-w-6xl mx-auto rounded-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-700 via-black to-orange-700 p-10 text-white text-center">
-            <h2 className="text-3xl font-extrabold mb-2">CONVIÉRTETE EN</h2>
-            <h3 className="text-3xl font-extrabold mb-6">PREMIUM</h3>
-            <p className="mb-8 max-w-md mx-auto font-light">Accede a todos los cursos y recursos y asistente de IA</p>
-            <Button
-              className="bg-orange-700 hover:bg-orange-600 rounded-full font-black text-black px-8 py-6 transition-all duration-200"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  router.push("/login")
-                } else {
-                  router.push("/premium")
-                }
-              }}
-            >
-              {isAuthenticated ? "Sí quiero ser optimizado" : "Iniciar sesión para Premium"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mensaje para usuarios no autenticados */}
-        {!isAuthenticated && (
-          <div className="mt-12 max-w-2xl mx-auto text-center p-6 bg-blue-50 border border-blue-200 rounded-xl">
-            <h3 className="text-xl font-bold text-blue-900 mb-2">¿Ya tienes una cuenta?</h3>
-            <p className="text-blue-700 mb-4">
-              Inicia sesión para ver tus cursos comprados y continuar tu aprendizaje.
-            </p>
-            <Button
-              onClick={() => router.push("/login")}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-2"
-            >
-              Iniciar Sesión
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
