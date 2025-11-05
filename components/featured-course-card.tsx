@@ -7,6 +7,7 @@ interface FeaturedCourse {
   title: string
   description: string
   image: string
+  isFree?: boolean // Added isFree property to show "Obtenlo" badge
 }
 
 interface FeaturedCourseCardProps {
@@ -24,11 +25,14 @@ export default function FeaturedCourseCard({ course }: FeaturedCourseCardProps) 
           fill
           className="object-cover brightness-50 group-hover:brightness-40 transition-all duration-300"
         />
+        {course.isFree && (
+          <div className="absolute top-4 right-4 z-20">
+            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">Obtenlo</span>
+          </div>
+        )}
         <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
           <h3 className="text-2xl font-bold mb-3 text-white">{course.title}</h3>
-          <p className="text-white mb-6">
-            {course.description.split(".")[0] + "."}
-          </p>
+          <p className="text-white mb-6">{course.description.split(".")[0] + "."}</p>
           <Link href={`/cursos/${course.id}`}>
             <Button className="bg-orange-700 hover:bg-orange-500 text-black w-full md:w-auto rounded-full">
               Acceder al curso
@@ -48,6 +52,11 @@ export default function FeaturedCourseCard({ course }: FeaturedCourseCardProps) 
             fill
             className="object-cover brightness-50"
           />
+          {course.isFree && (
+            <div className="absolute top-4 right-4 z-20">
+              <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">Obtenlo</span>
+            </div>
+          )}
           <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent">
             <h3 className="text-xl font-bold text-white">{course.title}</h3>
           </div>

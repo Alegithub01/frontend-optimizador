@@ -180,6 +180,11 @@ export default function CoursesPage() {
                       ✓ ADQUIRIDO
                     </div>
                   )}
+                  {!isOwned && course.isFree && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      Obtenlo
+                    </div>
+                  )}
                   {course.hasVideo && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center backdrop-blur-sm">
