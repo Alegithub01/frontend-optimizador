@@ -44,8 +44,6 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [purchasedCourses, setPurchasedCourses] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
-  const [priceSort, setPriceSort] = useState<"asc" | "desc" | "none">("none")
-  const [showFreeFirst, setShowFreeFirst] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,41 +121,7 @@ export default function CoursesPage() {
     }
   }, [authLoading])
 
-  const getFilteredAndSortedCourses = () => {
-    let filtered = [...courses]
-
-    if (showFreeFirst) {
-      const freeCourses = filtered.filter((c) => c.isFree || c.price === 0)
-      const paidCourses = filtered.filter((c) => !c.isFree && c.price > 0)
-
-      // Apply price sorting to each group independently
-      if (priceSort !== "none") {
-        freeCourses.sort((a, b) => {
-          const aPrice = a.price || 0
-          const bPrice = b.price || 0
-          return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
-        })
-
-        paidCourses.sort((a, b) => {
-          const aPrice = a.price || 0
-          const bPrice = b.price || 0
-          return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
-        })
-      }
-
-      // Combine: free courses first, then paid courses
-      filtered = [...freeCourses, ...paidCourses]
-    } else if (priceSort !== "none") {
-      // Only apply price sorting if "show free first" is not active
-      filtered.sort((a, b) => {
-        const aPrice = a.price || 0
-        const bPrice = b.price || 0
-        return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice
-      })
-    }
-
-    return filtered
-  }
+  // Removed filters section - filtering now handled by backend
 
   const handleCourseAction = (courseId: number) => {
     const isOwned = isAuthenticated && purchasedCourses.includes(courseId)
@@ -180,8 +144,6 @@ export default function CoursesPage() {
     )
   }
 
-  const filteredCourses = getFilteredAndSortedCourses()
-
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto py-16 px-4">
@@ -198,53 +160,8 @@ export default function CoursesPage() {
           )}
         </div>
 
-        <div className="max-w-6xl mx-auto mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
-          <h3 className="text-lg font-bold mb-4 text-gray-900">Filtros</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Price Sort Filter */}
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-700 mb-2">Ordenar por precio</label>
-              <select
-                value={priceSort}
-                onChange={(e) => setPriceSort(e.target.value as "asc" | "desc" | "none")}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              >
-                <option value="none">Sin ordenar</option>
-                <option value="asc">Menor a mayor precio</option>
-                <option value="desc">Mayor a menor precio</option>
-              </select>
-            </div>
-
-            {/* Free Courses First Filter */}
-            <div className="flex items-end">
-              <label className="flex items-center cursor-pointer gap-3 p-2 rounded-lg hover:bg-gray-200 transition">
-                <input
-                  type="checkbox"
-                  checked={showFreeFirst}
-                  onChange={(e) => setShowFreeFirst(e.target.checked)}
-                  className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
-                />
-                <span className="text-sm font-semibold text-gray-700">Mostrar cursos gratis primero</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Active filters indicator */}
-          {(priceSort !== "none" || showFreeFirst) && (
-            <div className="mt-4 p-2 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-sm text-orange-800">
-                <span className="font-semibold">Filtros activos:</span>{" "}
-                {priceSort !== "none" &&
-                  `Ordenado por precio (${priceSort === "asc" ? "menor a mayor" : "mayor a menor"})`}
-                {priceSort !== "none" && showFreeFirst && " • "}
-                {showFreeFirst && "Cursos gratis primero"}
-              </p>
-            </div>
-          )}
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {filteredCourses.map((course) => {
+          {courses.map((course) => {
             const isOwned = isAuthenticated && purchasedCourses.includes(course.id)
             return (
               <div
@@ -321,7 +238,7 @@ export default function CoursesPage() {
 
                     {!isOwned && course.isFree && (
                       <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-green-800 text-sm font-medium">¡Este curso es completamente gratuito!</p>
+                        <p className="text-green-800 text-sm font-medium">¡Este curso es completamente obtenible!</p>
                       </div>
                     )}
 
@@ -338,7 +255,7 @@ export default function CoursesPage() {
                         isOwned
                           ? "bg-gray-500 hover:bg-gray-600 text-white"
                           : course.isFree
-                            ? "bg-orange-700 hover:bg-orange-500 text-black"
+                            ? "bg-green-700 hover:bg-green-600 text-white"
                             : "bg-orange-700 hover:bg-orange-500 text-black"
                       }`}
                       onClick={() => handleCourseAction(course.id)}
@@ -349,7 +266,7 @@ export default function CoursesPage() {
                         </>
                       ) : course.isFree ? (
                         <>
-                          Obtenlo sin costo <CheckCircle className="h-4 w-4" />
+                          Obtenlo <CheckCircle className="h-4 w-4" />
                         </>
                       ) : (
                         <>

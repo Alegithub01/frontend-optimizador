@@ -409,6 +409,8 @@ export default function ProductGrid({
                           className={`rounded-full w-full text-white hover:text-white ${
                             purchaseStatus.hasBoth
                               ? "bg-gray-500 hover:bg-gray-600"
+                              : product.isFree
+                              ? "bg-green-700 hover:bg-green-500"
                               : "bg-orange-700 hover:bg-orange-600"
                           }`}
                           onClick={() => handleProductAction(product.id)}
@@ -416,7 +418,7 @@ export default function ProductGrid({
                         >
                           {product.isFree ? (
                             <span className="flex items-center gap-2">
-                              Gratis
+                              Obtenlo
                               <CheckCircle className="h-4 w-4" />
                             </span>
                           ) : purchaseStatus.hasBoth ? (

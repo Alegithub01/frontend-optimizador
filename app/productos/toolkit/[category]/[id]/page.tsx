@@ -421,7 +421,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
     </>
   ) : product.isFree ? (
     <>
-      <span>Adquirir gratis</span>
+      <span>Obtenlo</span>
       <CheckCircle className="ml-2 h-8 w-8" />
     </>
   ) : (
@@ -474,7 +474,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                           <>
                             {relatedProduct.isFree ? (
                               <div className="flex items-center">
-                                <span className="text-2xl font-bold text-green-600">GRATIS</span>
+                                <span className="text-2xl font-bold text-green-600">Obtenlo</span>
                                 <div className="ml-2 px-1 py-0.5 bg-green-100 text-green-800 text-xs rounded">🎉</div>
                               </div>
                             ) : (
@@ -497,7 +497,7 @@ export default function ToolkitProductPage({ params }: ToolkitProductPageProps) 
                         disabled={currencyLoading}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        {relatedProduct.isFree ? "Adquiérelo gratis" : "Comprar"}
+                        {relatedProduct.isFree ? "Obtenlo" : "Comprar"}
                       </Button>
                     </div>
                   </div>

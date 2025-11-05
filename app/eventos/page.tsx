@@ -5,6 +5,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Play, Calendar, Clock, ChevronRight } from "lucide-react"
 import { api } from "@/lib/api"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import VimeoPlayer from "@/components/VimeoPlayer"
 
 // Define the Event interface based on your backend structure
 interface Event {
@@ -146,6 +148,7 @@ function useCountdown(targetDate: string) {
 export default function EventsPage() {
   const { events, loading, error } = useEvents()
   const [featuredEvent, setFeaturedEvent] = useState<Event | null>(null)
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
   const countdown = useCountdown(featuredEvent?.dateTime || "")
 
   // Set the featured event (first upcoming event)
@@ -209,7 +212,7 @@ export default function EventsPage() {
                     <div className="absolute inset-0 flex items-center justify-center z-10">
                       {featuredEvent.trailerUrl && (
                         <button
-                          onClick={() => window.open(featuredEvent.trailerUrl, "_blank")}
+                          onClick={() => setIsVideoOpen(true)}
                           className="bg-white/20 rounded-full p-4 backdrop-blur-sm hover:bg-white/30 transition-colors"
                         >
                           <Play className="h-8 w-8 fill-white" />
@@ -382,7 +385,7 @@ export default function EventsPage() {
                     <div className="flex items-center text-2xl text-black">
                       <span className="font-black text-5xl">{day}</span>
                       <span className="font-black  text-l ml-2">{month}</span>
-                      
+
                       {/* Línea vertical separadora */}
                       <div className="h-6 w-[2px] bg-orange-700 mx-2" />
 
@@ -399,7 +402,6 @@ export default function EventsPage() {
                     </Link>
                   </div>
 
-
                   {/* Time */}
                   <div className="flex items-center text-black">
                     <Clock className="h-4 w-4 mr-2" />
@@ -411,6 +413,14 @@ export default function EventsPage() {
           })}
         </div>
       </div>
+
+      {featuredEvent && (
+        <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+          <DialogContent className="max-w-4xl w-full aspect-video p-0 border-0">
+            <VimeoPlayer videoUrl={featuredEvent.trailerUrl || ""} title={featuredEvent.title} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

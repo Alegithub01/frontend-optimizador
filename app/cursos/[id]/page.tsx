@@ -412,7 +412,7 @@ export default function CoursePage({ params }: CoursePageProps) {
     </>
   ) : course.isFree ? (
     <>
-      <span>Obtenlo sin costo</span>
+      <span>Obtenlo</span>
       <CheckCircle className="ml-2 h-8 w-8" />
     </>
   ) : (
@@ -467,7 +467,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                       {/* Precio con descuento para cursos relacionados */}
                       <div className="mb-4">
                         {relatedCourse.isFree ? (
-                          <div className="text-2xl font-bold text-green-600">GRATIS</div>
+                          <div className="text-2xl font-bold text-green-600">Obtenlo</div>
                         ) : (
                           <>
                             <div className="flex items-center">
@@ -518,7 +518,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                           disabled={currencyLoading}
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
-                          {relatedCourse.isFree ? "Adquiérelo gratis" : "Comprar"}
+                          {relatedCourse.isFree ? "Obtenlo" : "Comprar"}
                         </Button>
                       </div>
                     </div>

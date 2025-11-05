@@ -60,9 +60,7 @@ export default function ProyectosSection() {
 
       {/* Mobile Layout */}
       <div className="block md:hidden space-y-8">
-        {/* Proyecto destacado primero en móvil */}
         {proyectoDestacado && <ProyectoCard proyecto={proyectoDestacado} featured />}
-        {/* Resto de proyectos en columna con espacio y tamaño fijo */}
         <div className="space-y-8">
           {proyectosRegulares.map((proyecto) => (
             <div key={proyecto.id}>
@@ -75,21 +73,21 @@ export default function ProyectosSection() {
       {/* Desktop Layout */}
       <div className="hidden md:block max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-[0.7fr_1fr_0.7fr] gap-6 px-4">
-          {/* Primera columna (2 proyectos) */}
+          {/* Left column (2 projects) */}
           <div className="flex flex-col gap-6">
             {proyectosRegulares.slice(0, 2).map((proyecto) => (
               <ProyectoCard key={proyecto.id} proyecto={proyecto} />
             ))}
           </div>
 
-          {/* Columna central (proyecto destacado) */}
+          {/* Center column (featured project) */}
           {proyectoDestacado && (
             <div>
               <ProyectoCard proyecto={proyectoDestacado} featured />
             </div>
           )}
 
-          {/* Tercera columna (2 proyectos) */}
+          {/* Right column (2 projects) */}
           <div className="flex flex-col gap-6">
             {proyectosRegulares.slice(2, 4).map((proyecto) => (
               <ProyectoCard key={proyecto.id} proyecto={proyecto} />
@@ -103,16 +101,18 @@ export default function ProyectosSection() {
 
 function ProyectoCard({ proyecto, featured = false }: { proyecto: Proyecto; featured?: boolean }) {
   return (
-    <Link href={proyecto.link} className="group">
+    <Link href={proyecto.link} target="_blank" className="group block">
       <div
         className={`relative rounded-2xl md:rounded-3xl overflow-hidden transition-transform duration-300 group-hover:scale-[0.98] ${
-          featured ? "h-[300px] md:h-[400px]" : "h-[300px] md:h-[200px]"
+          featured ? "h-[300px] md:h-[400px]" : "h-[200px] md:h-[200px]"
         }`}
       >
         <Image
           src={proyecto.image || "/placeholder.svg"}
           alt={proyecto.title}
           fill
+          priority={featured}
+          sizes={featured ? "(max-width: 768px) 100vw, 33vw" : "(max-width: 768px) 100vw, 25vw"}
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
