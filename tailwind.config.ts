@@ -57,6 +57,7 @@ const config: Config = {
           600: "#16A34A",
           0:"#6BCE44",
           700:"#34C759",
+          lima:"#B7D968",
         },
         purple: {
           400: "#C084FC",

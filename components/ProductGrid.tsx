@@ -410,7 +410,7 @@ export default function ProductGrid({
                             purchaseStatus.hasBoth
                               ? "bg-gray-500 hover:bg-gray-600"
                               : product.isFree
-                              ? "bg-green-700 hover:bg-green-500"
+                              ? "bg-green-800 hover:bg-green-500 text-green-lima"
                               : "bg-orange-700 hover:bg-orange-600"
                           }`}
                           onClick={() => handleProductAction(product.id)}
@@ -418,7 +418,7 @@ export default function ProductGrid({
                         >
                           {product.isFree ? (
                             <span className="flex items-center gap-2">
-                              Obtenlo
+                              Gratís
                               <CheckCircle className="h-4 w-4" />
                             </span>
                           ) : purchaseStatus.hasBoth ? (

@@ -889,7 +889,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                 {product.isFree && selectedFormat === "digital" ? (
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    Obtenlo
+                    Gratís
                   </div>
                 ) : (
                   <>
@@ -988,7 +988,7 @@ export default function ProductDetailPage({ params }: { params: { category: stri
                   {product.isFree && selectedFormat === "digital" ? (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                      Obtenlo
+                      Gratís
                     </>
                   ) : (
                     <>

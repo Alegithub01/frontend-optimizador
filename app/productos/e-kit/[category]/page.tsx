@@ -331,7 +331,7 @@ export default function EKidsCategoryPage() {
                       </>
                     ) : product.isFree ? (
                       <>
-                        Obtenlo <CheckCircle className="h-4 w-4" />
+                        Gratís <CheckCircle className="h-4 w-4" />
                       </>
                     ) : (
                       <>

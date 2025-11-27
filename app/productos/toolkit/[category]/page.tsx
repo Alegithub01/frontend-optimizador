@@ -339,7 +339,7 @@ export default function ToolkitCategoryPage() {
                       </>
                     ) : product.isFree ? (
                       <>
-                        Obtenlo <CheckCircle className="h-4 w-4" />
+                        Gratís <CheckCircle className="h-4 w-4" />
                       </>
                     ) : (
                       <>

@@ -181,8 +181,8 @@ export default function CoursesPage() {
                     </div>
                   )}
                   {!isOwned && course.isFree && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                      Obtenlo
+                    <div className="absolute top-2 right-2 bg-green-800 text-green-lima px-3 py-1 rounded-full text-xs font-bold">
+                      Gratís
                     </div>
                   )}
                   {course.hasVideo && (
@@ -260,7 +260,7 @@ export default function CoursesPage() {
                         isOwned
                           ? "bg-gray-500 hover:bg-gray-600 text-white"
                           : course.isFree
-                            ? "bg-green-700 hover:bg-green-600 text-white"
+                            ? "bg-green-800 hover:bg-green-600 text-green-lima"
                             : "bg-orange-700 hover:bg-orange-500 text-black"
                       }`}
                       onClick={() => handleCourseAction(course.id)}
@@ -271,7 +271,7 @@ export default function CoursesPage() {
                         </>
                       ) : course.isFree ? (
                         <>
-                          Obtenlo <CheckCircle className="h-4 w-4" />
+                          Gratís <CheckCircle className="h-4 w-4" />
                         </>
                       ) : (
                         <>

@@ -415,7 +415,7 @@ export default function EKitProductPage({ params }: EKitProductPageProps) {
     </>
   ) : product.isFree ? (
     <>
-      <span>Obtenlo</span>
+      <span>Gratís</span>
       <CheckCircle className="ml-2 h-8 w-8" />
     </>
   ) : (
@@ -466,7 +466,7 @@ export default function EKitProductPage({ params }: EKitProductPageProps) {
                           <>
                             {relatedProduct.isFree ? (
                               <div className="flex items-center">
-                                <span className="text-2xl font-bold text-green-600">Obtenlo</span>
+                                <span className="text-2xl font-bold text-green-600">Gratís</span>
                               </div>
                             ) : (
                               <>
@@ -487,7 +487,7 @@ export default function EKitProductPage({ params }: EKitProductPageProps) {
                         disabled={currencyLoading}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        {relatedProduct.isFree ? "Obtenlo" : "Comprar"}
+                        {relatedProduct.isFree ? "Gratís" : "Comprar"}
                       </Button>
                     </div>
                   </div>
