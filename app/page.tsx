@@ -5,16 +5,17 @@
   import CategoryCard from "@/components/category-card"
   import FeaturedCourseCard from "@/components/featured-course-card"
   import ProductCategoryCard from "@/components/product-category-card"
-  import Lottie from "lottie-react"
-  import animacionLogo from "@/public/animations/logo-animacion-start.json"
+  import HeroAvatar from "@/components/hero-avatar"
   import EventsSection from "@/components/eventos-section"
   import TestimonialsSection from "@/components/testimonios-section"
   import CTASection from "@/components/cta-section"
   import ProyectosSection from "@/components/proyectos-sections"
   import { useEffect, useState } from "react"
+  import { usePathname } from "next/navigation"
   import { api } from "@/lib/api"
 
   export default function Home() {
+    const pathname = usePathname() // Track current path to force HeroAvatar re-mount
     const [courses, setCourses] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -64,56 +65,8 @@
 
     return (
       <div className="min-h-[100vh] bg-black text-white">
-        {/* Hero Section */}
-  {/**       <section className="container mx-auto px-4 text-center relative min-h-screen pt-10 md:pt-0 flex flex-col justify-start md:justify-center items-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-sans mb-4 md:mb-8 leading-tight">
-            ¿QUÉ TE FALTA PARA SER FELIZ?
-          </h1>
-
-          <div className="relative w-[80vw] h-[80vw] sm:w-64 sm:h-64 md:w-80 md:h-80 mx-auto mb-6 md:mb-12 mt-20">
-            <div className="w-full h-full relative glow-strong">
-              <Lottie animationData={animacionLogo} loop autoplay className="object-contain w-full h-full" />
-            </div>
-          </div>
-
-            <Link href="/generate-image" passHref>
-              <Button className="mt-20 bg-white text-black hover:bg-orange-700 hover:text-white transition-colors px-6 md:px-8 py-3 md:py-6 text-base md:text-lg rounded-full">
-                Descúbrelo
-              </Button>
-            </Link>
-        </section>
-
-
-    
-        <section className="hidden md:block container mx-auto py-12 md:py-0 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            <CategoryCard
-              title="Energía"
-              icon="/energia-icon.svg"
-              color="from-orange-500 to-yellow-500"
-              position="top-left"
-            />
-            <CategoryCard
-              title="Alimentación"
-              icon="/alimentacion-icon.svg"
-              color="from-green-500 to-green-400"
-              position="top-right"
-            />
-            <CategoryCard
-              title="Meditación"
-              icon="/meditacion-icon.svg"
-              color="from-purple-500 to-purple-400"
-              position="bottom-left"
-            />
-            <CategoryCard
-              title="Negocio"
-              icon="/negocio-icon.svg"
-              color="from-blue-500 to-blue-400"
-              position="bottom-right"
-            />
-          </div>
-        </section>
-  */}
+        {/* Hero Section con Avatar 3D */}
+        <HeroAvatar key={pathname} />
         <div className="bg-white">
           {/* Featured Courses Section */}
           <section id="cursos" className="container mx-auto py-12 md:py-20 px-4">
