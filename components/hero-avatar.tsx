@@ -421,6 +421,12 @@ export default function HeroAvatar() {
   const [isLoading, setIsLoading] = useState(false)
   // Usar timestamp único para forzar re-render del Canvas en cada mount
   const [canvasKey, setCanvasKey] = useState(Date.now())
+  // Estados para sistema híbrido de audio (iOS compatible)
+  const [showPlayButton, setShowPlayButton] = useState(false)
+  const [pendingAudio, setPendingAudio] = useState<string | null>(null)
+  // Estado para fallback a Web Speech API si ElevenLabs falla
+  const [showWebSpeechButton, setShowWebSpeechButton] = useState(false)
+  const [fallbackMessage, setFallbackMessage] = useState<string>('')
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const audioIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const audioElementRef = useRef<HTMLAudioElement | null>(null)
@@ -605,10 +611,10 @@ export default function HeroAvatar() {
       console.log('🔊 Activando isSpeaking=true')
       setIsSpeaking(true)
       
-      // Simular variación de audioLevel mientras habla
+      // Simular variación de audioLevel mientras habla (REDUCIDO para apertura más sutil)
       audioIntervalRef.current = setInterval(() => {
-        // Generar nivel aleatorio entre 0.3 y 1.0 para simular intensidad del habla
-        const level = 0.3 + Math.random() * 0.7
+        // Generar nivel aleatorio entre 0.15 y 0.45 para movimiento de boca más natural
+        const level = 0.15 + Math.random() * 0.3
         setAudioLevel(level)
         console.log('📊 AudioLevel actualizado:', level.toFixed(2))
       }, 100) // Actualizar cada 100ms
@@ -651,6 +657,195 @@ export default function HeroAvatar() {
     }, 1000)
   }
 
+  // 🔧 Sistema híbrido de audio (Opción C): Intenta autoplay, si falla muestra botón
+  const tryAutoplay = async (audioBase64: string) => {
+    console.log('🎵 Intentando autoplay de audio...')
+    
+    try {
+      const audioUrl = `data:audio/mp3;base64,${audioBase64}`
+      const audio = new Audio(audioUrl)
+      audioElementRef.current = audio
+
+      // Crear o reutilizar contexto de audio para análisis
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+        console.log('🎧 AudioContext creado para autoplay')
+      }
+
+      // Intentar reanudar AudioContext (crítico para iOS)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume()
+        console.log('▶️ AudioContext reanudado')
+      }
+
+      const audioContext = audioContextRef.current
+      const source = audioContext.createMediaElementSource(audio)
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyserRef.current = analyser
+
+      source.connect(analyser)
+      analyser.connect(audioContext.destination)
+
+      const bufferLength = analyser.frequencyBinCount
+      const dataArray = new Uint8Array(bufferLength)
+
+      // Evento cuando empieza a reproducir
+      audio.onplay = () => {
+        console.log('✅ Autoplay exitoso - Audio reproduciendo')
+        setIsSpeaking(true)
+        setShowPlayButton(false) // Ocultar botón si autoplay funcionó
+        setPendingAudio(null)
+
+        // Analizar nivel de audio en tiempo real
+        const updateAudioLevel = () => {
+          if (!analyserRef.current || !isSpeaking) return
+
+          analyserRef.current.getByteFrequencyData(dataArray)
+          
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i]
+          }
+          const average = sum / bufferLength
+          const normalizedLevel = average / 255
+
+          setAudioLevel(normalizedLevel)
+          
+          if (audio && !audio.paused) {
+            requestAnimationFrame(updateAudioLevel)
+          }
+        }
+
+        updateAudioLevel()
+      }
+
+      audio.onended = () => {
+        console.log('🎤 Audio finalizado')
+        setIsSpeaking(false)
+        setAudioLevel(0)
+      }
+
+      audio.onerror = (err) => {
+        console.error('❌ Error en reproducción de audio:', err)
+        setIsSpeaking(false)
+        setAudioLevel(0)
+      }
+
+      // 🚀 Intentar reproducir (aquí puede fallar en iOS)
+      await audio.play()
+      
+    } catch (error) {
+      // ⚠️ Autoplay bloqueado (iOS o política del navegador)
+      console.warn('⚠️ Autoplay bloqueado por el navegador:', error)
+      console.log('📱 Mostrando botón manual para reproducción')
+      setShowPlayButton(true)
+      setPendingAudio(audioBase64)
+    }
+  }
+
+  // 🔘 Reproducir audio manualmente (llamado desde botón)
+  const playManually = async (audioBase64: string) => {
+    console.log('🎵 Reproducción manual iniciada por usuario (ElevenLabs)')
+    setShowPlayButton(false)
+    setPendingAudio(null)
+
+    let audioContext: AudioContext | null = null
+
+    try {
+      // 🔑 IMPORTANTE: Este código se ejecuta DENTRO del evento onClick del botón
+      // Por eso cuenta como "interacción del usuario" y NO es bloqueado por iOS
+      const audioUrl = `data:audio/mp3;base64,${audioBase64}`
+      const audio = new Audio(audioUrl)
+      audioElementRef.current = audio
+
+      // 🎧 AudioContext para lip sync (NUEVO contexto para evitar conflictos)
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      console.log('🎧 Nuevo AudioContext creado para botón manual')
+
+      // Reanudar si está suspendido (crítico para iOS)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+        console.log('▶️ AudioContext reanudado')
+      }
+
+      const source = audioContext.createMediaElementSource(audio)
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      analyserRef.current = analyser
+
+      source.connect(analyser)
+      analyser.connect(audioContext.destination)
+
+      const bufferLength = analyser.frequencyBinCount
+      const dataArray = new Uint8Array(bufferLength)
+
+      // Eventos del audio
+      audio.onplay = () => {
+        console.log('✅ Audio ElevenLabs reproduciendo desde botón manual')
+        setIsSpeaking(true)
+
+        const updateAudioLevel = () => {
+          if (!analyserRef.current) return
+
+          analyserRef.current.getByteFrequencyData(dataArray)
+          
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i]
+          }
+          const average = sum / bufferLength
+          const normalizedLevel = average / 255
+
+          setAudioLevel(normalizedLevel)
+          
+          if (audio && !audio.paused) {
+            requestAnimationFrame(updateAudioLevel)
+          }
+        }
+
+        updateAudioLevel()
+      }
+
+      audio.onended = () => {
+        console.log('🎤 Audio ElevenLabs finalizado')
+        setIsSpeaking(false)
+        setAudioLevel(0)
+        // Cerrar contexto para liberar recursos
+        audioContext?.close().catch(e => console.warn('Error cerrando context:', e))
+      }
+
+      audio.onerror = (err) => {
+        console.error('❌ Error en audio ElevenLabs:', err)
+        setIsSpeaking(false)
+        setAudioLevel(0)
+        audioContext?.close().catch(e => console.warn('Error cerrando context:', e))
+      }
+
+      // 🚀 Reproducir AHORA (dentro del evento de click = permitido por iOS)
+      await audio.play()
+      console.log('✅ ElevenLabs audio.play() ejecutado exitosamente')
+      
+    } catch (error) {
+      console.error('❌ Error crítico en reproducción manual de ElevenLabs:', error)
+      console.warn('⚠️ Activando fallback a Web Speech API')
+      // 🔄 Si ElevenLabs falla, ofrecer Web Speech API como alternativa
+      setShowWebSpeechButton(true)
+      setIsSpeaking(false)
+      setAudioLevel(0)
+      audioContext?.close().catch(e => console.warn('Error cerrando context:', e))
+    }
+  }
+
+  // 🔊 Reproducir con Web Speech API (fallback)
+  const playWithWebSpeech = () => {
+    console.log('🎙️ Usando Web Speech API como fallback')
+    setShowWebSpeechButton(false)
+    if (fallbackMessage) {
+      speakMessage(fallbackMessage)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -660,6 +855,10 @@ export default function HeroAvatar() {
     setIsListening(false)
     setAiMessage("")
     setRecommendedCourses([])
+    setShowPlayButton(false) // Reset del botón
+    setPendingAudio(null)
+    setShowWebSpeechButton(false) // Reset del botón de fallback
+    setFallbackMessage('') // Reset del mensaje de fallback
 
     try {
       const response = await api.post<{
@@ -673,13 +872,14 @@ export default function HeroAvatar() {
 
       // Actualizar mensaje y cursos
       setAiMessage(response.message)
+      setFallbackMessage(response.message) // Guardar para fallback Web Speech
       setRecommendedCourses(response.courses)
       
-      // Reproducir audio de ElevenLabs si está disponible
+      // 🎵 Sistema híbrido: Intentar autoplay primero
       if (response.audio) {
         console.log('🎯 Audio ElevenLabs recibido del backend')
         console.log('📊 Tamaño del audio base64:', response.audio.length, 'caracteres')
-        playAudioFromBackend(response.audio)
+        await tryAutoplay(response.audio) // Intenta autoplay, si falla muestra botón
       } else {
         console.warn('⚠️ No se recibió audio de ElevenLabs del backend')
         console.log('📢 Usando fallback (Web Speech API)')
@@ -696,18 +896,24 @@ export default function HeroAvatar() {
     }
   }
 
+  // Ajustar altura del hero: compacto en móvil, expandido en desktop solo si hay cursos
+  const heroClasses = recommendedCourses.length > 0 
+    ? "py-8 md:min-h-screen container mx-auto px-4 text-center relative flex flex-col justify-center items-center"
+    : "py-12 md:py-20 container mx-auto px-4 text-center relative flex flex-col justify-center items-center"
+
   return (
-    <section className="container mx-auto px-4 text-center relative min-h-screen pt-10 md:pt-20 flex flex-col justify-start md:justify-center items-center">
-      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-sans mb-6 md:mb-8 leading-tight max-w-3xl">
+    <section className={heroClasses}>
+      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-sans mb-6 md:mb-8 leading-tight max-w-3xl mx-auto">
         ¿En qué quieres emprender? Dime cuáles son tus intereses
       </h1>
 
-      {/* Contenedor del Avatar 3D */}
-      <div className="relative w-[70vw] h-[70vw] sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 mx-auto mb-4 md:mb-6">
+      {/* Contenedor del Avatar 3D - Optimizado para móviles */}
+      <div className="relative w-[280px] h-[280px] min-[360px]:w-[320px] min-[360px]:h-[320px] sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[420px] lg:h-[420px] mx-auto mb-4 md:mb-6">
         <div className="w-full h-full relative glow-strong">
           <Canvas
             key={canvasKey} // Forzar re-render completo al navegar
             camera={{ position: [0, 0.4, 2.2], fov: 45 }}
+            dpr={[1, 2]} // Limitar device pixel ratio para mejor performance en móviles
             style={{ background: "transparent" }}
           >
             <ambientLight intensity={0.6} />
@@ -733,6 +939,38 @@ export default function HeroAvatar() {
           </Canvas>
         </div>
       </div>
+
+      {/* Botón de reproducción manual ElevenLabs (solo aparece si autoplay falla) */}
+      {showPlayButton && pendingAudio && (
+        <div className="w-full max-w-xl mx-auto mb-4 px-4">
+          <button
+            onClick={() => playManually(pendingAudio)}
+            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3 animate-pulse"
+          >
+            <span className="text-2xl">🔊</span>
+            <span className="text-lg">Escuchar respuesta del avatar (ElevenLabs)</span>
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            Tu navegador bloqueó la reproducción automática. Haz clic para escuchar.
+          </p>
+        </div>
+      )}
+
+      {/* Botón fallback Web Speech API (solo si ElevenLabs falla) */}
+      {showWebSpeechButton && fallbackMessage && (
+        <div className="w-full max-w-xl mx-auto mb-4 px-4">
+          <button
+            onClick={playWithWebSpeech}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3"
+          >
+            <span className="text-2xl">🎙️</span>
+            <span className="text-lg">Escuchar con voz del navegador</span>
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            El audio de alta calidad no está disponible. Usa la voz del navegador.
+          </p>
+        </div>
+      )}
 
       {/* Input de búsqueda */}
       <form onSubmit={handleSubmit} className="w-full max-w-xl mx-auto mb-8 px-4">
